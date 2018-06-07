@@ -31,7 +31,7 @@ gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
         https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 EOF
 
-yum install -y net-tools screen tree telnet kubelet kubeadm docker --nogpgcheck
+yum install -y net-tools screen tree telnet kubelet kubeadm docker rsync --nogpgcheck
 systemctl enable kubelet && systemctl start kubelet
 systemctl enable docker && systemctl start docker
 
@@ -57,9 +57,7 @@ kubeadm reset
 kubeadm init --apiserver-advertise-address=#{MASTER_IP} --pod-network-cidr=#{POD_NW_CIDR} --token #{KUBETOKEN} --token-ttl 0
 
 mkdir -p $HOME/.kube
-sudo mkdir -p /data/.kube
 sudo cp -Rf /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo cp -Rf /etc/kubernetes/admin.conf /data/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
@@ -105,7 +103,7 @@ Vagrant.configure('2') do |config|
                     vb.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', diskI - 1, '--device', diskI - 1, '--type', 'hdd', '--medium', ".vagrant/master-disk-#{diskI}.vdi"]
                 end
             end
-            subconfig.vm.synced_folder 'data/', '/data', type: "rsync",
+            subconfig.vm.synced_folder 'data/master/', '/data', type: "rsync",
                 create: true, owner: 'root', group: 'root',
                 rsync__args: ["--rsync-path='sudo rsync'", "--archive", "--delete", "-z"]
             # Provision
@@ -137,7 +135,7 @@ Vagrant.configure('2') do |config|
                       vb.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', diskI - 1, '--device', diskI - 1, '--type', 'hdd', '--medium', ".vagrant/node#{i}-disk-#{diskI}.vdi"]
                   end
                 end
-                subconfig.vm.synced_folder 'data/', '/data', type: "rsync",
+                subconfig.vm.synced_folder "data/node#{i}/", '/data', type: "rsync",
                     create: true, owner: 'root', group: 'root',
                     rsync__args: ["--rsync-path='sudo rsync'", "--archive", "--delete", "-z"]
                 # Provision
