@@ -5,6 +5,7 @@ Inspiration to this project was [coolsvap/kubeadm-vagrant](https://github.com/co
 * Vagrant (tested with `2.1.1`)
 * Vagrant Plugins
     * `vagrant-hostmanager` - Install using `vagrant plugin install vagrant-hostmanager`
+* Virtualbox
 
 ## Usage
 ### Starting the environment
