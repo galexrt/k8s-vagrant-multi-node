@@ -88,7 +88,9 @@ Vagrant.configure('2') do |config|
                 vb.customize ['modifyvm', :id, '--cpus', '2']
                 vb.customize ['modifyvm', :id, '--memory', '2048']
                 # Storage configuration
-                vb.customize ['storagectl', :id, '--name', 'SATAController', '--remove']
+                unless File.exist?(".vagrant/machines/master/virtualbox/id")
+                    vb.customize ['storagectl', :id, '--name', 'SATAController', '--remove']
+                end
                 vb.customize ['storagectl', :id, '--name', 'SATAController', '--add', 'sata']
                 (1..DISK_COUNT).each do |diskI|
                     unless File.exist?(".vagrant/master-disk-#{diskI}.vdi")
@@ -115,7 +117,9 @@ Vagrant.configure('2') do |config|
                 subconfig.vm.network :private_network, ip: NODE_IP_NW + (i + 10).to_s
                 subconfig.vm.provider :virtualbox do |vb|
                   # Storage configuration
-                  vb.customize ['storagectl', :id, '--name', 'SATAController', '--remove']
+                  unless File.exist?(".vagrant/machines/node#{i}/virtualbox/id")
+                      vb.customize ['storagectl', :id, '--name', 'SATAController', '--remove']
+                  end
                   vb.customize ['storagectl', :id, '--name', 'SATAController', '--add', 'sata']
                   (1..DISK_COUNT).each do |diskI|
                       unless File.exist?(".vagrant/node#{i}-disk-#{diskI}.vdi")
