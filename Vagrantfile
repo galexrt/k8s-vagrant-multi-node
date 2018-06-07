@@ -42,7 +42,7 @@ sed -i '/swap/s/^/#/g' /etc/fstab
 echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
 BASEINSTALLSCRIPT
 
-$kubeminionscript = <<MINIONSCRIPT
+$kubeMinionScript = <<MINIONSCRIPT
 
 set -x
 kubeadm reset
@@ -50,7 +50,7 @@ kubeadm reset
 kubeadm join --discovery-token-unsafe-skip-ca-verification --token #{KUBETOKEN} #{MASTER_IP}:6443
 MINIONSCRIPT
 
-$kubemasterscript = <<SCRIPT
+$kubeMasterScript = <<SCRIPT
 
 set -x
 kubeadm reset
@@ -65,7 +65,7 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 SCRIPT
 
-$kubedashscript = <<DASHSCRIPT
+$kubeDashScript = <<DASHSCRIPT
 
 # Kubernetes Dashboard Setup
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
@@ -110,10 +110,10 @@ Vagrant.configure('2') do |config|
                 rsync__args: ["--rsync-path='sudo rsync'", "--archive", "--delete", "-z"]
             # Provision
             subconfig.vm.provision :shell, inline: $baseInstallScript
-            subconfig.vm.provision :shell, inline: $kubemasterscript
+            subconfig.vm.provision :shell, inline: $kubeMasterScript
             # Addons
             if K8S_DASHBOARD
-                subconfig.vm.provision :shell, inline: $kubedashscript
+                subconfig.vm.provision :shell, inline: $kubeDashScript
                 subconfig.vm.network 'forwarded_port', guest: 8443, host: 8443
             end
         end
@@ -142,7 +142,7 @@ Vagrant.configure('2') do |config|
                     rsync__args: ["--rsync-path='sudo rsync'", "--archive", "--delete", "-z"]
                 # Provision
                 subconfig.vm.provision :shell, inline: $baseInstallScript
-                subconfig.vm.provision :shell, inline: $kubeminionscript
+                subconfig.vm.provision :shell, inline: $kubeMinionScript
             end
         end
     end
