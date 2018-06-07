@@ -1,8 +1,6 @@
 # Box setup
 BOX_IMAGE = 'centos/7'.freeze
 # Kubernetes nodes to setup
-SETUP_MASTER = true
-SETUP_NODES = true
 NODE_COUNT = 3
 # Disk setup
 DISK_COUNT = 1
