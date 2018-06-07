@@ -95,9 +95,9 @@ Vagrant.configure('2') do |config|
                     vb.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', diskI - 1, '--device', diskI - 1, '--type', 'hdd', '--medium', ".vagrant/master-disk-#{diskI}.vdi"]
                 end
             end
+            subconfig.vm.synced_folder 'data/', '/data'
+            # Provision
             subconfig.vm.provision :shell, inline: $kubemasterscript
-            vb.synced_folder 'bin/', '/opt/bin'
-            vb.synced_folder 'data/', '/data'
             # Addons
             if K8S_DASHBOARD
                 subconfig.vm.provision :shell, inline: $kubedashscript
@@ -120,9 +120,9 @@ Vagrant.configure('2') do |config|
                     end
                     subconfig.vm.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', diskI - 1, '--device', diskI - 1, '--type', 'hdd', '--medium', ".vagrant/node#{i}-disk-#{diskI}.vdi"]
                 end
-                subconfig.vm.provision :shell, inline: $kubeminionscript
-                subconfig.vm.synced_folder 'bin/', '/opt/bin', create: true, owner: 'root', group: 'root'
                 subconfig.vm.synced_folder 'data/', '/data', create: true, owner: 'root', group: 'root'
+                # Provision
+                subconfig.vm.provision :shell, inline: $kubeminionscript
             end
         end
     end

@@ -2,8 +2,11 @@ up:
 	vagrant up \
 	    --parallel
 
+stop:
+	vagrant halt -f
+
 clean:
-	vagrant stop -f
+	vagrant halt -f
 	vagrant destroy -f
 
 .PHONY: up clean
