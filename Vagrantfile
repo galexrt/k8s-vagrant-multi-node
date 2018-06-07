@@ -1,11 +1,17 @@
+# Box setup
 BOX_IMAGE = 'centos/7'.freeze
+# Kubernetes nodes to setup
 SETUP_MASTER = true
 SETUP_NODES = true
 NODE_COUNT = 3
+# Disk setup
 DISK_COUNT = 1
+DISK_SIZE_GB = 10
+# Network
 MASTER_IP = '192.168.26.10'.freeze
 NODE_IP_NW = '192.168.26.'.freeze
 POD_NW_CIDR = '10.244.0.0/16'.freeze
+# Addons
 K8S_DASHBOARD = false
 
 # Generate new using steps in README
@@ -94,7 +100,7 @@ Vagrant.configure('2') do |config|
                 vb.customize ['storagectl', :id, '--name', 'SATAController', '--add', 'sata']
                 (1..DISK_COUNT).each do |diskI|
                     unless File.exist?(".vagrant/master-disk-#{diskI}.vdi")
-                        vb.customize ['createhd', '--filename', ".vagrant/master-disk-#{diskI}.vdi", '--variant', 'Standard', '--size', 10 * 1024]
+                        vb.customize ['createhd', '--filename', ".vagrant/master-disk-#{diskI}.vdi", '--variant', 'Standard', '--size', DISK_SIZE_GB * 1024]
                     end
                     vb.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', diskI - 1, '--device', diskI - 1, '--type', 'hdd', '--medium', ".vagrant/master-disk-#{diskI}.vdi"]
                 end
@@ -126,7 +132,7 @@ Vagrant.configure('2') do |config|
                   vb.customize ['storagectl', :id, '--name', 'SATAController', '--add', 'sata']
                   (1..DISK_COUNT).each do |diskI|
                       unless File.exist?(".vagrant/node#{i}-disk-#{diskI}.vdi")
-                          vb.customize ['createhd', '--filename', ".vagrant/node#{i}-disk-#{diskI}.vdi", '--variant', 'Standard', '--size', 10 * 1024]
+                          vb.customize ['createhd', '--filename', ".vagrant/node#{i}-disk-#{diskI}.vdi", '--variant', 'Standard', '--size', DISK_SIZE_GB * 1024]
                       end
                       vb.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', diskI - 1, '--device', diskI - 1, '--type', 'hdd', '--medium', ".vagrant/node#{i}-disk-#{diskI}.vdi"]
                   end
