@@ -81,67 +81,62 @@ Vagrant.configure('2') do |config|
 
     config.hostmanager.enabled = true
     config.hostmanager.manage_guest = true
-    # config.vm.network "public_network"
 
-    if SETUP_MASTER
-        config.vm.define 'master' do |subconfig|
-            subconfig.vm.hostname = 'master'
-            subconfig.vm.network :private_network, ip: MASTER_IP
+    config.vm.define 'master' do |subconfig|
+        subconfig.vm.hostname = 'master'
+        subconfig.vm.network :private_network, ip: MASTER_IP
+        subconfig.vm.provider :virtualbox do |vb|
+            # VM Resources
+            vb.customize ['modifyvm', :id, '--cpus', '2']
+            vb.customize ['modifyvm', :id, '--memory', '2048']
+            # Storage configuration
+            if File.exist?('.vagrant/master-disk-1.vdi')
+                vb.customize ['storagectl', :id, '--name', 'SATAController', '--remove']
+           end
+            vb.customize ['storagectl', :id, '--name', 'SATAController', '--add', 'sata']
+            (1..DISK_COUNT).each do |diskI|
+                unless File.exist?(".vagrant/master-disk-#{diskI}.vdi")
+                    vb.customize ['createhd', '--filename', ".vagrant/master-disk-#{diskI}.vdi", '--variant', 'Standard', '--size', DISK_SIZE_GB * 1024]
+                end
+                vb.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', diskI - 1, '--device', diskI - 1, '--type', 'hdd', '--medium', ".vagrant/master-disk-#{diskI}.vdi"]
+            end
+        end
+        subconfig.vm.synced_folder 'data/master/', '/data', type: 'rsync',
+                                                            create: true, owner: 'root', group: 'root',
+                                                            rsync__args: ["--rsync-path='sudo rsync'", '--archive', '--delete', '-z']
+        # Provision
+        subconfig.vm.provision :shell, inline: $baseInstallScript
+        subconfig.vm.provision :shell, inline: $kubeMasterScript
+        # Addons
+        if K8S_DASHBOARD
+            subconfig.vm.provision :shell, inline: $kubeDashScript
+            subconfig.vm.network 'forwarded_port', guest: 8443, host: 8443
+        end
+    end
+
+    (1..NODE_COUNT).each do |i|
+        config.vm.define "node#{i}" do |subconfig|
+            subconfig.vm.hostname = "node#{i}"
+            subconfig.vm.network :private_network, ip: NODE_IP_NW + (i + 10).to_s
             subconfig.vm.provider :virtualbox do |vb|
-                # VM Resources
-                vb.customize ['modifyvm', :id, '--cpus', '2']
-                vb.customize ['modifyvm', :id, '--memory', '2048']
                 # Storage configuration
-                 if File.exist?(".vagrant/master-disk-1.vdi")
+                if File.exist?(".vagrant/node#{i}-disk-1.vdi")
                     vb.customize ['storagectl', :id, '--name', 'SATAController', '--remove']
                 end
                 vb.customize ['storagectl', :id, '--name', 'SATAController', '--add', 'sata']
                 (1..DISK_COUNT).each do |diskI|
-                    unless File.exist?(".vagrant/master-disk-#{diskI}.vdi")
-                        vb.customize ['createhd', '--filename', ".vagrant/master-disk-#{diskI}.vdi", '--variant', 'Standard', '--size', DISK_SIZE_GB * 1024]
+                    unless File.exist?(".vagrant/node#{i}-disk-#{diskI}.vdi")
+                        vb.customize ['createhd', '--filename', ".vagrant/node#{i}-disk-#{diskI}.vdi", '--variant', 'Standard', '--size', DISK_SIZE_GB * 1024]
                     end
-                    vb.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', diskI - 1, '--device', diskI - 1, '--type', 'hdd', '--medium', ".vagrant/master-disk-#{diskI}.vdi"]
+                    vb.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', diskI - 1, '--device', diskI - 1, '--type', 'hdd', '--medium', ".vagrant/node#{i}-disk-#{diskI}.vdi"]
                 end
             end
-            subconfig.vm.synced_folder 'data/master/', '/data', type: "rsync",
-                create: true, owner: 'root', group: 'root',
-                rsync__args: ["--rsync-path='sudo rsync'", "--archive", "--delete", "-z"]
+            subconfig.vm.synced_folder "data/node#{i}/", '/data', type: 'rsync',
+                                                                  create: true, owner: 'root', group: 'root',
+                                                                  rsync__args: ["--rsync-path='sudo rsync'", '--archive', '--delete', '-z']
             # Provision
             subconfig.vm.provision :shell, inline: $baseInstallScript
-            subconfig.vm.provision :shell, inline: $kubeMasterScript
-            # Addons
-            if K8S_DASHBOARD
-                subconfig.vm.provision :shell, inline: $kubeDashScript
-                subconfig.vm.network 'forwarded_port', guest: 8443, host: 8443
-            end
-        end
-    end
-
-    if SETUP_NODES
-        (1..NODE_COUNT).each do |i|
-            config.vm.define "node#{i}" do |subconfig|
-                subconfig.vm.hostname = "node#{i}"
-                subconfig.vm.network :private_network, ip: NODE_IP_NW + (i + 10).to_s
-                subconfig.vm.provider :virtualbox do |vb|
-                  # Storage configuration
-                  if File.exist?(".vagrant/node#{i}-disk-1.vdi")
-                      vb.customize ['storagectl', :id, '--name', 'SATAController', '--remove']
-                  end
-                  vb.customize ['storagectl', :id, '--name', 'SATAController', '--add', 'sata']
-                  (1..DISK_COUNT).each do |diskI|
-                      unless File.exist?(".vagrant/node#{i}-disk-#{diskI}.vdi")
-                          vb.customize ['createhd', '--filename', ".vagrant/node#{i}-disk-#{diskI}.vdi", '--variant', 'Standard', '--size', DISK_SIZE_GB * 1024]
-                      end
-                      vb.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', diskI - 1, '--device', diskI - 1, '--type', 'hdd', '--medium', ".vagrant/node#{i}-disk-#{diskI}.vdi"]
-                  end
-                end
-                subconfig.vm.synced_folder "data/node#{i}/", '/data', type: "rsync",
-                    create: true, owner: 'root', group: 'root',
-                    rsync__args: ["--rsync-path='sudo rsync'", "--archive", "--delete", "-z"]
-                # Provision
-                subconfig.vm.provision :shell, inline: $baseInstallScript
-                subconfig.vm.provision :shell, inline: $kubeMinionScript
-            end
+            subconfig.vm.provision :shell, inline: $kubeMinionScript
         end
     end
 end

@@ -25,3 +25,7 @@ Run `make destroy` to destroy the Vagrant environment.
 
 ### Data inside VM
 See the `data/VM_NAME/` directories, where `VM_NAME` is for example `master`.
+
+## ToDo
+- [ ] `vagrant up` master and nodes separately for faster startup
+- [ ] Allow env vars to overwrite vars in `Vagrantfile`

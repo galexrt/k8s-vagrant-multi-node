@@ -1,6 +1,8 @@
 up:
 	@echo "Starting Vagrant Kubernetes multi node environment ..."
+
 	vagrant up
+
 	mkdir -p data/.kube
 	vagrant ssh master -c 'sudo cat /root/.kube/config' > data/.kube/config
 	@echo "Started Vagrant Kubernetes multi node environment."
