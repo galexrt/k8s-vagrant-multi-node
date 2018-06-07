@@ -1,6 +1,12 @@
 #!/bin/bash
 set -x
 
+if [ $# -lt 2 ]; then
+    echo "Not enough args given."
+    echo "$0 [SOURCE_IMAGE] [DEST_IMAGE]"
+    exit 2
+fi
+
 cd "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" || exit 1
 
 NODE_COUNT="$(grep -Po 'NODE_COUNT = \K\w+$' Vagrantfile)"
