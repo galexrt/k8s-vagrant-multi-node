@@ -1,13 +1,17 @@
 #!/bin/bash
+set -x
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd "$DIR" || exit 1
+cd "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" || exit 1
 
-docker tag build-ec779fd0/ceph-amd64 rook/ceph:master
-docker tag build-ec779fd0/ceph-toolbox-amd64 rook/ceph-toolbox:master
+NODE_COUNT="$(grep -Po 'NODE_COUNT = \K\w+$' Vagrantfile)"
 
-for vm in master node1 node2 node3 node4; do
-    echo $vm
-    docker save rook/ceph:master | vagrant ssh $vm -t -c 'sudo docker load' &
-    docker save rook/ceph-toolbox:master | vagrant ssh $vm -t -c 'sudo docker load' &
+SOURCE_IMAGE="$1"
+DEST_IMAGE="$2"
+
+docker tag "${SOURCE_IMAGE}" "${DEST_IMAGE}"
+
+for vm in master {1..${NODE_COUNT}}; do
+    docker save "${DEST_IMAGE}" | vagrant ssh "${vm}" -t -c 'sudo docker load' &
 done
+echo "Waiting for docker load jobs to finish ..."
+wait
