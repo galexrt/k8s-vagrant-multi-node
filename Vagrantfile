@@ -113,14 +113,16 @@ Vagrant.configure('2') do |config|
             config.vm.define "node#{i}" do |subconfig|
                 subconfig.vm.hostname = "node#{i}"
                 subconfig.vm.network :private_network, ip: NODE_IP_NW + (i + 10).to_s
-                # Storage configuration
-                subconfig.vm.customize ['storagectl', :id, '--name', 'SATAController', '--remove']
-                subconfig.vm.customize ['storagectl', :id, '--name', 'SATAController', '--add', 'sata']
-                (1..DISK_COUNT).each do |diskI|
-                    unless File.exist?(".vagrant/node#{i}-disk-#{diskI}.vdi")
-                        subconfig.vm.customize ['createhd', '--filename', ".vagrant/node#{i}-disk-#{diskI}.vdi", '--variant', 'Standard', '--size', 10 * 1024]
-                    end
-                    subconfig.vm.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', diskI - 1, '--device', diskI - 1, '--type', 'hdd', '--medium', ".vagrant/node#{i}-disk-#{diskI}.vdi"]
+                subconfig.vm.provider :virtualbox do |vb|
+                  # Storage configuration
+                  vb.customize ['storagectl', :id, '--name', 'SATAController', '--remove']
+                  vb.customize ['storagectl', :id, '--name', 'SATAController', '--add', 'sata']
+                  (1..DISK_COUNT).each do |diskI|
+                      unless File.exist?(".vagrant/node#{i}-disk-#{diskI}.vdi")
+                          vb.customize ['createhd', '--filename', ".vagrant/node#{i}-disk-#{diskI}.vdi", '--variant', 'Standard', '--size', 10 * 1024]
+                      end
+                      vb.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', diskI - 1, '--device', diskI - 1, '--type', 'hdd', '--medium', ".vagrant/node#{i}-disk-#{diskI}.vdi"]
+                  end
                 end
                 subconfig.vm.synced_folder 'data/', '/data', create: true, owner: 'root', group: 'root'
                 # Provision
