@@ -28,7 +28,6 @@ master:
 		> $(CLUSTERCERTSDIR)/ca.crt
 	vagrant ssh master -c 'sudo cat /root/.kube/config' \
 		> $(CLUSTERCERTSDIR)/config
-	echo "" >> $(CLUSTERCERTSDIR)/config
 	@grep -P 'client-certificate-data:' $(CLUSTERCERTSDIR)/config | \
 		sed -e 's/^[ \t]*//' | \
 		cut -d' ' -f2 | \
@@ -45,7 +44,7 @@ master:
 		config set-cluster \
 			$(CLUSTER_NAME) \
 			--embed-certs=true \
-			--server=$(MASTER_IP) \
+			--server=$(MASTER_IP):6443 \
 			--certificate-authority=$(CLUSTERCERTSDIR)/ca.crt
 	kubectl \
 		config set-credentials \
