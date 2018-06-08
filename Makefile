@@ -15,31 +15,18 @@ K8S_DASHBOARD ?= false
 
 KUBETOKEN ?= 'b029ee.968a33e8d8e6bb0d'
 
-up:
-	@echo "Starting Vagrant Kubernetes multi node environment ..."
-	make master &
-	make nodes &
-	@echo "Waiting for vagrant up to succeed ..."
-	wait
-	@echo
-	@echo "Kubernetes master and nodes are up."
-	@echo
+up: master nodes
 	# Copy kubeconfig
 	mkdir -p data/.kube
 	vagrant ssh master -c 'sudo cat /root/.kube/config' > data/.kube/config
-	@echo "Started Vagrant Kubernetes multi node environment."
-	@echo "Run 'export KUBECONFIG=\"$(PWD)/data/.kube/config\"' to be able to use 'kubectl' with the environment."
 
 master:
 	vagrant up
 
-nodes:
-	for i in $(shell seq 1 $(NODE_COUNT)); do make node-$$i &; done
+nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "node-$$i"; done)
 
 node-%:
-	@echo "Starting node $* ..."
 	VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant up
-	@echo "Started node $*."
 
 stop:
 	vagrant halt -f
