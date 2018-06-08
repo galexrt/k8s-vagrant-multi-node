@@ -22,7 +22,7 @@ up: master nodes
 master:
 	vagrant up
 
-	CLUSTERCERTSDIR = $(shell mktemp -d)
+	CLUSTERCERTSDIR := $(shell mktemp -d)
 	vagrant ssh master -c 'sudo cat /root/.kube/config' > $(CLUSTERCERTSDIR)/config
 	grep -oP 'client-certificate-data: (.+)' .kube/config | cut -d' ' -f2 > $(CLUSTERCERTSDIR)/client-certificate.crt
 	grep -oP 'client-key-data: (.+)' .kube/config | cut -d' ' -f2 > $(CLUSTERCERTSDIR)/client-key.crt
