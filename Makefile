@@ -1,3 +1,6 @@
+MFILECWD = $(shell pwd)
+
+# === BEGIN USER OPTIONS ===
 # Box setup
 BOX_IMAGE ?= centos/7
 # Disk setup
@@ -13,11 +16,23 @@ POD_NW_CIDR ?= 10.244.0.0/16
 # Addons
 K8S_DASHBOARD ?= false
 
-CLUSTER_NAME ?= $(shell basename $(CURDIR))
+CLUSTER_NAME ?= $(shell basename $(MFILECWD))
+# === END USER OPTIONS ===
 
-KUBETOKEN ?= 'b029ee.968a33e8d8e6bb0d'
+preflight: token
+	$(eval KUBETOKEN := $(shell cat $(MFILECWD)/.vagrant/KUBETOKEN))
 
-up: master nodes
+token:
+	@# [a-z0-9]{6}.[a-z0-9]{16}
+	@if [ ! -f $(MFILECWD)/.vagrant/KUBETOKEN ]; then \
+		if [ -z "$(KUBETOKEN)" ]; then \
+			echo "$(shell cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1).$(shell cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 16 | head -n 1)" > $(MFILECWD)/.vagrant/KUBETOKEN; \
+		else \
+			echo "$(KUBETOKEN)" > $(MFILECWD)/.vagrant/KUBETOKEN; \
+		fi; \
+	fi;
+
+up: preflight master nodes
 
 master:
 	vagrant up
@@ -106,5 +121,5 @@ status-master:
 status-node-%:
 	@VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant status | tail -n+3 | head -n-5
 
-.PHONY: up master nodes stop clean clean-master clean-data load-image status
+.PHONY: preflight up master nodes stop clean clean-master clean-data load-image status
 .EXPORT_ALL_VARIABLES:
