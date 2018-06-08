@@ -80,3 +80,4 @@ See the `data/VM_NAME/` directories, where `VM_NAME` is for example `master`.
 
 ## ToDo
 - [ ] Make resources configurable by environment variables
+- [ ] Make Kubernetes version selectable through `kubeadm`
