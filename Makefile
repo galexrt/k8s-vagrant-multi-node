@@ -35,10 +35,10 @@ stop:
 clean: clean-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done)
 
 clean-master:
-	vagrant destroy -f
+	-vagrant destroy -f
 
 clean-node-%:
-	VAGRANT_VAGRANTFILE=Vagrantfile_nodes vagrant destroy -f node$*; done
+	-VAGRANT_VAGRANTFILE=Vagrantfile_nodes vagrant destroy -f node$*
 
 clean-data:
 	rm -rf "$(PWD)/data/*"
