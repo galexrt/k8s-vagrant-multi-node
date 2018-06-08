@@ -12,7 +12,7 @@ K8S_DASHBOARD = false
 # Generate new using steps in README
 KUBETOKEN = ENV["KUBETOKEN"] || 'b029ee.968a33e8d8e6bb0d'.freeze
 
-$baseInstallScript = <<BASEINSTALLSCRIPT
+$baseInstallScript = <<SCRIPT
 
 set -x
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
@@ -35,7 +35,7 @@ sed -i 's/SELINUX=enforcing/SELINUX=enforcing/g' /etc/selinux/config
 swapoff -a
 sed -i '/swap/s/^/#/g' /etc/fstab
 echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
-BASEINSTALLSCRIPT
+SCRIPT
 
 $kubeMasterScript = <<SCRIPT
 
@@ -57,12 +57,12 @@ kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documen
 SCRIPT
 
 # Addons
-$kubeDashScript = <<DASHSCRIPT
+$kubeDashScript = <<SCRIPT
 
 # Kubernetes Dashboard Setup
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
 kubectl proxy &
-DASHSCRIPT
+SCRIPT
 
 Vagrant.configure('2') do |config|
     config.vm.box = BOX_IMAGE

@@ -5,7 +5,7 @@ Inspiration to this project was [coolsvap/kubeadm-vagrant](https://github.com/co
 * Vagrant (tested with `2.1.1`)
 * Virtualbox
 * `rsync`
-* `/dev/urandom` when no `KUBETOKEN` is given
+* `/dev/urandom` (only used to generate a kubeadm token, when no custom `KUBETOKEN` is given)
 
 ## Hardware Requirements
 * Master
@@ -19,7 +19,7 @@ These values can currently only be changed by editing `Vagrantfile` and `Vagrant
 but will probably be configurable by environment variables in the future.
 
 ## Quickstart
-To start with the defaults master and two workers, run the following:
+To start with the defaults, 1x master and 2x workers, run the following:
 ```
 $ make up -j 3
 $ kubectl get componentstatus
@@ -33,6 +33,7 @@ master    Ready     master    9m        v1.10.4
 node1     Ready     <none>    9m        v1.10.4
 node2     Ready     <none>    9m        v1.10.4
 ```
+The `-j3` will cause three targets, in this VMs, to be started at the same time.
 
 ## Usage
 ### Starting the environment

@@ -14,7 +14,7 @@ NODE_IP = NODE_IP_NW + (i + 10).to_s
 # Generate new using steps in README
 KUBETOKEN = ENV['KUBETOKEN'] || 'b029ee.968a33e8d8e6bb0d'.freeze
 
-$baseInstallScript = <<BASEINSTALLSCRIPT
+$baseInstallScript = <<SCRIPT
 
 set -x
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
@@ -37,9 +37,9 @@ sed -i 's/SELINUX=enforcing/SELINUX=enforcing/g' /etc/selinux/config
 swapoff -a
 sed -i '/swap/s/^/#/g' /etc/fstab
 echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
-BASEINSTALLSCRIPT
+SCRIPT
 
-$kubeMinionScript = <<MINIONSCRIPT
+$kubeMinionScript = <<SCRIPT
 
 set -x
 kubeadm reset
@@ -51,7 +51,7 @@ sed -i 's/KUBELET_NETWORK_ARGS=/KUBELET_NETWORK_ARGS=--node-ip=#{NODE_IP} /' /et
 
 systemctl restart kubelet.service
 
-MINIONSCRIPT
+SCRIPT
 
 Vagrant.configure('2') do |config|
     config.vm.box = BOX_IMAGE
