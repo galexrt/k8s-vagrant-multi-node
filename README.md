@@ -50,6 +50,7 @@ The flag `-j PARALLEL` allows to set how many VMs (Makefile targets) will be run
 To destroy the Vagrant environment run:
 ```bash
 make clean
+make clean-data
 ```
 
 ### Copy local Docker image into VMs
