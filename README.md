@@ -58,7 +58,7 @@ See the `data/VM_NAME/` directories, where `VM_NAME` is for example `master`.
 | `POD_NW_CIDR`     | `10.244.0.0/16`          | The Pod (container) network CIDR.                                                                   |
 | `K8K8S_DASHBOARD` | `false`                  | Install the Kubernetes dashboard addon.                                                             |
 | `CLUSTER_NAME`    | `k8s-vagrant-multi-node` | The name of the directory the Makefile is in.                                                       |
-| `KUBETOKEN`       | `` (empty)               | The `kubeadm` "join" token to use. Will be generated automatically using `/dev/urandom/ when empty. |
+| `KUBETOKEN`       | `""` (empty)               | The `kubeadm` "join" token to use. Will be generated automatically using `/dev/urandom/ when empty. |
 
 ## ToDo
 - [ ] Make resources configurable by environment variables
