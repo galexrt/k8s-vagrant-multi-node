@@ -1,19 +1,16 @@
 # Box setup
-BOX_IMAGE = 'centos/7'.freeze
-# Kubernetes nodes to setup
-NODE_COUNT = 3
+BOX_IMAGE = ENV["BOX_IMAGE"] || 'centos/7'.freeze
 # Disk setup
-DISK_COUNT = 1
-DISK_SIZE_GB = 10
+DISK_COUNT = ENV["DISK_COUNT"].to_i || 2
+DISK_SIZE_GB = ENV["DISK_SIZE_GB"].to_i || 10
 # Network
-MASTER_IP = '192.168.26.10'.freeze
-NODE_IP_NW = '192.168.26.'.freeze
-POD_NW_CIDR = '10.244.0.0/16'.freeze
+MASTER_IP = ENV["MASTER_IP"] || '192.168.26.10'.freeze
+POD_NW_CIDR = ENV["POD_NW_CIDR"] || '10.244.0.0/16'.freeze
 # Addons
 K8S_DASHBOARD = false
 
 # Generate new using steps in README
-KUBETOKEN = 'b029ee.968a33e8d8e6bb0d'.freeze
+KUBETOKEN = ENV["KUBETOKEN"] || 'b029ee.968a33e8d8e6bb0d'.freeze
 
 $baseInstallScript = <<BASEINSTALLSCRIPT
 
@@ -40,14 +37,6 @@ sed -i '/swap/s/^/#/g' /etc/fstab
 echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
 BASEINSTALLSCRIPT
 
-$kubeMinionScript = <<MINIONSCRIPT
-
-set -x
-kubeadm reset
-
-kubeadm join --discovery-token-unsafe-skip-ca-verification --token #{KUBETOKEN} #{MASTER_IP}:6443
-MINIONSCRIPT
-
 $kubeMasterScript = <<SCRIPT
 
 set -x
@@ -61,6 +50,7 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 SCRIPT
 
+# Addons
 $kubeDashScript = <<DASHSCRIPT
 
 # Kubernetes Dashboard Setup
@@ -77,9 +67,6 @@ Vagrant.configure('2') do |config|
         l.memory = '1024'
     end
 
-    config.hostmanager.enabled = true
-    config.hostmanager.manage_guest = true
-
     config.vm.define 'master' do |subconfig|
         subconfig.vm.hostname = 'master'
         subconfig.vm.network :private_network, ip: MASTER_IP
@@ -92,7 +79,7 @@ Vagrant.configure('2') do |config|
                 vb.customize ['storagectl', :id, '--name', 'SATAController', '--remove']
            end
             vb.customize ['storagectl', :id, '--name', 'SATAController', '--add', 'sata']
-            (1..DISK_COUNT).each do |diskI|
+            (1..DISK_COUNT.to_i).each do |diskI|
                 unless File.exist?(".vagrant/master-disk-#{diskI}.vdi")
                     vb.customize ['createhd', '--filename', ".vagrant/master-disk-#{diskI}.vdi", '--variant', 'Standard', '--size', DISK_SIZE_GB * 1024]
                 end
@@ -106,35 +93,9 @@ Vagrant.configure('2') do |config|
         subconfig.vm.provision :shell, inline: $baseInstallScript
         subconfig.vm.provision :shell, inline: $kubeMasterScript
         # Addons
-        if K8S_DASHBOARD
+        if K8S_DASHBOARD.to_s
             subconfig.vm.provision :shell, inline: $kubeDashScript
             subconfig.vm.network 'forwarded_port', guest: 8443, host: 8443
-        end
-    end
-
-    (1..NODE_COUNT).each do |i|
-        config.vm.define "node#{i}" do |subconfig|
-            subconfig.vm.hostname = "node#{i}"
-            subconfig.vm.network :private_network, ip: NODE_IP_NW + (i + 10).to_s
-            subconfig.vm.provider :virtualbox do |vb|
-                # Storage configuration
-                if File.exist?(".vagrant/node#{i}-disk-1.vdi")
-                    vb.customize ['storagectl', :id, '--name', 'SATAController', '--remove']
-                end
-                vb.customize ['storagectl', :id, '--name', 'SATAController', '--add', 'sata']
-                (1..DISK_COUNT).each do |diskI|
-                    unless File.exist?(".vagrant/node#{i}-disk-#{diskI}.vdi")
-                        vb.customize ['createhd', '--filename', ".vagrant/node#{i}-disk-#{diskI}.vdi", '--variant', 'Standard', '--size', DISK_SIZE_GB * 1024]
-                    end
-                    vb.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', diskI - 1, '--device', diskI - 1, '--type', 'hdd', '--medium', ".vagrant/node#{i}-disk-#{diskI}.vdi"]
-                end
-            end
-            subconfig.vm.synced_folder "data/node#{i}/", '/data', type: 'rsync',
-                                                                  create: true, owner: 'root', group: 'root',
-                                                                  rsync__args: ["--rsync-path='sudo rsync'", '--archive', '--delete', '-z']
-            # Provision
-            subconfig.vm.provision :shell, inline: $baseInstallScript
-            subconfig.vm.provision :shell, inline: $kubeMinionScript
         end
     end
 end

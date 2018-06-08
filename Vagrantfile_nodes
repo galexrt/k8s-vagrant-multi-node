@@ -1,0 +1,81 @@
+# Box setup
+BOX_IMAGE = ENV['BOX_IMAGE'] || 'centos/7'.freeze
+
+i = ENV["NODE"].to_i || 1
+
+# Disk setup
+DISK_COUNT = ENV['DISK_COUNT'].to_i || 1
+DISK_SIZE_GB = ENV['DISK_SIZE_GB'].to_i || 10
+# Network
+MASTER_IP = ENV['MASTER_IP'] || '192.168.26.10'.freeze
+NODE_IP_NW = ENV['NODE_IP_NW'] || '192.168.26.'.freeze
+
+# Generate new using steps in README
+KUBETOKEN = ENV['KUBETOKEN'] || 'b029ee.968a33e8d8e6bb0d'.freeze
+
+$baseInstallScript = <<BASEINSTALLSCRIPT
+
+set -x
+cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
+        https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+
+yum install -y net-tools screen tree telnet kubelet kubeadm docker rsync --nogpgcheck
+systemctl enable kubelet && systemctl start kubelet
+systemctl enable docker && systemctl start docker
+
+setenforce 0
+sed -i 's/SELINUX=enforcing/SELINUX=enforcing/g' /etc/selinux/config
+swapoff -a
+sed -i '/swap/s/^/#/g' /etc/fstab
+echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
+BASEINSTALLSCRIPT
+
+$kubeMinionScript = <<MINIONSCRIPT
+
+set -x
+kubeadm reset
+
+kubeadm join --discovery-token-unsafe-skip-ca-verification --token #{KUBETOKEN} #{MASTER_IP}:6443
+MINIONSCRIPT
+
+Vagrant.configure('2') do |config|
+    config.vm.box = BOX_IMAGE
+    config.vm.box_check_update = true
+
+    config.vm.provider 'virtualbox' do |l|
+        l.cpus = 1
+        l.memory = '1024'
+    end
+
+    config.vm.define "node#{i}" do |subconfig|
+        subconfig.vm.hostname = "node#{i}"
+        subconfig.vm.network :private_network, ip: (NODE_IP_NW + (i + 10).to_s)
+        subconfig.vm.provider :virtualbox do |vb|
+            # Storage configuration
+            if File.exist?(".vagrant/node#{i}-disk-1.vdi")
+                vb.customize ['storagectl', :id, '--name', 'SATAController', '--remove']
+            end
+            vb.customize ['storagectl', :id, '--name', 'SATAController', '--add', 'sata']
+            (1..DISK_COUNT.to_i).each do |diskI|
+                unless File.exist?(".vagrant/node#{i}-disk-#{diskI}.vdi")
+                    vb.customize ['createhd', '--filename', ".vagrant/node#{i}-disk-#{diskI}.vdi", '--variant', 'Standard', '--size', DISK_SIZE_GB * 1024]
+                end
+                vb.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', diskI - 1, '--device', diskI - 1, '--type', 'hdd', '--medium', ".vagrant/node#{i}-disk-#{diskI}.vdi"]
+            end
+        end
+        subconfig.vm.synced_folder "data/node#{i}/", '/data', type: 'rsync',
+                                                              create: true, owner: 'root', group: 'root',
+                                                              rsync__args: ["--rsync-path='sudo rsync'", '--archive', '--delete', '-z']
+        # Provision
+        subconfig.vm.provision :shell, inline: $baseInstallScript
+        subconfig.vm.provision :shell, inline: $kubeMinionScript
+    end
+end
