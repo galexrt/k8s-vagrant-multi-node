@@ -18,7 +18,9 @@ KUBETOKEN ?= 'b029ee.968a33e8d8e6bb0d'
 up: master nodes
 	# Copy kubeconfig
 	mkdir -p data/.kube
-	vagrant ssh master -c 'sudo cat /root/.kube/config' > data/.kube/config
+	TEMPKCONFIG = $(shell mktemp)
+	vagrant ssh master -c 'sudo cat /root/.kube/config' > $(TEMPKCONFIG)
+	# TODO Configure kubectl config current
 
 master:
 	vagrant up
