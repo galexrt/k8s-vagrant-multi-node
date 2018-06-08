@@ -8,11 +8,14 @@ Inspiration to this project was [coolsvap/kubeadm-vagrant](https://github.com/co
 
 ## Hardware Requirements
 * Master
-    * CPU: 2
+    * CPU: 2 Cores
     * Memory: 2GB
-* One Node:
-    * CPU: 1
+* 1x Node:
+    * CPU: 1 Core
     * Memory: 1GB
+
+These values can currently only be changed by editing `Vagrantfile` and `Vagrantfile_nodes` directly,
+but will probably be configurable by environment variables in the future.
 
 ## Usage
 ### Starting the environment
@@ -41,3 +44,9 @@ make load-image IMG=my-private-registry.com/your_name/your_image_name:your_tag
 
 ### Data inside VM
 See the `data/VM_NAME/` directories, where `VM_NAME` is for example `master`.
+
+## Variables
+TODO
+
+## ToDo
+- [ ] Make resources configurable by environment variables

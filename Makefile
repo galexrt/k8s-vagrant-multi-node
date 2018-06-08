@@ -22,11 +22,23 @@ up: master nodes
 master:
 	vagrant up
 
-	CLUSTERCERTSDIR := $(shell mktemp -d)
-	vagrant ssh master -c 'sudo cat /root/.kube/config' > $(CLUSTERCERTSDIR)/config
-	grep -oP 'client-certificate-data: (.+)' .kube/config | cut -d' ' -f2 > $(CLUSTERCERTSDIR)/client-certificate.crt
-	grep -oP 'client-key-data: (.+)' .kube/config | cut -d' ' -f2 > $(CLUSTERCERTSDIR)/client-key.crt
-	vagrant ssh master -c 'sudo cat /etc/kubernetes/pki/ca.crt' > $(CLUSTERCERTSDIR)/ca.crt
+	$(eval CLUSTERCERTSDIR := $(shell mktemp -d))
+
+	vagrant ssh master -c 'sudo cat /etc/kubernetes/pki/ca.crt' \
+		> $(CLUSTERCERTSDIR)/ca.crt
+	vagrant ssh master -c 'sudo cat /root/.kube/config' \
+		> $(CLUSTERCERTSDIR)/config
+	echo "" >> $(CLUSTERCERTSDIR)/config
+	@grep -P 'client-certificate-data:' $(CLUSTERCERTSDIR)/config | \
+		sed -e 's/^[ \t]*//' | \
+		cut -d' ' -f2 | \
+		base64 -d -i \
+		> $(CLUSTERCERTSDIR)/client-certificate.crt
+	@grep -P 'client-key-data:' $(CLUSTERCERTSDIR)/config | \
+		sed -e 's/^[ \t]*//' | \
+		cut -d' ' -f2 | \
+		base64 -d -i \
+		> $(CLUSTERCERTSDIR)/client-key.key
 
 	# kubeclt create cluster
 	kubectl \
@@ -37,12 +49,12 @@ master:
 			--certificate-authority=$(CLUSTERCERTSDIR)/ca.crt
 	kubectl \
 		config set-credentials \
-			$(CLUSTER_NAME)-kubernetes-admin
+			$(CLUSTER_NAME)-kubernetes-admin \
 			--embed-certs=true \
-			--username=kubernetes-admin
+			--username=kubernetes-admin \
 			--client-certificate=$(CLUSTERCERTSDIR)/client-certificate.crt \
-			--client-key=$(CLUSTERCERTSDIR)/client-key.crt
-	rm -rf $(CLUSTERCERTSDIR)
+			--client-key=$(CLUSTERCERTSDIR)/client-key.key
+	@rm -rf $(CLUSTERCERTSDIR)
 
 	# kubeclt create context
 	kubectl \
