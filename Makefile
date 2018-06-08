@@ -23,7 +23,7 @@ preflight: token ## Gather checks and variables for the the `up` target
 	$(eval KUBETOKEN := $(shell cat $(MFILECWD)/.vagrant/KUBETOKEN))
 
 token: ## Generate a kubeadm join token
-	## Kubeadm join token format is: `[a-z0-9]{6}.[a-z0-9]{16}`
+	@## Kubeadm join token format is: `[a-z0-9]{6}.[a-z0-9]{16}`
 	@if [ ! -f $(MFILECWD)/.vagrant/KUBETOKEN ]; then \
 		if [ -z "$(KUBETOKEN)" ]; then \
 			echo "$(shell cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1).$(shell cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 16 | head -n 1)" > $(MFILECWD)/.vagrant/KUBETOKEN; \
@@ -36,7 +36,9 @@ up: preflight master nodes ## Start master and nodes
 
 master: ## Start up masters (automatically done by `up` target)
 	vagrant up
+	make kubectl
 
+kubectl: ## Configure kubeconfig using `kubectl config`
 	$(eval CLUSTERCERTSDIR := $(shell mktemp -d))
 
 	vagrant ssh master -c 'sudo cat /etc/kubernetes/pki/ca.crt' \
