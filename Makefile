@@ -59,7 +59,7 @@ master: ## Start up masters (automatically done by `up` target)
 		config set-cluster \
 			$(CLUSTER_NAME) \
 			--embed-certs=true \
-			--server=$(MASTER_IP):6443 \
+			--server=https://$(MASTER_IP):6443 \
 			--certificate-authority=$(CLUSTERCERTSDIR)/ca.crt
 	kubectl \
 		config set-credentials \
