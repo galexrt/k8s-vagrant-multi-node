@@ -18,6 +18,22 @@ Inspiration to this project was [coolsvap/kubeadm-vagrant](https://github.com/co
 These values can currently only be changed by editing `Vagrantfile` and `Vagrantfile_nodes` directly,
 but will probably be configurable by environment variables in the future.
 
+## Quickstart
+To start with the defaults master and two workers, run the following:
+```
+$ make up -j 3
+$ kubectl get componentstatus
+NAME                 STATUS    MESSAGE              ERROR
+scheduler            Healthy   ok
+controller-manager   Healthy   ok
+etcd-0               Healthy   {"health": "true"}
+$ kubectl get nodes
+NAME      STATUS    ROLES     AGE       VERSION
+master    Ready     master    9m        v1.10.4
+node1     Ready     <none>    9m        v1.10.4
+node2     Ready     <none>    9m        v1.10.4
+```
+
 ## Usage
 ### Starting the environment
 To start up the Vagrant Kubernetes multi node environment (non parallel) run:
