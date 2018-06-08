@@ -84,7 +84,7 @@ clean-master:
 	-vagrant destroy -f
 
 clean-node-%:
-	-VAGRANT_VAGRANTFILE=Vagrantfile_nodes vagrant destroy -f node$*
+	-VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant destroy -f node$*
 
 clean-data:
 	rm -rf "$(PWD)/data/*"
@@ -96,7 +96,15 @@ load-image-master:
 	docker save $(IMG) | vagrant ssh "master" -t -c 'sudo docker load'
 
 load-image-node-%:
-	docker save $(IMG) | NODE=$* VAGRANT_VAGRANTFILE=Vagrantfile_nodes vagrant ssh "node$*" -t -c 'sudo docker load'
+	docker save $(IMG) | VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant ssh "node$*" -t -c 'sudo docker load'
 
-.PHONY: up master nodes stop clean clean-master clean-data load-image
+status: status-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "status-node-$$i"; done)
+
+status-master:
+	@vagrant status | tail -n+3 | head -n-5
+
+status-node-%:
+	@VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant status | tail -n+3 | head -n-5
+
+.PHONY: up master nodes stop clean clean-master clean-data load-image status
 .EXPORT_ALL_VARIABLES:
