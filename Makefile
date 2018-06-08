@@ -32,15 +32,17 @@ stop:
 	vagrant halt -f
 	VAGRANT_VAGRANTFILE=Vagrantfile_nodes vagrant halt -f
 
-clean:
-	vagrant halt -f
-	for i in $(shell seq 1 $(NODE_COUNT)); do VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$$i vagrant halt -f; done
+clean: clean-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done)
+
+clean-master:
 	vagrant destroy -f
-	for i in $(shell seq 1 $(NODE_COUNT)); do VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$$i vagrant destroy -f; done
+
+clean-node-%:
+	VAGRANT_VAGRANTFILE=Vagrantfile_nodes vagrant destroy -f node$*; done
 
 clean-data:
 	rm -rf "$(PWD)/data/*"
 	rm -rf "$(PWD)/.vagrant/*.vdi"
 
-.PHONY: up master nodes stop clean clean-data
+.PHONY: up master nodes stop clean clean-master clean-data
 .EXPORT_ALL_VARIABLES:
