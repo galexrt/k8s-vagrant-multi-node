@@ -47,6 +47,7 @@ grep -q -- '--node-ip=' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf &&
     sed -ri -e 's/KUBELET_NETWORK_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ /KUBELET_NETWORK_ARGS=/' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 sed -i 's/KUBELET_NETWORK_ARGS=/KUBELET_NETWORK_ARGS=--node-ip=#{MASTER_IP} /' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 
+systemctl daemon-reload
 systemctl restart kubelet.service
 
 mkdir -p $HOME/.kube
