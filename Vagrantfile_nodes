@@ -1,7 +1,7 @@
 # Box setup
 BOX_IMAGE = ENV['BOX_IMAGE'] || 'centos/7'.freeze
 
-i = ENV["NODE"].to_i || 1
+i = ENV['NODE'].to_i || 1
 
 # Disk setup
 DISK_COUNT = ENV['DISK_COUNT'].to_i || 1
@@ -9,6 +9,7 @@ DISK_SIZE_GB = ENV['DISK_SIZE_GB'].to_i || 10
 # Network
 MASTER_IP = ENV['MASTER_IP'] || '192.168.26.10'.freeze
 NODE_IP_NW = ENV['NODE_IP_NW'] || '192.168.26.'.freeze
+NODE_IP = NODE_IP_NW + (i + 10).to_s
 
 # Generate new using steps in README
 KUBETOKEN = ENV['KUBETOKEN'] || 'b029ee.968a33e8d8e6bb0d'.freeze
@@ -44,6 +45,9 @@ set -x
 kubeadm reset
 
 kubeadm join --discovery-token-unsafe-skip-ca-verification --token #{KUBETOKEN} #{MASTER_IP}:6443
+grep -q -- '--node-ip=' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf && \
+    sed -ri -e 's/KUBELET_NETWORK_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ /KUBELET_NETWORK_ARGS=/' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+sed -i 's/KUBELET_NETWORK_ARGS=/KUBELET_NETWORK_ARGS=--node-ip=#{NODE_IP} /' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 MINIONSCRIPT
 
 Vagrant.configure('2') do |config|
@@ -57,7 +61,7 @@ Vagrant.configure('2') do |config|
 
     config.vm.define "node#{i}" do |subconfig|
         subconfig.vm.hostname = "node#{i}"
-        subconfig.vm.network :private_network, ip: (NODE_IP_NW + (i + 10).to_s)
+        subconfig.vm.network :private_network, ip: NODE_IP
         subconfig.vm.provider :virtualbox do |vb|
             # Storage configuration
             if File.exist?(".vagrant/node#{i}-disk-1.vdi")
