@@ -132,4 +132,4 @@ help: ## Show help menu
 
 .DEFAULT_GOAL := help
 .EXPORT_ALL_VARIABLES:
-.PHONY: preflight up master nodes stop clean clean-master clean-data load-image status help
+.PHONY: preflight up master nodes stop clean clean-data load-image status help
