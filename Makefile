@@ -43,17 +43,15 @@ kubectl: ## Configure kubeconfig using `kubectl config`
 
 	vagrant ssh master -c 'sudo cat /etc/kubernetes/pki/ca.crt' \
 		> $(CLUSTERCERTSDIR)/ca.crt
-	vagrant ssh master -c 'sudo cat /root/.kube/config' \
-		> $(CLUSTERCERTSDIR)/config
-	@grep -P 'client-certificate-data:' $(CLUSTERCERTSDIR)/config | \
-		sed -e 's/^[ \t]*//' | \
-		cut -d' ' -f2 | \
-		base64 -d -i \
+	vagrant ssh master -c 'sudo grep -P "client-certificate-data:" /root/.kube/config | \
+		sed -e "s/^[ \t]*//" | \
+		cut -d" " -f2 | \
+		base64 -d -i' \
 		> $(CLUSTERCERTSDIR)/client-certificate.crt
-	@grep -P 'client-key-data:' $(CLUSTERCERTSDIR)/config | \
-		sed -e 's/^[ \t]*//' | \
-		cut -d' ' -f2 | \
-		base64 -d -i \
+	vagrant ssh master -c 'sudo grep -P "client-key-data:" /root/.kube/config | \
+		sed -e "s/^[ \t]*//" | \
+		cut -d" " -f2 | \
+		base64 -d -i' \
 		> $(CLUSTERCERTSDIR)/client-key.key
 
 	# kubeclt create cluster
@@ -63,6 +61,7 @@ kubectl: ## Configure kubeconfig using `kubectl config`
 			--embed-certs=true \
 			--server=https://$(MASTER_IP):6443 \
 			--certificate-authority=$(CLUSTERCERTSDIR)/ca.crt
+	# kubectl create user
 	kubectl \
 		config set-credentials \
 			$(CLUSTER_NAME)-kubernetes-admin \
