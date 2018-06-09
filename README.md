@@ -1,5 +1,6 @@
 # k8s-vagrant-multi-node
-Inspiration to this project was [coolsvap/kubeadm-vagrant](https://github.com/coolsvap/kubeadm-vagrant).
+This project is based on work from [coolsvap/kubeadm-vagrant](https://github.com/coolsvap/kubeadm-vagrant) by [@coolsvap](https://twitter.com/coolsvap).
+
 
 ## Prerequisites
 * Vagrant (tested with `2.1.1`)
