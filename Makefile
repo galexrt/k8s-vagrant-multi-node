@@ -30,7 +30,7 @@ token: ## Generate a kubeadm join token
 		else \
 			echo "$(KUBETOKEN)" > $(MFILECWD)/.vagrant/KUBETOKEN; \
 		fi; \
-	fi;
+	fi
 
 up: preflight master nodes ## Start master and nodes
 	make kubectl
@@ -121,10 +121,20 @@ load-image-node-%:
 status: status-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "status-node-$$i"; done) ## Show status of master and node VMs
 
 status-master:
-	@vagrant status | tail -n+3 | head -n-5
+	@STATUS_OUT="$$(vagrant status | tail -n+3)"; \
+		if (( $$(echo "$$STATUS_OUT" | wc -l) > 5 )); then \
+			echo "$$STATUS_OUT" | head -n-5; \
+		else \
+			echo "$$STATUS_OUT" | head -n-2; \
+		fi
 
 status-node-%:
-	@VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant status | tail -n+3 | head -n-5
+	@STATUS_OUT="$$(VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant status | tail -n+3)"; \
+		if (( $$(echo "$$STATUS_OUT" | wc -l) > 5 )); then \
+			echo "$$STATUS_OUT" | head -n-5; \
+		else \
+			echo "$$STATUS_OUT" | head -n-2; \
+		fi
 
 help: ## Show help menu
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
