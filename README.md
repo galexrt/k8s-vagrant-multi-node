@@ -26,6 +26,7 @@ To start with the defaults, 1x master and 2x workers, run the following:
 ```
 $ make up -j 3
 ```
+The `-j3` will cause three VMs to be started in parallel to speed up the cluster creation.
 > **NOTE** Your `kubectl` is automatically configured to use a context for the
 > created cluster, after the master VM is started.
 > The context is named after the directory the `Makefile` is in.
@@ -44,7 +45,6 @@ master    Ready     master    4m        v1.10.4
 node1     Ready     <none>    4m        v1.10.4
 node2     Ready     <none>    4m        v1.10.4
 ```
-The `-j3` will cause three targets, in this VMs, to be started at the same time.
 
 ## Usage
 ### Starting the environment
@@ -72,9 +72,9 @@ node2                     not created (virtualbox)
 
 ### Shutting down the environment
 To destroy the Vagrant environment run:
-```bash
-make clean
-make clean-data
+```
+$ make clean
+$ make clean-data
 ```
 
 ### Copy local Docker image into VMs
@@ -86,6 +86,23 @@ $ make load-image IMG=my-private-registry.com/your_name/your_image_name:your_tag
 
 ### Data inside VM
 See the `data/VM_NAME/` directories, where `VM_NAME` is for example `master`.
+
+### Show `make` targets
+```
+$ make help
+clean                          Destroy master and node VMs
+clean-data                     Remove data (shared folders) and other disks from all VMs
+help                           Show help menu
+kubectl                        Configure kubeconfig using `kubectl config`
+load-image                     Load local Docker image into master and node VMs
+master                         Start up masters (automatically done by `up` target)
+nodes                          Start up the nodes by utilizing the `node-X` target.
+preflight                      Gather checks and variables for the the `up` target
+status                         Show status of master and node VMs
+stop                           Stop/Halt all masters and nodes
+token                          Generate a kubeadm join token
+up                             Start master and nodes
+```
 
 ## Variables
 | Variable Name     | Default Value            | Description                                                                                          |
