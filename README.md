@@ -90,18 +90,27 @@ See the `data/VM_NAME/` directories, where `VM_NAME` is for example `master`.
 ### Show `make` targets
 ```
 $ make help
-clean                          Destroy master and node VMs
-clean-data                     Remove data (shared folders) and other disks from all VMs
-help                           Show help menu
-kubectl                        Configure kubeconfig using `kubectl config`
-load-image                     Load local Docker image into master and node VMs
-master                         Start up masters (automatically done by `up` target)
-nodes                          Start up the nodes by utilizing the `node-X` target.
-preflight                      Gather checks and variables for the the `up` target
-status                         Show status of master and node VMs
-stop                           Stop/Halt all masters and nodes
-token                          Generate a kubeadm join token
-up                             Start master and nodes
+clean                          Destroy master and node VMs.
+clean-data                     Remove data (shared folders) and disks from all VMs.
+clean-master                   Remove the master VM.
+clean-node-%                   Remove a node VM, where `%` is the number of the node.
+help                           Show this help menu.
+kubectl                        Configure kubeconfig using `kubectl config` (automatically done by `up` target).
+load-image                     Load local/pulled Docker image into master and all node VMs.
+load-image-master              Load local/pulled image into master VM.
+load-image-node-%              Load local/pulled image into node VM, where `%` is the number of the node.
+preflight                      Run checks and gather variables, used for the the `up` target.
+start-master                   Start up master VM (automatically done by `up` target).
+start-nodes                    Start up the nodes by utilizing the `node-X` target (automatically done by `up` target).
+start-node-%                   Start a node VM, where `%` is the number of the node.
+status-master                  Show status of the master VM.
+status-node-%                  Show status of a node VM, where `%` is the number of the node.
+status                         Show status of master and node VMs.
+stop-master                    Stop/Halt the master VM.
+stop-node-%                    Stop/Halt a node VM, where `%` is the number of the node.
+stop                           Stop/Halt all masters and nodes.
+token                          Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_MAKEFILE/.vagrant/KUBETOKEN`).
+up                             Start Kubernetes Vagrant multi-node cluster. Creates, starts and bootsup the master and node VMs.
 ```
 
 ## Variables

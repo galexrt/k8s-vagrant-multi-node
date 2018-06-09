@@ -19,26 +19,23 @@ K8S_DASHBOARD ?= false
 CLUSTER_NAME ?= $(shell basename $(MFILECWD))
 # === END USER OPTIONS ===
 
-preflight: token ## Gather checks and variables for the the `up` target
+preflight: token ## Run checks and gather variables, used for the the `up` target.
 	$(eval KUBETOKEN := $(shell cat $(MFILECWD)/.vagrant/KUBETOKEN))
 
-token: ## Generate a kubeadm join token
+token: ## Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_MAKEFILE/.vagrant/KUBETOKEN`).
 	@## Kubeadm join token format is: `[a-z0-9]{6}.[a-z0-9]{16}`
-	@if [ ! -f $(MFILECWD)/.vagrant/KUBETOKEN ]; then \
+	@if [ ! -f "$(MFILECWD)/.vagrant/KUBETOKEN" ]; then \
 		if [ -z "$(KUBETOKEN)" ]; then \
 			echo "$(shell cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1).$(shell cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 16 | head -n 1)" > $(MFILECWD)/.vagrant/KUBETOKEN; \
 		else \
-			echo "$(KUBETOKEN)" > $(MFILECWD)/.vagrant/KUBETOKEN; \
+			echo "$(KUBETOKEN)" > "$(MFILECWD)/.vagrant/KUBETOKEN"; \
 		fi; \
 	fi
 
-up: preflight master nodes ## Start master and nodes
-	make kubectl
+up: preflight start-master start-nodes ## Start Kubernetes Vagrant multi-node cluster. Creates, starts and bootsup the master and node VMs.
+	@make kubectl
 
-master: ## Start up masters (automatically done by `up` target)
-	vagrant up
-
-kubectl: ## Configure kubeconfig using `kubectl config`
+kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` (automatically done by `up` target).
 	$(eval CLUSTERCERTSDIR := $(shell mktemp -d))
 
 	vagrant ssh master -c 'sudo cat /etc/kubernetes/pki/ca.crt' \
@@ -70,7 +67,6 @@ kubectl: ## Configure kubeconfig using `kubectl config`
 			--client-certificate=$(CLUSTERCERTSDIR)/client-certificate.crt \
 			--client-key=$(CLUSTERCERTSDIR)/client-key.key
 	@rm -rf $(CLUSTERCERTSDIR)
-
 	# kubeclt create context
 	kubectl \
 		config set-context \
@@ -85,50 +81,58 @@ kubectl: ## Configure kubeconfig using `kubectl config`
 	@echo "kubectl context name: $(CLUSTER_NAME)"
 	@echo
 
-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "node-$$i"; done) ## Start up the nodes by utilizing the `node-X` target.
+start-master: ## Start up master VM (automatically done by `up` target).
+	vagrant up
 
-node-%:
+start-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "start-node-$$i"; done) ## Create and start all node VMs by utilizing the `node-X` target (automatically done by `up` target).
+
+start-node-%: ## Start node VM, where `%` is the number of the node.
 	VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant up
 
-stop: stop-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "stop-node-$$i"; done) ## Stop/Halt all masters and nodes
+stop: stop-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "stop-node-$$i"; done) ## Stop/Halt master and all nodes VMs.
 
-stop-master:
+stop-master: ## Stop/Halt the master VM.
 	vagrant halt -f
 
-stop-node-%:
+stop-node-%: ## Stop/Halt a node VM, where `%` is the number of the node.
 	VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant halt -f
 
-clean: clean-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done) ## Destroy master and node VMs
+stop-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "stop-node-$$i"; done) ## Stop/Halt all node VMs.
 
-clean-master:
+clean: clean-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done) clean-data ## Destroy master and node VMs, and delete data.
+
+clean-master: ## Remove the master VM.
 	-vagrant destroy -f
 
-clean-node-%:
+clean-node-%: ## Remove a node VM, where `%` is the number of the node.
 	-VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant destroy -f node$*
 
-clean-data: ## Remove data (shared folders) and other disks from all VMs
+clean-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done) ## Remove all node VMs.
+
+clean-data: ## Remove data (shared folders) and disks of all VMs (master and nodes).
 	rm -rf "$(PWD)/data/*"
 	rm -rf "$(PWD)/.vagrant/*.vdi"
 
-load-image: load-image-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "load-image-node-$$i"; done) ## Load local Docker image into master and node VMs
+load-image: load-image-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "load-image-node-$$i"; done) ## Load local/pulled Docker image into master and all node VMs.
 
-load-image-master:
+load-image-master: ## Load local/pulled image into master VM.
 	docker save $(IMG) | vagrant ssh "master" -t -c 'sudo docker load'
 
-load-image-node-%:
+load-image-node-%: ## Load local/pulled image into node VM, where `%` is the number of the node.
 	docker save $(IMG) | VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant ssh "node$*" -t -c 'sudo docker load'
 
-status: status-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "status-node-$$i"; done) ## Show status of master and node VMs
+load-image-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "load-image-node-$$i"; done) ## Load local/pulled Docker image into all node VMs.
 
-status-master:
+status: status-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "status-node-$$i"; done) ## Show status of master and all node VMs.
+
+status-master: ## Show status of the master VM.
 	@STATUS_OUT="$$(vagrant status | tail -n+3)"; \
 		if (( $$(echo "$$STATUS_OUT" | wc -l) > 5 )); then \
 			echo "$$STATUS_OUT" | head -n-5; \
 		else \
 			echo "$$STATUS_OUT" | head -n-2; \
 		fi
-
-status-node-%:
+status-node-%: ## Show status of a node VM, where `%` is the number of the node.
 	@STATUS_OUT="$$(VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant status | tail -n+3)"; \
 		if (( $$(echo "$$STATUS_OUT" | wc -l) > 5 )); then \
 			echo "$$STATUS_OUT" | head -n-5; \
@@ -136,9 +140,13 @@ status-node-%:
 			echo "$$STATUS_OUT" | head -n-2; \
 		fi
 
-help: ## Show help menu
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+status-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "status-node-$$i"; done) ## Show status of all node VMs.
+
+help: ## Show this help menu.
+	@grep -E '^[a-zA-Z_-%]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 .DEFAULT_GOAL := help
 .EXPORT_ALL_VARIABLES:
-.PHONY: preflight up master nodes stop clean clean-data load-image status help
+.PHONY: clean clean-data clean-master clean-nodes help kubectl load-image \
+	load-image-master load-image-nodes preflight start-master start-nodes \
+	status-master status-nodes status stop-master stop-nodes stop token up
