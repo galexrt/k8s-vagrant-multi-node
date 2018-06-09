@@ -52,16 +52,18 @@ To start up the Vagrant Kubernetes multi node environment with the default of tw
 ```
 $ make up
 ```
-To start up 4 VMs in parallel run (The `-j` flag does not control how many (worker) VMs are started, the `NODE_COUNT` variable is used for that):
-```
-$ NODE_COUNT=3 make up -j4
-```
-The flag `-j PARALLEL` allows yout to set how many VMs (Makefile targets) will be run at the same time.
-So to start up all VMs (master and three nodes) in parallel, you would add one to the chosen `NODE_COUNT`.
-
 > **NOTE** Your `kubectl` is automatically configured to use a context for the
 > created cluster, after the master VM is started.
 > The context is named after the directory the `Makefile` is in.
+
+### Faster (parallel) environment start
+To start up 4 VMs in parallel run (`-j` flag does not control how many (worker) VMs are started, the `NODE_COUNT` variable is used for that):
+```
+$ NODE_COUNT=3 make up -j4
+```
+The flag `-j CORES/THREADS` allows yout to set how many VMs (Makefile targets) will be run at the same time.
+You can also use `-j $(nproc)` to start as many VMs as cores/threads you have in your machine.
+So to start up all VMs (master and three nodes) in parallel, you would add one to the chosen `NODE_COUNT`.
 
 ### Show status of VMs
 ```
