@@ -1,12 +1,7 @@
 # k8s-vagrant-multi-node
 This project is based on work from [coolsvap/kubeadm-vagrant](https://github.com/coolsvap/kubeadm-vagrant) by [@coolsvap](https://twitter.com/coolsvap).
 
-## Showcase
-### Start
-[![asciicast](https://asciinema.org/a/186375.png)](https://asciinema.org/a/186375)
-
-### Destroy
-[![asciicast](https://asciinema.org/a/186376.png)](https://asciinema.org/a/186376)
+A demo of the start and destroy of a cluster can be found here: [README.md Demo section](#demo).
 
 ## Prerequisites
 * `make`
@@ -85,6 +80,13 @@ See the `data/VM_NAME/` directories, where `VM_NAME` is for example `master`.
 | `K8K8S_DASHBOARD` | `false`                  | Install the Kubernetes dashboard addon.                                                              |
 | `CLUSTER_NAME`    | `k8s-vagrant-multi-node` | The name of the directory the Makefile is in.                                                        |
 | `KUBETOKEN`       | `""` (empty)             | The `kubeadm` "join" token to use. Will be generated automatically using `/dev/urandom/` when empty. |
+
+## Demo
+### Start Cluster
+[![asciicast](https://asciinema.org/a/186375.png)](https://asciinema.org/a/186375)
+
+### Destroy Cluster
+[![asciicast](https://asciinema.org/a/186376.png)](https://asciinema.org/a/186376)
 
 ## ToDo
 - [ ] Make resources configurable by environment variables
