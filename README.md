@@ -1,8 +1,15 @@
 # k8s-vagrant-multi-node
 This project is based on work from [coolsvap/kubeadm-vagrant](https://github.com/coolsvap/kubeadm-vagrant) by [@coolsvap](https://twitter.com/coolsvap).
 
+## Showcase
+### Start
+[![asciicast](https://asciinema.org/a/186375.png)](https://asciinema.org/a/186375)
+
+### Destroy
+[![asciicast](https://asciinema.org/a/186376.png)](https://asciinema.org/a/186376)
 
 ## Prerequisites
+* `make`
 * Vagrant (tested with `2.1.1`)
 * Virtualbox
 * `rsync`
