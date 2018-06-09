@@ -33,10 +33,10 @@ token: ## Generate a kubeadm join token
 	fi;
 
 up: preflight master nodes ## Start master and nodes
+	make kubectl
 
 master: ## Start up masters (automatically done by `up` target)
 	vagrant up
-	make kubectl
 
 kubectl: ## Configure kubeconfig using `kubectl config`
 	$(eval CLUSTERCERTSDIR := $(shell mktemp -d))
