@@ -111,6 +111,7 @@ clean-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-
 
 clean-data: ## Remove data (shared folders) and disks of all VMs (master and nodes).
 	rm -rf "$(PWD)/data/*"
+	rm -rf "$(PWD)/.vagrant/KUBETOKEN"
 	rm -rf "$(PWD)/.vagrant/*.vdi"
 
 load-image: load-image-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "load-image-node-$$i"; done) ## Load local/pulled Docker image into master and all node VMs.
