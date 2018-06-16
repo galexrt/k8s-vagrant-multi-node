@@ -78,7 +78,7 @@ kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` 
 	kubectl config use-context $(CLUSTER_NAME)
 	@echo
 	@echo "kubeclt has been configured to use started k8s-vagrant-multi-node Kubernetes cluster"
-	@echo "kubectl context name: $(CLUSTER_NAME)"
+	kubectl config current-context
 	@echo
 
 start-master: ## Start up master VM (automatically done by `up` target).
