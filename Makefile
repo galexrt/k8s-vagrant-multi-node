@@ -51,7 +51,7 @@ kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` 
 		base64 -d -i' \
 		> $(CLUSTERCERTSDIR)/client-key.key
 
-	# kubeclt create cluster
+	# kubectl create cluster
 	kubectl \
 		config set-cluster \
 			$(CLUSTER_NAME) \
@@ -67,7 +67,7 @@ kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` 
 			--client-certificate=$(CLUSTERCERTSDIR)/client-certificate.crt \
 			--client-key=$(CLUSTERCERTSDIR)/client-key.key
 	@rm -rf $(CLUSTERCERTSDIR)
-	# kubeclt create context
+	# kubectl create context
 	kubectl \
 		config set-context \
 			$(CLUSTER_NAME) \
@@ -77,7 +77,7 @@ kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` 
 	# kubectl switch to created context
 	kubectl config use-context $(CLUSTER_NAME)
 	@echo
-	@echo "kubeclt has been configured to use started k8s-vagrant-multi-node Kubernetes cluster"
+	@echo "kubectl has been configured to use started k8s-vagrant-multi-node Kubernetes cluster"
 	kubectl config current-context
 	@echo
 
