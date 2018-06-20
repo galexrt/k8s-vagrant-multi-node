@@ -26,7 +26,7 @@ token: ## Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_
 	@## Kubeadm join token format is: `[a-z0-9]{6}.[a-z0-9]{16}`
 	@if [ ! -f "$(MFILECWD)/.vagrant/KUBETOKEN" ]; then \
 		if [ -z "$(KUBETOKEN)" ]; then \
-			echo "$(shell cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1).$(shell cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 16 | head -n 1)" > $(MFILECWD)/.vagrant/KUBETOKEN; \
+			echo "$(shell LC_CTYPE=C tr -cd 'a-z0-9' < /dev/urandom | fold -w 6 | head -n 1).$(shell cat /dev/urandom | LC_CTYPE=C tr -cd 'a-z0-9' < /dev/urandom | fold -w 16 | head -n 1)" > $(MFILECWD)/.vagrant/KUBETOKEN; \
 		else \
 			echo "$(KUBETOKEN)" > "$(MFILECWD)/.vagrant/KUBETOKEN"; \
 		fi; \
