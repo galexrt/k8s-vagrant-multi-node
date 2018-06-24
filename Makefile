@@ -99,6 +99,12 @@ stop-node-%: ## Stop/Halt a node VM, where `%` is the number of the node.
 
 stop-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "stop-node-$$i"; done) ## Stop/Halt all node VMs.
 
+ssh-master: ## SSH into the master VM.
+	vagrant ssh
+
+ssh-node-%: ## SSH into a node VM, where `%` is the number of the node.
+	VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant ssh
+
 clean: clean-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done) clean-data ## Destroy master and node VMs, and delete data.
 
 clean-master: ## Remove the master VM.
@@ -133,6 +139,7 @@ status-master: ## Show status of the master VM.
 		else \
 			echo "$$STATUS_OUT" | head -n-2; \
 		fi
+
 status-node-%: ## Show status of a node VM, where `%` is the number of the node.
 	@STATUS_OUT="$$(VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant status | tail -n+3)"; \
 		if (( $$(echo "$$STATUS_OUT" | wc -l) > 5 )); then \
