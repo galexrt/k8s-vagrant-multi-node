@@ -13,6 +13,14 @@ MASTER_IP ?= 192.168.26.10
 NODE_IP_NW ?= 192.168.26.
 POD_NW_CIDR ?= 10.244.0.0/16
 
+# Kubernetes and kubeadm
+KUBERNETES_VERSION ?= ""
+# `kubeadm init` flags for master
+# NOTE: The `--kubernetes-version` is automatically set if `KUBERNETES_VERSION` is given.
+KUBEADM_INIT_FLAGS ?= ""
+# `kubeadm join` flags for nodes
+KUBEADM_JOIN_FLAGS ?= ""
+
 # Addons
 K8S_DASHBOARD ?= false
 
@@ -156,5 +164,5 @@ help: ## Show this help menu.
 .DEFAULT_GOAL := help
 .EXPORT_ALL_VARIABLES:
 .PHONY: clean clean-data clean-master clean-nodes help kubectl load-image \
-	load-image-master load-image-nodes preflight start-master start-nodes \
+	load-image-master load-image-nodes preflight ssh-master start-master start-nodes \
 	status-master status-nodes status stop-master stop-nodes stop token up

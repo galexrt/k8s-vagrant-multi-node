@@ -11,6 +11,10 @@ MASTER_IP = ENV['MASTER_IP'] || '192.168.26.10'.freeze
 NODE_IP_NW = ENV['NODE_IP_NW'] || '192.168.26.'.freeze
 NODE_IP = NODE_IP_NW + (i + 10).to_s
 
+# Kubernetes and kubeadm
+KUBERNETES_VERSION = ENV["KUBERNETES_VERSION"] || ''.freeze
+KUBEADM_JOIN_FLAGS = ENV["KUBEADM_INIT_FLAGS"] || ''.freeze
+
 # Generate new using steps in README
 KUBETOKEN = ENV['KUBETOKEN'] || 'b029ee.968a33e8d8e6bb0d'.freeze
 
@@ -28,7 +32,13 @@ gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
         https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 EOF
 
-yum install -y net-tools screen tree telnet kubelet kubeadm docker rsync --nogpgcheck
+if [ -n "#{KUBERNETES_VERSION}" ]; then
+    KUBERNETES_PACKAGES="kubelet-#{KUBERNETES_VERSION} kubeadm-#{KUBERNETES_VERSION}"
+else
+    KUBERNETES_PACKAGES="kubelet kubeadm"
+fi
+
+yum install --nogpgcheck -y net-tools screen tree telnet docker rsync ${KUBERNETES_PACKAGES}
 systemctl enable kubelet && systemctl start kubelet
 systemctl enable docker && systemctl start docker
 
@@ -43,8 +53,10 @@ $kubeMinionScript = <<SCRIPT
 
 set -x
 kubeadm reset
-
-kubeadm join --discovery-token-unsafe-skip-ca-verification --token #{KUBETOKEN} #{MASTER_IP}:6443
+kubeadm join \
+    #{KUBEADM_JOIN_FLAGS} \
+    --discovery-token-unsafe-skip-ca-verification \
+    --token "#{KUBETOKEN}" "#{MASTER_IP}:6443"
 grep -q -- '--node-ip=' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf && \
     sed -ri -e 's/KUBELET_NETWORK_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ /KUBELET_NETWORK_ARGS=/' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 sed -i 's/KUBELET_NETWORK_ARGS=/KUBELET_NETWORK_ARGS=--node-ip=#{NODE_IP} /' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf

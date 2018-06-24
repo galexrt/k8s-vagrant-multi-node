@@ -9,6 +9,13 @@ POD_NW_CIDR = ENV["POD_NW_CIDR"] || '10.244.0.0/16'.freeze
 # Addons
 K8S_DASHBOARD = false
 
+# Kubernetes and kubeadm
+KUBERNETES_VERSION = ENV["KUBERNETES_VERSION"] || ''.freeze
+KUBEADM_INIT_FLAGS = ENV["KUBEADM_INIT_FLAGS"] || ''.freeze
+if KUBERNETES_VERSION != "" && KUBEADM_INIT_FLAGS == ""
+    KUBEADM_INIT_FLAGS = "--kubernetes-version=#{KUBERNETES_VERSION}"
+end
+
 # Generate new using steps in README
 KUBETOKEN = ENV["KUBETOKEN"] || 'b029ee.968a33e8d8e6bb0d'.freeze
 
@@ -26,7 +33,13 @@ gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
         https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 EOF
 
-yum install -y net-tools screen tree telnet kubelet kubeadm docker rsync --nogpgcheck
+if [ -n "#{KUBERNETES_VERSION}" ]; then
+    KUBERNETES_PACKAGES="kubelet-#{KUBERNETES_VERSION} kubeadm-#{KUBERNETES_VERSION}"
+else
+    KUBERNETES_PACKAGES="kubelet kubeadm"
+fi
+
+yum install --nogpgcheck -y net-tools screen tree telnet docker rsync ${KUBERNETES_PACKAGES}
 systemctl enable kubelet && systemctl start kubelet
 systemctl enable docker && systemctl start docker
 
@@ -41,7 +54,11 @@ $kubeMasterScript = <<SCRIPT
 
 set -x
 kubeadm reset
-kubeadm init --apiserver-advertise-address=#{MASTER_IP} --pod-network-cidr=#{POD_NW_CIDR} --token #{KUBETOKEN} --token-ttl 0
+kubeadm init #{KUBEADM_INIT_FLAGS} \
+    --apiserver-advertise-address=#{MASTER_IP} \
+    --pod-network-cidr=#{POD_NW_CIDR} \
+    --token "#{KUBETOKEN}" \
+    --token-ttl 0
 
 grep -q -- '--node-ip=' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf && \
     sed -ri -e 's/KUBELET_NETWORK_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ /KUBELET_NETWORK_ARGS=/' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
@@ -57,6 +74,7 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 curl --retry 5 --fail -s https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml | \
     awk '/- --kube-subnet-mgr/{print "        - --iface=eth1"}1' | \
     kubectl apply -f -
+
 SCRIPT
 
 # Addons
@@ -65,6 +83,7 @@ $kubeDashScript = <<SCRIPT
 # Kubernetes Dashboard Setup
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
 kubectl proxy &
+
 SCRIPT
 
 Vagrant.configure('2') do |config|
