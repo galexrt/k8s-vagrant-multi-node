@@ -105,6 +105,8 @@ load-image-master              Load local/pulled image into master VM.
 load-image-node-%              Load local/pulled image into node VM, where `%` is the number of the node.
 load-image-nodes               Load local/pulled Docker image into all node VMs.
 preflight                      Run checks and gather variables, used for the the `up` target.
+ssh-master                     SSH into the master VM.
+ssh-node-%                     SSH into a node VM, where `%` is the number of the node.
 start-master                   Start up master VM (automatically done by `up` target).
 start-nodes                    Create and start all node VMs by utilizing the `node-X` target (automatically done by `up` target).
 start-node-%                   Start node VM, where `%` is the number of the node.
