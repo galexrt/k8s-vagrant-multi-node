@@ -81,10 +81,19 @@ $ make clean-data
 ```
 
 ### Copy local Docker image into VMs
+
+The `make load-image` target can be used to copy a docker image from your local docker daemon to all the VMs in your cluster.
+The `IMG` variable can be expressed in a few ways, for example:
 ```
 $ make load-image IMG=your_name/your_image_name:your_tag
 $ make load-image IMG=your_name/your_image_name
 $ make load-image IMG=my-private-registry.com/your_name/your_image_name:your_tag
+```
+
+You can also specify a new image name and tag to use after the image has been copied to the VM's by setting the `TAG` variable.
+This will not change the image/tag in your local docker daemon, it will only affect the image in the VM's.
+```
+$ make load-image IMG=repo/image:tag TAG=new_repo/new_image:new_tag
 ```
 
 ### Data inside VM
