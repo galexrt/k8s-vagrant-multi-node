@@ -13,7 +13,7 @@ NODE_IP = NODE_IP_NW + (i + 10).to_s
 
 # Kubernetes and kubeadm
 KUBERNETES_VERSION = ENV["KUBERNETES_VERSION"] || ''.freeze
-KUBEADM_JOIN_FLAGS = ENV["KUBEADM_INIT_FLAGS"] || ''.freeze
+KUBEADM_JOIN_FLAGS = ENV["KUBEADM_JOIN_FLAGS"] || ''.freeze
 
 # Generate new using steps in README
 KUBETOKEN = ENV['KUBETOKEN'] || 'b029ee.968a33e8d8e6bb0d'.freeze
