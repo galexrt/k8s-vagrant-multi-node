@@ -17,12 +17,12 @@ NODE_IP_NW ?= 192.168.26.
 POD_NW_CIDR ?= 10.244.0.0/16
 
 # Kubernetes and kubeadm
-KUBERNETES_VERSION ?= ""
+KUBERNETES_VERSION ?=
 # `kubeadm init` flags for master
 # NOTE: The `--kubernetes-version` is automatically set if `KUBERNETES_VERSION` is given.
-KUBEADM_INIT_FLAGS ?= ""
+KUBEADM_INIT_FLAGS ?=
 # `kubeadm join` flags for nodes
-KUBEADM_JOIN_FLAGS ?= ""
+KUBEADM_JOIN_FLAGS ?=
 
 # Addons
 K8S_DASHBOARD ?= false
