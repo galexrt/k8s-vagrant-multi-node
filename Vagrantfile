@@ -111,7 +111,7 @@ Vagrant.configure('2') do |config|
                 unless File.exist?(".vagrant/master-disk-#{diskI}.vdi")
                     vb.customize ['createhd', '--filename', ".vagrant/master-disk-#{diskI}.vdi", '--variant', 'Standard', '--size', DISK_SIZE_GB * 1024]
                 end
-                vb.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', diskI - 1, '--device', diskI - 1, '--type', 'hdd', '--medium', ".vagrant/master-disk-#{diskI}.vdi"]
+                vb.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', diskI - 1, '--device', 0, '--type', 'hdd', '--medium', ".vagrant/master-disk-#{diskI}.vdi"]
             end
         end
         subconfig.vm.synced_folder 'data/master/', '/data', type: 'rsync',
