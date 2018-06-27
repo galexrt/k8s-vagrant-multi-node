@@ -6,6 +6,8 @@ i = ENV['NODE'].to_i || 1
 # Disk setup
 DISK_COUNT = ENV['DISK_COUNT'].to_i || 1
 DISK_SIZE_GB = ENV['DISK_SIZE_GB'].to_i || 10
+# Memory setup
+MEMORY_SIZE_GB = ENV['MEMORY_SIZE_GB'].to_i || 1
 # Network
 MASTER_IP = ENV['MASTER_IP'] || '192.168.26.10'.freeze
 NODE_IP_NW = ENV['NODE_IP_NW'] || '192.168.26.'.freeze
@@ -82,7 +84,7 @@ Vagrant.configure('2') do |config|
 
     config.vm.provider 'virtualbox' do |l|
         l.cpus = 1
-        l.memory = '1024'
+        l.memory = MEMORY_SIZE_GB * 1024
     end
 
     config.vm.define "node#{i}" do |subconfig|

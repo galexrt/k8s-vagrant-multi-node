@@ -90,11 +90,6 @@ Vagrant.configure('2') do |config|
     config.vm.box = BOX_IMAGE
     config.vm.box_check_update = true
 
-    config.vm.provider 'virtualbox' do |l|
-        l.cpus = 1
-        l.memory = '1024'
-    end
-
     config.vm.define 'master' do |subconfig|
         subconfig.vm.hostname = 'master'
         subconfig.vm.network :private_network, ip: MASTER_IP
