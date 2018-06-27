@@ -134,7 +134,7 @@ up                             Start Kubernetes Vagrant multi-node cluster. Crea
 ## Variables
 | Variable Name        | Default Value            | Description                                                                                                                                                      |
 | -------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BOX_IMAGE`          | `centos/7`               | Set the VMs box image to use.                                                                                                                                    |
+| `BOX_IMAGE`          | `generic/fedora27`               | Set the VMs box image to use.                                                                                                                                    |
 | `DISK_COUNT`         | `1`                      | Set how many additional disks will be added to the VMs.                                                                                                          |
 | `DISK_SIZE_GB`       | `10` GB                  | Size of additional disks added to the VMs.                                                                                                                       |
 | `MEMORY_SIZE_GB`     | `1` GB                   | Size of memory (in GB) to be allocated for each of the worker VMs.                                                                                               |

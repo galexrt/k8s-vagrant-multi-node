@@ -1,5 +1,5 @@
 # Box setup
-BOX_IMAGE = ENV["BOX_IMAGE"] || 'centos/7'.freeze
+BOX_IMAGE = ENV["BOX_IMAGE"] || 'generic/fedora27'.freeze
 # Disk setup
 DISK_COUNT = ENV["DISK_COUNT"].to_i || 2
 DISK_SIZE_GB = ENV["DISK_SIZE_GB"].to_i || 10
@@ -39,7 +39,7 @@ else
     KUBERNETES_PACKAGES="kubelet kubeadm"
 fi
 
-yum install --nogpgcheck -y net-tools screen tree telnet docker rsync ${KUBERNETES_PACKAGES}
+dnf install --nogpgcheck -y net-tools screen tree telnet docker rsync ${KUBERNETES_PACKAGES}
 systemctl enable kubelet && systemctl start kubelet
 systemctl enable docker && systemctl start docker
 
@@ -48,6 +48,7 @@ sed -i 's/SELINUX=enforcing/SELINUX=enforcing/g' /etc/selinux/config
 swapoff -a
 sed -i '/swap/s/^/#/g' /etc/fstab
 echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
+systemctl stop firewalld && systemctl disable firewalld && systemctl mask firewalld
 SCRIPT
 
 $kubeMasterScript = <<SCRIPT

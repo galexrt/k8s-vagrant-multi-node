@@ -5,7 +5,7 @@ REVERSE_LINES=sed -e '1!G;h;$$!d'
 
 # === BEGIN USER OPTIONS ===
 # Box setup
-BOX_IMAGE ?= centos/7
+BOX_IMAGE ?= generic/fedora27
 # Disk setup
 DISK_COUNT ?= 1
 DISK_SIZE_GB ?= 10
