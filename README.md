@@ -132,22 +132,25 @@ up                             Start Kubernetes Vagrant multi-node cluster. Crea
 ```
 
 ## Variables
-| Variable Name        | Default Value            | Description                                                                                                                                                      |
-| -------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BOX_IMAGE`          | `centos/7`               | Set the VMs box image to use.                                                                                                                                    |
-| `DISK_COUNT`         | `1`                      | Set how many additional disks will be added to the VMs.                                                                                                          |
-| `DISK_SIZE_GB`       | `10` GB                  | Size of additional disks added to the VMs.                                                                                                                       |
-| `MEMORY_SIZE_GB`     | `1` GB                   | Size of memory (in GB) to be allocated for each of the worker VMs.                                                                                               |
-| `NODE_COUNT`         | `2`                      | How many worker nodes should be spawned.                                                                                                                         |
-| `MASTER_IP`          | `192.168.26.10`          | The Kubernetes master node IP.                                                                                                                                   |
-| `NODE_IP_NW`         | `192.168.26.`            | The first three parts of the IPs used for the nodes.                                                                                                             |
-| `POD_NW_CIDR`        | `10.244.0.0/16`          | The Pod (container) network CIDR.                                                                                                                                |
-| `K8K8S_DASHBOARD`    | `false`                  | Install the Kubernetes dashboard addon.                                                                                                                          |
-| `CLUSTER_NAME`       | `k8s-vagrant-multi-node` | The name of the directory the Makefile is in.                                                                                                                    |
-| `KUBETOKEN`          | `""` (empty)             | The `kubeadm` "join" token to use. Will be generated automatically using `/dev/urandom/` when empty.                                                             |
-| `KUBEADM_INIT_FLAGS` | `""` (empty)             | The `kubeadm init` flags to use.                                                                                                                                 |
-| `KUBEADM_JOIN_FLAGS` | `""` (empty)             | The `kubeadm join` flags to use.                                                                                                                                 |
-| `KUBERNETES_VERSION` | `""` (empty)             | The `kubeadm` and `kubelet` package and API server version to install (`KUBEADM_INIT_FLAGS` will be set to `--kubernetes-version=$KUBERNETES_VERSION` if unset). |
+| Variable Name           | Default Value            | Description                                                                                                                                                      |
+| ----------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BOX_IMAGE`             | `centos/7`               | Set the VMs box image to use.                                                                                                                                    |
+| `DISK_COUNT`            | `1`                      | Set how many additional disks will be added to the VMs.                                                                                                          |
+| `DISK_SIZE_GB`          | `10` GB                  | Size of additional disks added to the VMs.                                                                                                                       |
+| `MASTER_CPUS`           | `2` Cores                | How many CPU cores to use for the master VM.                                                                                                                     |
+| `MASTER_MEMORY_SIZE_GB` | `2` GB                   | Size of memory (in GB) to be allocated for the master VM.                                                                                                        |
+| `NODE_CPUS`             | `1` Core                 | How many CPU cores to use for each node VM.                                                                                                                      |
+| `NODE_MEMORY_SIZE_GB`   | `1` GB                   | Size of memory (in GB) to be allocated for each of the worker VMs.                                                                                               |
+| `NODE_COUNT`            | `2`                      | How many worker nodes should be spawned.                                                                                                                         |
+| `MASTER_IP`             | `192.168.26.10`          | The Kubernetes master node IP.                                                                                                                                   |
+| `NODE_IP_NW`            | `192.168.26.`            | The first three parts of the IPs used for the nodes.                                                                                                             |
+| `POD_NW_CIDR`           | `10.244.0.0/16`          | The Pod (container) network CIDR.                                                                                                                                |
+| `K8S_DASHBOARD`         | `false`                  | Install the Kubernetes dashboard addon.                                                                                                                          |
+| `CLUSTER_NAME`          | `k8s-vagrant-multi-node` | The name of the directory the Makefile is in (used for the `kubectl config` context name).                                                                       |
+| `KUBETOKEN`             | `""` (empty)             | The `kubeadm` "join" token to use. Will be generated automatically using `/dev/urandom/` when empty.                                                             |
+| `KUBEADM_INIT_FLAGS`    | `""` (empty)             | The `kubeadm init` flags to use.                                                                                                                                 |
+| `KUBEADM_JOIN_FLAGS`    | `""` (empty)             | The `kubeadm join` flags to use.                                                                                                                                 |
+| `KUBERNETES_VERSION`    | `""` (empty)             | The `kubeadm` and `kubelet` package and API server version to install (`KUBEADM_INIT_FLAGS` will be set to `--kubernetes-version=$KUBERNETES_VERSION` if unset). |
 
 ## Demo
 ### Start Cluster
@@ -155,6 +158,3 @@ up                             Start Kubernetes Vagrant multi-node cluster. Crea
 
 ### Destroy Cluster
 [![asciicast](https://asciinema.org/a/186376.png)](https://asciinema.org/a/186376)
-
-## ToDo
-- [ ] Make resources configurable by environment variables
