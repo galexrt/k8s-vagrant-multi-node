@@ -53,10 +53,20 @@ $kubeMinionScript = <<SCRIPT
 
 set -x
 kubeadm reset
-kubeadm join \
-    #{KUBEADM_JOIN_FLAGS} \
-    --discovery-token-unsafe-skip-ca-verification \
-    --token "#{KUBETOKEN}" "#{MASTER_IP}:6443"
+
+if [ -n "#{KUBEADM_JOIN_FLAGS}" ]; then
+    kubeadm join \
+        #{KUBEADM_JOIN_FLAGS} \
+        --discovery-token-unsafe-skip-ca-verification \
+        --token "#{KUBETOKEN}" \
+        "#{MASTER_IP}:6443"
+else
+    kubeadm join \
+        --discovery-token-unsafe-skip-ca-verification \
+        --token "#{KUBETOKEN}" \
+        "#{MASTER_IP}:6443"
+fi
+
 grep -q -- '--node-ip=' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf && \
     sed -ri -e 's/KUBELET_NETWORK_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ /KUBELET_NETWORK_ARGS=/' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 sed -i 's/KUBELET_NETWORK_ARGS=/KUBELET_NETWORK_ARGS=--node-ip=#{NODE_IP} /' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
