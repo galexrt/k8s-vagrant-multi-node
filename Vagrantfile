@@ -3,6 +3,9 @@ BOX_IMAGE = ENV["BOX_IMAGE"] || 'generic/fedora27'.freeze
 # Disk setup
 DISK_COUNT = ENV["DISK_COUNT"].to_i || 2
 DISK_SIZE_GB = ENV["DISK_SIZE_GB"].to_i || 10
+# Resources
+MASTER_CPUS = ENV['MASTER_CPUS'].to_i || 2
+MASTER_MEMORY_SIZE_GB = ENV['MASTER_MEMORY_SIZE_GB'].to_i || 2
 # Network
 MASTER_IP = ENV["MASTER_IP"] || '192.168.26.10'.freeze
 POD_NW_CIDR = ENV["POD_NW_CIDR"] || '10.244.0.0/16'.freeze
@@ -91,13 +94,15 @@ Vagrant.configure('2') do |config|
     config.vm.box = BOX_IMAGE
     config.vm.box_check_update = true
 
+    config.vm.provider 'virtualbox' do |l|
+        l.cpus = MASTER_CPUS
+        l.memory = MASTER_MEMORY_SIZE_GB * 1024
+    end
+
     config.vm.define 'master' do |subconfig|
         subconfig.vm.hostname = 'master'
         subconfig.vm.network :private_network, ip: MASTER_IP
         subconfig.vm.provider :virtualbox do |vb|
-            # VM Resources
-            vb.customize ['modifyvm', :id, '--cpus', '2']
-            vb.customize ['modifyvm', :id, '--memory', '2048']
             # Storage configuration
             if File.exist?('.vagrant/master-disk-1.vdi')
                 vb.customize ['storagectl', :id, '--name', 'SATAController', '--remove']

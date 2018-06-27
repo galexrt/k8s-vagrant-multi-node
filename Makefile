@@ -9,8 +9,11 @@ BOX_IMAGE ?= generic/fedora27
 # Disk setup
 DISK_COUNT ?= 1
 DISK_SIZE_GB ?= 10
-# Memory setup
-MEMORY_SIZE_GB ?= 1
+# VM Resources
+MASTER_CPUS ?= 2
+MASTER_MEMORY_SIZE_GB ?= 2
+NODE_CPUS ?= 1
+NODE_MEMORY_SIZE_GB ?= 1
 
 NODE_COUNT ?= 2
 # Network
