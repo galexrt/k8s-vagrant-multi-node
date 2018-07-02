@@ -17,6 +17,7 @@ NODE_IP = NODE_IP_NW + (i + 10).to_s
 # Kubernetes and kubeadm
 KUBERNETES_VERSION = ENV["KUBERNETES_VERSION"] || ''.freeze
 KUBEADM_JOIN_FLAGS = ENV["KUBEADM_JOIN_FLAGS"] || ''.freeze
+KUBE_PROXY_IPVS = ENV['KUBE_PROXY_IPVS'] || false
 
 # Generate new using steps in README
 KUBETOKEN = ENV['KUBETOKEN'] || 'b029ee.968a33e8d8e6bb0d'.freeze
@@ -51,6 +52,17 @@ swapoff -a
 sed -i '/swap/s/^/#/g' /etc/fstab
 echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
 systemctl stop firewalld && systemctl disable firewalld && systemctl mask firewalld
+
+if [ "#{KUBE_PROXY_IPVS}" != "false" ]; then
+    cat << EOF > /etc/modules-load.d/ipvs
+ip_vs_sh
+nf_conntrack_ipv4
+ip_vs
+ip_vs_rr
+ip_vs_wrr
+EOF
+fi
+
 SCRIPT
 
 $kubeMinionScript = <<SCRIPT
@@ -71,9 +83,9 @@ else
         "#{MASTER_IP}:6443"
 fi
 
-grep -q -- '--node-ip=' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf && \
-    sed -ri -e 's/KUBELET_NETWORK_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ /KUBELET_NETWORK_ARGS=/' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-sed -i 's/KUBELET_NETWORK_ARGS=/KUBELET_NETWORK_ARGS=--node-ip=#{NODE_IP} /' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+grep -q -- '--node-ip=' /etc/sysconfig/kubelet && \
+    sed -ri -e 's/KUBELET_EXTRA_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ /KUBELET_EXTRA_ARGS=/' /etc/sysconfig/kubelet
+sed -i 's/KUBELET_EXTRA_ARGS=/KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} /' /etc/sysconfig/kubelet
 
 systemctl daemon-reload
 systemctl restart kubelet.service

@@ -145,12 +145,13 @@ up                             Start Kubernetes Vagrant multi-node cluster. Crea
 | `MASTER_IP`             | `192.168.26.10`          | The Kubernetes master node IP.                                                                                                                                   |
 | `NODE_IP_NW`            | `192.168.26.`            | The first three parts of the IPs used for the nodes.                                                                                                             |
 | `POD_NW_CIDR`           | `10.244.0.0/16`          | The Pod (container) network CIDR.                                                                                                                                |
-| `K8K8S_DASHBOARD`       | `false`                  | Install the Kubernetes dashboard addon.                                                                                                                          |
+| `K8S_DASHBOARD`         | `false`                  | Install the Kubernetes dashboard addon.                                                                                                                          |
 | `CLUSTER_NAME`          | `k8s-vagrant-multi-node` | The name of the directory the Makefile is in.                                                                                                                    |
 | `KUBETOKEN`             | `""` (empty)             | The `kubeadm` "join" token to use. Will be generated automatically using `/dev/urandom/` when empty.                                                             |
 | `KUBEADM_INIT_FLAGS`    | `""` (empty)             | The `kubeadm init` flags to use.                                                                                                                                 |
 | `KUBEADM_JOIN_FLAGS`    | `""` (empty)             | The `kubeadm join` flags to use.                                                                                                                                 |
 | `KUBERNETES_VERSION`    | `""` (empty)             | The `kubeadm` and `kubelet` package and API server version to install (`KUBEADM_INIT_FLAGS` will be set to `--kubernetes-version=$KUBERNETES_VERSION` if unset). |
+| `KUBE_PROXY_IPVS`       | `false`                  | Enable IPVS kernel modules to then use IPVS for the kube-proxy.                                                                                                  |
 
 ## Demo
 ### Start Cluster

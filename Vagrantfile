@@ -10,7 +10,7 @@ MASTER_MEMORY_SIZE_GB = ENV['MASTER_MEMORY_SIZE_GB'].to_i || 2
 MASTER_IP = ENV["MASTER_IP"] || '192.168.26.10'.freeze
 POD_NW_CIDR = ENV["POD_NW_CIDR"] || '10.244.0.0/16'.freeze
 # Addons
-K8S_DASHBOARD = false
+K8S_DASHBOARD = ENV['K8S_DASHBOARD'] || false
 
 # Kubernetes and kubeadm
 KUBERNETES_VERSION = ENV["KUBERNETES_VERSION"] || ''.freeze
@@ -18,6 +18,7 @@ KUBEADM_INIT_FLAGS = ENV["KUBEADM_INIT_FLAGS"] || ''.freeze
 if KUBERNETES_VERSION != "" && KUBEADM_INIT_FLAGS == ""
     KUBEADM_INIT_FLAGS = "--kubernetes-version=#{KUBERNETES_VERSION}"
 end
+KUBE_PROXY_IPVS = ENV['KUBE_PROXY_IPVS'] || false
 
 # Generate new using steps in README
 KUBETOKEN = ENV["KUBETOKEN"] || 'b029ee.968a33e8d8e6bb0d'.freeze
@@ -52,6 +53,16 @@ swapoff -a
 sed -i '/swap/s/^/#/g' /etc/fstab
 echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
 systemctl stop firewalld && systemctl disable firewalld && systemctl mask firewalld
+
+if [ "#{KUBE_PROXY_IPVS}" != "false" ]; then
+    cat << EOF > /etc/modules-load.d/ipvs
+ip_vs_sh
+nf_conntrack_ipv4
+ip_vs
+ip_vs_rr
+ip_vs_wrr
+EOF
+fi
 SCRIPT
 
 $kubeMasterScript = <<SCRIPT
@@ -64,9 +75,9 @@ kubeadm init #{KUBEADM_INIT_FLAGS} \
     --token "#{KUBETOKEN}" \
     --token-ttl 0
 
-grep -q -- '--node-ip=' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf && \
-    sed -ri -e 's/KUBELET_NETWORK_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ /KUBELET_NETWORK_ARGS=/' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-sed -i 's/KUBELET_NETWORK_ARGS=/KUBELET_NETWORK_ARGS=--node-ip=#{MASTER_IP} /' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+grep -q -- '--node-ip=' /etc/sysconfig/kubelet && \
+    sed -ri -e 's/KUBELET_EXTRA_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ /KUBELET_EXTRA_ARGS=/' /etc/sysconfig/kubelet
+sed -i 's/KUBELET_EXTRA_ARGS=/KUBELET_EXTRA_ARGS=--node-ip=#{MASTER_IP} /' /etc/sysconfig/kubelet
 
 systemctl daemon-reload
 systemctl restart kubelet.service
@@ -86,8 +97,6 @@ $kubeDashScript = <<SCRIPT
 
 # Kubernetes Dashboard Setup
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
-kubectl proxy &
-
 SCRIPT
 
 Vagrant.configure('2') do |config|
