@@ -152,6 +152,7 @@ up                             Start Kubernetes Vagrant multi-node cluster. Crea
 | `KUBEADM_JOIN_FLAGS`    | `""` (empty)             | The `kubeadm join` flags to use.                                                                                                                                 |
 | `KUBERNETES_VERSION`    | `""` (empty)             | The `kubeadm` and `kubelet` package and API server version to install (`KUBEADM_INIT_FLAGS` will be set to `--kubernetes-version=$KUBERNETES_VERSION` if unset). |
 | `KUBE_PROXY_IPVS`       | `false`                  | Enable IPVS kernel modules to then use IPVS for the kube-proxy.                                                                                                  |
+| `KUBE_NETWORK`          | `flannel`                | What CNI to install, if empty don't install any CNI.                                                                                                        |
 
 ## Demo
 ### Start Cluster

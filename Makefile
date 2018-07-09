@@ -29,6 +29,8 @@ KUBEADM_INIT_FLAGS ?=
 # `kubeadm join` flags for nodes
 KUBEADM_JOIN_FLAGS ?=
 
+KUBE_NETWORK ?= flannel
+
 # Addons
 K8S_DASHBOARD ?= false
 
