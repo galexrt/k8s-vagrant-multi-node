@@ -18,6 +18,7 @@ KUBEADM_INIT_FLAGS = ENV["KUBEADM_INIT_FLAGS"] || ''.freeze
 if KUBERNETES_VERSION != "" && KUBEADM_INIT_FLAGS == ""
     KUBEADM_INIT_FLAGS = "--kubernetes-version=#{KUBERNETES_VERSION}"
 end
+KUBE_NETWORK = ENV['KUBE_NETWORK'] || 'flannel'.freeze
 KUBE_PROXY_IPVS = ENV['KUBE_PROXY_IPVS'] || false
 
 # Generate new using steps in README
@@ -85,11 +86,11 @@ systemctl restart kubelet.service
 mkdir -p $HOME/.kube
 sudo cp -Rf /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
-
-curl --retry 5 --fail -s https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml | \
-    awk '/- --kube-subnet-mgr/{print "        - --iface=eth1"}1' | \
-    kubectl apply -f -
-
+if [ "#{KUBE_NETWORK}" == "flannel" ]; then
+    curl --retry 5 --fail -s https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml | \
+        awk '/- --kube-subnet-mgr/{print "        - --iface=eth1"}1' | \
+        kubectl apply -f -
+fi
 SCRIPT
 
 # Addons
