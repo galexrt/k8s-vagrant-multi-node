@@ -50,7 +50,11 @@ token: ## Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_
 		fi; \
 	fi
 
-up: preflight start-master start-nodes ## Start Kubernetes Vagrant multi-node cluster. Creates, starts and bootsup the master and node VMs.
+up: preflight ## Start Kubernetes Vagrant multi-node cluster. Creates, starts and bootsup the master and node VMs.
+	@make start
+
+start:
+	@make start-master start-nodes
 	@make kubectl
 
 kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` (automatically done by `up` target).
