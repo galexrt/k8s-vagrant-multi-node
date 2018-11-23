@@ -68,7 +68,7 @@ SCRIPT
 $kubeMinionScript = <<SCRIPT
 
 set -x
-kubeadm reset
+kubeadm reset -f
 
 if [ -n "#{KUBEADM_JOIN_FLAGS}" ]; then
     kubeadm join \
