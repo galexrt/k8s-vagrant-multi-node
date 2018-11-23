@@ -69,7 +69,7 @@ SCRIPT
 $kubeMasterScript = <<SCRIPT
 
 set -x
-kubeadm reset
+kubeadm reset -f
 kubeadm init #{KUBEADM_INIT_FLAGS} \
     --apiserver-advertise-address=#{MASTER_IP} \
     --pod-network-cidr=#{POD_NW_CIDR} \
