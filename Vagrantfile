@@ -11,6 +11,7 @@ MASTER_IP = ENV["MASTER_IP"] || '192.168.26.10'.freeze
 POD_NW_CIDR = ENV["POD_NW_CIDR"] || '10.244.0.0/16'.freeze
 # Addons
 K8S_DASHBOARD = ENV['K8S_DASHBOARD'] || false
+K8S_DASHBOARD_VERSION = ENV['K8S_DASHBOARD_VERSION'] || 'v1.10.1'
 
 # Kubernetes and kubeadm
 KUBERNETES_VERSION = ENV["KUBERNETES_VERSION"] || ''.freeze
@@ -97,7 +98,7 @@ SCRIPT
 $kubeDashScript = <<SCRIPT
 
 # Kubernetes Dashboard Setup
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/#{K8S_DASHBOARD_VERSION}/src/deploy/recommended/kubernetes-dashboard.yaml
 SCRIPT
 
 Vagrant.configure('2') do |config|
