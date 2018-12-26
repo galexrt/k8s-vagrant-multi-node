@@ -4,13 +4,19 @@ This project is based on work from [coolsvap/kubeadm-vagrant](https://github.com
 A demo of the start and destroy of a cluster can be found here: [README.md Demo section](#demo).
 
 ## Prerequisites
+
 * `make`
+* `kubectl`
 * Vagrant (tested with `2.1.1`)
 * Virtualbox
 * `rsync`
 * `/dev/urandom` (only used to generate a kubeadm token, when no custom `KUBETOKEN` is given)
 
+> **NOTE** `kubectl` is only needed when the `kubectl` auto configuration is enabled (default is enabled), to disable it set the variable `KUBECTL_AUTO_CONF` to `false`.
+> For more information, see the [Variables](#variables) section.
+
 ## Hardware Requirements
+
 * Master
     * CPU: 2 Cores
     * Memory: 2GB
@@ -22,6 +28,7 @@ These resources can currently only be changed by editing `Vagrantfile` and `Vagr
 but will probably be configurable by environment variables in the future.
 
 ## Quickstart
+
 To start with the defaults, 1x master and 2x workers, run the following:
 ```
 $ make up -j 3
@@ -47,7 +54,9 @@ node2     Ready     <none>    4m        v1.10.4
 ```
 
 ## Usage
+
 ### Starting the environment
+
 To start up the Vagrant Kubernetes multi node environment with the default of two worker nodes + a master (not parallel) run:
 ```
 $ make up
@@ -57,6 +66,7 @@ $ make up
 > The context is named after the directory the `Makefile` is in.
 
 ### Faster (parallel) environment start
+
 To start up 4 VMs in parallel run (`-j` flag does not control how many (worker) VMs are started, the `NODE_COUNT` variable is used for that):
 ```
 $ NODE_COUNT=3 make up -j4
@@ -66,6 +76,7 @@ You can also use `-j $(nproc)` to start as many VMs as cores/threads you have in
 So to start up all VMs (master and three nodes) in parallel, you would add one to the chosen `NODE_COUNT`.
 
 ### Show status of VMs
+
 ```
 $ make status
 master                    not created (virtualbox)
@@ -74,6 +85,7 @@ node2                     not created (virtualbox)
 ```
 
 ### Shutting down the environment
+
 To destroy the Vagrant environment run:
 ```
 $ make clean
@@ -97,9 +109,11 @@ $ make load-image IMG=repo/image:tag TAG=new_repo/new_image:new_tag
 ```
 
 ### Data inside VM
+
 See the `data/VM_NAME/` directories, where `VM_NAME` is for example `master`.
 
 ### Show `make` targets
+
 ```
 $ make help
 clean                          Destroy master and node VMs, and delete data.
@@ -132,6 +146,7 @@ up                             Start Kubernetes Vagrant multi-node cluster. Crea
 ```
 
 ## Variables
+
 | Variable Name           | Default Value            | Description                                                                                                                                                      |
 | ----------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `BOX_IMAGE`             | `generic/fedora27`       | Set the VMs box image to use.                                                                                                                                    |
@@ -153,11 +168,15 @@ up                             Start Kubernetes Vagrant multi-node cluster. Crea
 | `KUBEADM_JOIN_FLAGS`    | `""` (empty)             | The `kubeadm join` flags to use.                                                                                                                                 |
 | `KUBERNETES_VERSION`    | `""` (empty)             | The `kubeadm` and `kubelet` package and API server version to install (`KUBEADM_INIT_FLAGS` will be set to `--kubernetes-version=$KUBERNETES_VERSION` if unset). |
 | `KUBE_PROXY_IPVS`       | `false`                  | Enable IPVS kernel modules to then use IPVS for the kube-proxy.                                                                                                  |
-| `KUBE_NETWORK`          | `flannel`                | What CNI to install, if empty don't install any CNI.                                                                                                        |
+| `KUBE_NETWORK`          | `flannel`                | What CNI to install, if empty don't install any CNI.                                                                                                             |
+| `KUBECTL_AUTO_CONF`     | `true`                   | If `kubectl` should be  automatically configured to be able to talk with the cluster (if disabled, removes need for `kubectl` binary).                           |
 
 ## Demo
+
 ### Start Cluster
+
 [![asciicast](https://asciinema.org/a/186375.png)](https://asciinema.org/a/186375)
 
 ### Destroy Cluster
+
 [![asciicast](https://asciinema.org/a/186376.png)](https://asciinema.org/a/186376)

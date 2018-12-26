@@ -21,6 +21,8 @@ MASTER_IP ?= 192.168.26.10
 NODE_IP_NW ?= 192.168.26.
 POD_NW_CIDR ?= 10.244.0.0/16
 
+KUBECTL_AUTO_CONF ?= true
+
 # Kubernetes and kubeadm
 KUBERNETES_VERSION ?=
 # `kubeadm init` flags for master
@@ -59,7 +61,12 @@ up: preflight ## Start Kubernetes Vagrant multi-node cluster. Creates, starts an
 
 start:
 	@$(MAKE) start-master start-nodes
-	@$(MAKE) kubectl
+	@if $(KUBECTL_AUTO_CONF); then \
+		$(MAKE) kubectl; \
+	else \
+		echo "=>> kubectl auto configuration is disabled."; \
+		echo "Run 'make ssh-master' to connect to the Kubernetes master and then run 'sudo -i' to be able to use 'kubectl' on the cluster.";
+	fi
 
 kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` (automatically done by `up` target).
 	$(eval CLUSTERCERTSDIR := $(shell mktemp -d))
