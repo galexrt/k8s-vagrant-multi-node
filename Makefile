@@ -33,6 +33,7 @@ KUBE_NETWORK ?= flannel
 
 # Addons
 K8S_DASHBOARD ?= false
+K8S_DASHBOARD_VERSION ?= v1.10.1
 
 CLUSTER_NAME ?= $(shell basename $(MFILECWD))
 # === END USER OPTIONS ===
