@@ -65,7 +65,7 @@ start:
 		$(MAKE) kubectl; \
 	else \
 		echo "=>> kubectl auto configuration is disabled."; \
-		echo "Run 'make ssh-master' to connect to the Kubernetes master and then run 'sudo -i' to be able to use 'kubectl' on the cluster.";
+		echo "Run 'make ssh-master' to connect to the Kubernetes master and then run 'sudo -i' to be able to use 'kubectl' on the cluster."; \
 	fi
 
 kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` (automatically done by `up` target).

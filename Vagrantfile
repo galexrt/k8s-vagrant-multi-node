@@ -75,10 +75,12 @@ kubeadm init #{KUBEADM_INIT_FLAGS} \
     --apiserver-advertise-address=#{MASTER_IP} \
     --pod-network-cidr=#{POD_NW_CIDR} \
     --token "#{KUBETOKEN}" \
-    --token-ttl 0
+    --token-ttl 0 || \
+    { echo "kubeadm init failed."; exit 1; }
 
-grep -q -- '--node-ip=' /etc/sysconfig/kubelet && \
-    sed -ri -e 's/KUBELET_EXTRA_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ /KUBELET_EXTRA_ARGS=/' /etc/sysconfig/kubelet
+if grep -q -- '--node-ip=' /etc/sysconfig/kubelet; then
+    sed -ri -e 's/KUBELET_EXTRA_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/KUBELET_EXTRA_ARGS=/' /etc/sysconfig/kubelet
+fi
 sed -i 's/KUBELET_EXTRA_ARGS=/KUBELET_EXTRA_ARGS=--node-ip=#{MASTER_IP} /' /etc/sysconfig/kubelet
 
 systemctl daemon-reload
