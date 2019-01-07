@@ -75,16 +75,19 @@ if [ -n "#{KUBEADM_JOIN_FLAGS}" ]; then
         #{KUBEADM_JOIN_FLAGS} \
         --discovery-token-unsafe-skip-ca-verification \
         --token "#{KUBETOKEN}" \
-        "#{MASTER_IP}:6443"
+        "#{MASTER_IP}:6443" || \
+        { echo "Failed to kubeadm join"; exit 1; }
 else
     kubeadm join \
         --discovery-token-unsafe-skip-ca-verification \
         --token "#{KUBETOKEN}" \
-        "#{MASTER_IP}:6443"
+        "#{MASTER_IP}:6443" || \
+        { echo "Failed to kubeadm join"; exit 1; }
 fi
 
-grep -q -- '--node-ip=' /etc/sysconfig/kubelet && \
-    sed -ri -e 's/KUBELET_EXTRA_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ /KUBELET_EXTRA_ARGS=/' /etc/sysconfig/kubelet
+if grep -q -- '--node-ip=' /etc/sysconfig/kubelet; then
+    sed -ri -e 's/KUBELET_EXTRA_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/KUBELET_EXTRA_ARGS=/' /etc/sysconfig/kubelet
+fi
 sed -i 's/KUBELET_EXTRA_ARGS=/KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} /' /etc/sysconfig/kubelet
 
 systemctl daemon-reload

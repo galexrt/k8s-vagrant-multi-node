@@ -117,10 +117,10 @@ kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` 
 start-master: ## Start up master VM (automatically done by `up` target).
 	vagrant up
 
-start-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "start-node-$$i"; done) ## Create and start all node VMs by utilizing the `node-X` target (automatically done by `up` target).
-
-start-node-%: ## Start node VM, where `%` is the number of the node.
+start-node-%: preflight ## Start node VM, where `%` is the number of the node.
 	VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant up
+
+start-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "start-node-$$i"; done) ## Create and start all node VMs by utilizing the `node-X` target (automatically done by `up` target).
 
 stop: stop-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "stop-node-$$i"; done) ## Stop/Halt master and all nodes VMs.
 
