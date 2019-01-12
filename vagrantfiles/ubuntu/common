@@ -1,0 +1,8 @@
+$box_image = ENV["BOX_IMAGE"] || 'generic/ubuntu1804'.freeze
+
+if $kubernetes_pkg_version_suffix == ''
+    $kubernetes_pkg_version_suffix = '-00'
+end
+
+$prepareScript = <<SCRIPT
+SCRIPT

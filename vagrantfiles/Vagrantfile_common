@@ -1,0 +1,100 @@
+# $box_image must be set in each Vagrantfile set.
+
+# Disk setup
+DISK_COUNT = ENV["DISK_COUNT"].to_i || 2
+DISK_SIZE_GB = ENV["DISK_SIZE_GB"].to_i || 10
+
+# Resources
+MASTER_CPUS = ENV['MASTER_CPUS'].to_i || 2
+MASTER_MEMORY_SIZE_GB = ENV['MASTER_MEMORY_SIZE_GB'].to_i || 2
+NODE_CPUS = ENV['NODE_CPUS'].to_i || 1
+NODE_MEMORY_SIZE_GB = ENV['NODE_MEMORY_SIZE_GB'].to_i || 1
+
+# Network
+NODE = ENV['NODE'].to_i || 1
+
+MASTER_IP = ENV["MASTER_IP"] || '192.168.26.10'.freeze
+POD_NW_CIDR = ENV["POD_NW_CIDR"] || '10.244.0.0/16'.freeze
+NODE_IP_NW = ENV['NODE_IP_NW'] || '192.168.26.'.freeze
+NODE_IP = NODE_IP_NW + (NODE + 10).to_s
+
+# Addons
+K8S_DASHBOARD = ENV['K8S_DASHBOARD'] || false
+K8S_DASHBOARD_VERSION = ENV['K8S_DASHBOARD_VERSION'] || 'v1.10.1'
+
+# Kubernetes and kubeadm
+KUBERNETES_VERSION = ENV["KUBERNETES_VERSION"] || ''.freeze
+$kubernetes_pkg_version_suffix = ENV["KUBERNETES_PKG_VERSION_SUFFIX"] || 1
+$kubeadm_init_flags = ENV["KUBEADM_INIT_FLAGS"] || ''.freeze
+$kubeadm_join_flags = ENV["KUBEADM_JOIN_FLAGS"] || ''.freeze
+if KUBERNETES_VERSION != "" && $kubeadm_init_flags == ""
+    $kubeadm_init_flags = "--kubernetes-version=#{KUBERNETES_VERSION}"
+end
+KUBE_NETWORK = ENV['KUBE_NETWORK'] || 'flannel'.freeze
+KUBE_PROXY_IPVS = ENV['KUBE_PROXY_IPVS'] || false
+
+# Generate new using steps in README
+KUBETOKEN = ENV["KUBETOKEN"] || 'b029ee.968a33e8d8e6bb0d'.freeze
+
+# Common scripts
+$kubeMasterScript = <<SCRIPT
+set -x
+kubeadm reset -f
+kubeadm init #{$kubeadm_init_flags} \
+    --apiserver-advertise-address=#{MASTER_IP} \
+    --pod-network-cidr=#{POD_NW_CIDR} \
+    --token "#{KUBETOKEN}" \
+    --token-ttl 0 || \
+    { echo "kubeadm init failed."; exit 1; }
+
+if grep -q -- '--node-ip=' /etc/sysconfig/kubelet; then
+    sed -ri -e 's/KUBELET_EXTRA_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/KUBELET_EXTRA_ARGS=/' /etc/sysconfig/kubelet
+fi
+sed -i 's/KUBELET_EXTRA_ARGS=/KUBELET_EXTRA_ARGS=--node-ip=#{MASTER_IP} /' /etc/sysconfig/kubelet
+
+systemctl daemon-reload
+systemctl restart kubelet.service
+
+mkdir -p $HOME/.kube
+sudo cp -Rf /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+if [ "#{KUBE_NETWORK}" == "flannel" ]; then
+    curl --retry 5 --fail -s https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml | \
+        awk '/- --kube-subnet-mgr/{print "        - --iface=eth1"}1' | \
+        kubectl apply -f -
+fi
+SCRIPT
+
+$kubeMinionScript = <<SCRIPT
+set -x
+kubeadm reset -f
+
+if [ -n "#{$kubeadm_join_flags}" ]; then
+    kubeadm join \
+        #{$kubeadm_join_flags} \
+        --discovery-token-unsafe-skip-ca-verification \
+        --token "#{KUBETOKEN}" \
+        "#{MASTER_IP}:6443" || \
+        { echo "Failed to kubeadm join"; exit 1; }
+else
+    kubeadm join \
+        #{$kubeadm_join_flags} \
+        --discovery-token-unsafe-skip-ca-verification \
+        --token "#{KUBETOKEN}" \
+        "#{MASTER_IP}:6443" || \
+        { echo "Failed to kubeadm join"; exit 1; }
+fi
+
+KUBELET_EXTRA_ARGS_FILE=/etc/sysconfig/kubelet
+if [ ! -f /etc/sysconfig/kubelet ]; then
+    KUBELET_EXTRA_ARGS_FILE=/etc/default/kubelet
+fi
+
+if grep -q -- '--node-ip=' "$KUBELET_EXTRA_ARGS_FILE"; then
+    sed -ri -e 's/KUBELET_EXTRA_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/KUBELET_EXTRA_ARGS=/' "$KUBELET_EXTRA_ARGS_FILE"
+fi
+sed -i 's/KUBELET_EXTRA_ARGS=/KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} /' "$KUBELET_EXTRA_ARGS_FILE"
+
+systemctl daemon-reload
+systemctl restart kubelet.service
+SCRIPT

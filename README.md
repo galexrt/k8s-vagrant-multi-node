@@ -1,7 +1,29 @@
 # k8s-vagrant-multi-node
-This project is based on work from [coolsvap/kubeadm-vagrant](https://github.com/coolsvap/kubeadm-vagrant) by [@coolsvap](https://twitter.com/coolsvap).
+
+This project was based on work from [coolsvap/kubeadm-vagrant](https://github.com/coolsvap/kubeadm-vagrant) by [@coolsvap](https://twitter.com/coolsvap), now it is mostly independent.
 
 A demo of the start and destroy of a cluster can be found here: [README.md Demo section](#demo).
+
+<!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [Prerequisites](#prerequisites)
+- [Hardware Requirements](#hardware-requirements)
+- [Quickstart](#quickstart)
+- [Different OS / Vagrantfiles](#different-os-vagrantfiles)
+- [Usage](#usage)
+	- [Starting the environment](#starting-the-environment)
+	- [Faster (parallel) environment start](#faster-parallel-environment-start)
+	- [Show status of VMs](#show-status-of-vms)
+	- [Shutting down the environment](#shutting-down-the-environment)
+	- [Copy local Docker image into VMs](#copy-local-docker-image-into-vms)
+	- [Data inside VM](#data-inside-vm)
+	- [Show `make` targets](#show-make-targets)
+- [Variables](#variables)
+- [Demo](#demo)
+	- [Start Cluster](#start-cluster)
+	- [Destroy Cluster](#destroy-cluster)
+
+<!-- /TOC -->
 
 ## Prerequisites
 
@@ -52,6 +74,20 @@ master    Ready     master    4m        v1.10.4
 node1     Ready     <none>    4m        v1.10.4
 node2     Ready     <none>    4m        v1.10.4
 ```
+
+## Different OS / Vagrantfiles
+
+There are multiple sets of Vagrantfiles available (see [`vagrantfiles/`](/vagrantfiles/)) which can be used to use a different OS for the Kubernetes environment.
+
+List of currently available Vagrantfile sets:
+
+| Name     | Container Runtime                           | OS Version   |
+| -------- | ------------------------------------------- | ------------ |
+| `centos` | [Docker/Moby](https://github.com/moby/moby) | CentOS 7     |
+| `fedora` | [Docker/Moby](https://github.com/moby/moby) | Fedora 29    |
+| `ubuntu` | [Docker/Moby](https://github.com/moby/moby) | Ubuntu 18.04 |
+
+To use a different set than the default `fedora` one's, add `BOX_OS=__NAME__` (where `__NAME__` is, e.g., `fedora`).
 
 ## Usage
 
@@ -147,29 +183,31 @@ up                             Start Kubernetes Vagrant multi-node cluster. Crea
 
 ## Variables
 
-| Variable Name           | Default Value            | Description                                                                                                                                                      |
-| ----------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BOX_IMAGE`             | `generic/fedora27`       | Set the VMs box image to use.                                                                                                                                    |
-| `DISK_COUNT`            | `1`                      | Set how many additional disks will be added to the VMs.                                                                                                          |
-| `DISK_SIZE_GB`          | `10` GB                  | Size of additional disks added to the VMs.                                                                                                                       |
-| `MASTER_CPUS`           | `1` Core                 | Amount of cores to use for the master VM.                                                                                                                        |
-| `MASTER_MEMORY_SIZE_GB` | `2` GB                   | Size of memory (in GB) to be allocated for the master VM.                                                                                                        |
-| `NODE_CPUS`             | `1`                      | Amount of cores to use for each node VM.                                                                                                                         |
-| `NODE_MEMORY_SIZE_GB`   | `1` GB                   | Size of memory (in GB) to be allocated for each node VM.                                                                                                         |
-| `NODE_COUNT`            | `2`                      | How many worker nodes should be spawned.                                                                                                                         |
-| `MASTER_IP`             | `192.168.26.10`          | The Kubernetes master node IP.                                                                                                                                   |
-| `NODE_IP_NW`            | `192.168.26.`            | The first three parts of the IPs used for the nodes.                                                                                                             |
-| `POD_NW_CIDR`           | `10.244.0.0/16`          | The Pod (container) network CIDR.                                                                                                                                |
-| `K8S_DASHBOARD`         | `false`                  | Install the Kubernetes dashboard addon.                                                                                                                          |
-| `K8S_DASHBOARD_VERSION` | `v1.10.1`                | The Kubernetes dashboard addon version. Note that there is a breaking change in the kubernetes dashboard repository after the 1.10.1 version.                     |
-| `CLUSTER_NAME`          | `k8s-vagrant-multi-node` | The name of the directory the Makefile is in.                                                                                                                    |
-| `KUBETOKEN`             | `""` (empty)             | The `kubeadm` "join" token to use. Will be generated automatically using `/dev/urandom/` when empty.                                                             |
-| `KUBEADM_INIT_FLAGS`    | `""` (empty)             | The `kubeadm init` flags to use.                                                                                                                                 |
-| `KUBEADM_JOIN_FLAGS`    | `""` (empty)             | The `kubeadm join` flags to use.                                                                                                                                 |
-| `KUBERNETES_VERSION`    | `""` (empty)             | The `kubeadm` and `kubelet` package and API server version to install (`KUBEADM_INIT_FLAGS` will be set to `--kubernetes-version=$KUBERNETES_VERSION` if unset). |
-| `KUBE_PROXY_IPVS`       | `false`                  | Enable IPVS kernel modules to then use IPVS for the kube-proxy.                                                                                                  |
-| `KUBE_NETWORK`          | `flannel`                | What CNI to install, if empty don't install any CNI.                                                                                                             |
-| `KUBECTL_AUTO_CONF`     | `true`                   | If `kubectl` should be  automatically configured to be able to talk with the cluster (if disabled, removes need for `kubectl` binary).                           |
+| Variable Name                   | Default Value            | Description                                                                                                                                                      |
+| ------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BOX_OS`                        | `fedora`                 | Which set of Vagrantfiles to use to start the VMs.                                                                                                               |
+| `BOX_IMAGE`                     | ``                       | Set the VM box image to use (only for override purposes).                                                                                                        |
+| `DISK_COUNT`                    | `1`                      | Set how many additional disks will be added to the VMs.                                                                                                          |
+| `DISK_SIZE_GB`                  | `10` GB                  | Size of additional disks added to the VMs.                                                                                                                       |
+| `MASTER_CPUS`                   | `1` Core                 | Amount of cores to use for the master VM.                                                                                                                        |
+| `MASTER_MEMORY_SIZE_GB`         | `2` GB                   | Size of memory (in GB) to be allocated for the master VM.                                                                                                        |
+| `NODE_CPUS`                     | `1`                      | Amount of cores to use for each node VM.                                                                                                                         |
+| `NODE_MEMORY_SIZE_GB`           | `1` GB                   | Size of memory (in GB) to be allocated for each node VM.                                                                                                         |
+| `NODE_COUNT`                    | `2`                      | How many worker nodes should be spawned.                                                                                                                         |
+| `MASTER_IP`                     | `192.168.26.10`          | The Kubernetes master node IP.                                                                                                                                   |
+| `NODE_IP_NW`                    | `192.168.26.`            | The first three parts of the IPs used for the nodes.                                                                                                             |
+| `POD_NW_CIDR`                   | `10.244.0.0/16`          | The Pod (container) network CIDR.                                                                                                                                |
+| `K8S_DASHBOARD`                 | `false`                  | Install the Kubernetes dashboard addon.                                                                                                                          |
+| `K8S_DASHBOARD_VERSION`         | `v1.10.1`                | The Kubernetes dashboard addon version. Note that there is a breaking change in the kubernetes dashboard repository after the 1.10.1 version.                    |
+| `CLUSTER_NAME`                  | `k8s-vagrant-multi-node` | The name of the directory the Makefile is in.                                                                                                                    |
+| `KUBETOKEN`                     | `""` (empty)             | The `kubeadm` "join" token to use. Will be generated automatically using `/dev/urandom/` when empty.                                                             |
+| `KUBEADM_INIT_FLAGS`            | `""` (empty)             | The `kubeadm init` flags to use.                                                                                                                                 |
+| `KUBEADM_JOIN_FLAGS`            | `""` (empty)             | The `kubeadm join` flags to use.                                                                                                                                 |
+| `KUBERNETES_VERSION`            | `""` (empty)             | The `kubeadm` and `kubelet` package and API server version to install (`KUBEADM_INIT_FLAGS` will be set to `--kubernetes-version=$KUBERNETES_VERSION` if unset). |
+| `KUBERNETES_PKG_VERSION_SUFFIX` | `""` (empty)             | String which will be appended to the `kubeadm` and `kubelet` package versions when installed (only used for `vagrantfiles/ubuntu`).                              |
+| `KUBE_PROXY_IPVS`               | `false`                  | Enable IPVS kernel modules to then use IPVS for the kube-proxy.                                                                                                  |
+| `KUBE_NETWORK`                  | `flannel`                | What CNI to install, if empty don't install any CNI.                                                                                                             |
+| `KUBECTL_AUTO_CONF`             | `true`                   | If `kubectl` should be  automatically configured to be able to talk with the cluster (if disabled, removes need for `kubectl` binary).                           |
 
 ## Demo
 

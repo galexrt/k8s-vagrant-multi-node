@@ -1,0 +1,34 @@
+Vagrant.configure('2') do |config|
+    config.vm.box = $box_image
+    config.vm.box_check_update = true
+
+    config.vm.provider 'virtualbox' do |l|
+        l.cpus = NODE_CPUS
+        l.memory = NODE_MEMORY_SIZE_GB * 1024
+    end
+
+    config.vm.define "node#{NODE}" do |subconfig|
+        subconfig.vm.hostname = "node#{NODE}"
+        subconfig.vm.network :private_network, ip: NODE_IP
+        subconfig.vm.provider :virtualbox do |vb|
+            # Storage configuration
+            if File.exist?(".vagrant/node#{NODE}-disk-1.vdi")
+                vb.customize ['storagectl', :id, '--name', 'SATAController', '--remove']
+            end
+            vb.customize ['storagectl', :id, '--name', 'SATAController', '--add', 'sata']
+            (1..DISK_COUNT.to_i).each do |diskI|
+                unless File.exist?(".vagrant/node#{NODE}-disk-#{diskI}.vdi")
+                    vb.customize ['createhd', '--filename', ".vagrant/node#{NODE}-disk-#{diskI}.vdi", '--variant', 'Standard', '--size', DISK_SIZE_GB * 1024]
+                end
+                vb.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', diskI - 1, '--device', 0, '--type', 'hdd', '--medium', ".vagrant/node#{NODE}-disk-#{diskI}.vdi"]
+            end
+        end
+        subconfig.vm.synced_folder "data/node#{NODE}/", '/data', type: 'rsync',
+            create: true, owner: 'root', group: 'root',
+            rsync__args: ["--rsync-path='sudo rsync'", '--archive', '--delete', '-z']
+        # Provision
+        subconfig.vm.provision :shell, inline: $prepareScript
+        subconfig.vm.provision :shell, inline: $baseInstallScript
+        subconfig.vm.provision :shell, inline: $kubeMinionScript
+    end
+end

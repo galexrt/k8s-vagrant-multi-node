@@ -1,0 +1,44 @@
+$baseInstallScript = <<SCRIPT
+set -x
+cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
+        https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+
+if [ -n "#{KUBERNETES_VERSION}" ]; then
+    KUBERNETES_PACKAGES="kubelet-#{KUBERNETES_VERSION} kubeadm-#{KUBERNETES_VERSION}"
+else
+    KUBERNETES_PACKAGES="kubelet kubeadm"
+fi
+
+# Use yum so we can use this for CentOS too
+yum clean expire-cache
+yum install --nogpgcheck -y net-tools screen tree telnet docker rsync ${KUBERNETES_PACKAGES}
+systemctl enable kubelet && systemctl start kubelet
+systemctl enable docker && systemctl start docker
+
+setenforce 0
+sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
+swapoff -a
+sed -i '/swap/s/^/#/g' /etc/fstab
+echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
+systemctl stop firewalld && systemctl disable firewalld && systemctl mask firewalld
+
+if [ "#{KUBE_PROXY_IPVS}" != "false" ]; then
+    cat << EOF > /etc/modules-load.d/ipvs.conf
+overlay
+br_netfilter
+ip_vs
+ip_vs_rr
+ip_vs_wrr
+ip_vs_sh
+nf_conntrack
+EOF
+fi
+SCRIPT
