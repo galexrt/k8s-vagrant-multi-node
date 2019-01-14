@@ -1,9 +1,3 @@
-# Addons
-$kubeDashScript = <<SCRIPT
-# Kubernetes Dashboard Setup
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/#{K8S_DASHBOARD_VERSION}/src/deploy/recommended/kubernetes-dashboard.yaml
-SCRIPT
-
 Vagrant.configure('2') do |config|
     config.vm.box = $box_image
     config.vm.box_check_update = true
@@ -18,18 +12,18 @@ Vagrant.configure('2') do |config|
         subconfig.vm.network :private_network, ip: MASTER_IP
         subconfig.vm.provider :virtualbox do |vb|
             # Storage configuration
-            if File.exist?('.vagrant/master-disk-1.vdi')
-                vb.customize ['storagectl', :id, '--name', 'SATAController', '--remove']
-           end
-            vb.customize ['storagectl', :id, '--name', 'SATAController', '--add', 'sata']
+            if File.exist?(".vagrant/#{BOX_OS}-master-disk-1.vdi")
+                vb.customize ['storagectl', :id, '--name', $storagecontroller, '--remove']
+            end
+            vb.customize ['storagectl', :id, '--name', $storagecontroller, '--add', 'sata']
             (1..DISK_COUNT.to_i).each do |diskI|
-                unless File.exist?(".vagrant/master-disk-#{diskI}.vdi")
-                    vb.customize ['createhd', '--filename', ".vagrant/master-disk-#{diskI}.vdi", '--variant', 'Standard', '--size', DISK_SIZE_GB * 1024]
+                unless File.exist?(".vagrant/#{BOX_OS}-master-disk-#{diskI}.vdi")
+                    vb.customize ['createhd', '--filename', ".vagrant/#{BOX_OS}-master-disk-#{diskI}.vdi", '--variant', 'Standard', '--size', DISK_SIZE_GB * 1024]
                 end
-                vb.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', diskI - 1, '--device', 0, '--type', 'hdd', '--medium', ".vagrant/master-disk-#{diskI}.vdi"]
+                vb.customize ['storageattach', :id, '--storagectl', $storagecontroller, '--port', diskI - 1, '--device', 0, '--type', 'hdd', '--medium', ".vagrant/#{BOX_OS}-master-disk-#{diskI}.vdi"]
             end
         end
-        subconfig.vm.synced_folder 'data/master/', '/data', type: 'rsync',
+        subconfig.vm.synced_folder "data/#{BOX_OS}-master/", '/data', type: 'rsync',
             create: true, owner: 'root', group: 'root',
             rsync__args: ["--rsync-path='sudo rsync'", '--archive', '--delete', '-z']
         # Provision

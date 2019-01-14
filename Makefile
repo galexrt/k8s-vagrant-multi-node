@@ -154,9 +154,19 @@ clean-node-%: ## Remove a node VM, where `%` is the number of the node.
 clean-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done) ## Remove all node VMs.
 
 clean-data: ## Remove data (shared folders) and disks of all VMs (master and nodes).
-	rm -rf "$(PWD)/data/*"
+	rm -rf "$(PWD)/data/"*
 	rm -rf "$(PWD)/.vagrant/KUBETOKEN"
-	rm -rf "$(PWD)/.vagrant/*.vdi"
+	rm -rf "$(PWD)/.vagrant/"*.vdi
+
+vagrant-reload: vagrant-reload-master vagrant-reload-nodes ## Run vagrant reload on master and nodes.
+
+vagrant-reload-master: ## Run vagrant reload for master VM.
+	vagrant reload
+
+vagrant-reload-node-%: ## Run `vagrant reload` for specific node  VM.
+	NODE=$* vagrant reload
+
+vagrant-reload-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "vagrant-reload-node-$$i"; done) ## Run `vagrant reload` for all node VMs.
 
 load-image: load-image-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "load-image-node-$$i"; done) ## Load local/pulled Docker image into master and all node VMs.
 
@@ -201,4 +211,5 @@ help: ## Show this help menu.
 .EXPORT_ALL_VARIABLES:
 .PHONY: clean clean-data clean-master clean-nodes help kubectl load-image \
 	load-image-master load-image-nodes preflight ssh-master start-master start-nodes \
-	status-master status-nodes status stop-master stop-nodes stop token up
+	status-master status-nodes status stop-master stop-nodes vagrant-reload \
+	vagrant-reload-master vagrant-reload-nodes stop token up

@@ -13,9 +13,9 @@ NODE_MEMORY_SIZE_GB = ENV['NODE_MEMORY_SIZE_GB'].to_i || 1
 # Network
 NODE = ENV['NODE'].to_i || 1
 
-MASTER_IP = ENV["MASTER_IP"] || '192.168.26.10'.freeze
-POD_NW_CIDR = ENV["POD_NW_CIDR"] || '10.244.0.0/16'.freeze
-NODE_IP_NW = ENV['NODE_IP_NW'] || '192.168.26.'.freeze
+MASTER_IP = ENV["MASTER_IP"] || '192.168.26.10'
+POD_NW_CIDR = ENV["POD_NW_CIDR"] || '10.244.0.0/16'
+NODE_IP_NW = ENV['NODE_IP_NW'] || '192.168.26.'
 NODE_IP = NODE_IP_NW + (NODE + 10).to_s
 
 # Addons
@@ -23,18 +23,22 @@ K8S_DASHBOARD = ENV['K8S_DASHBOARD'] || false
 K8S_DASHBOARD_VERSION = ENV['K8S_DASHBOARD_VERSION'] || 'v1.10.1'
 
 # Kubernetes and kubeadm
-KUBERNETES_VERSION = ENV["KUBERNETES_VERSION"] || ''.freeze
+KUBERNETES_VERSION = ENV["KUBERNETES_VERSION"] || ''
 $kubernetes_pkg_version_suffix = ENV["KUBERNETES_PKG_VERSION_SUFFIX"] || 1
-$kubeadm_init_flags = ENV["KUBEADM_INIT_FLAGS"] || ''.freeze
-$kubeadm_join_flags = ENV["KUBEADM_JOIN_FLAGS"] || ''.freeze
+$kubeadm_init_flags = ENV["KUBEADM_INIT_FLAGS"] || ''
+$kubeadm_join_flags = ENV["KUBEADM_JOIN_FLAGS"] || ''
 if KUBERNETES_VERSION != "" && $kubeadm_init_flags == ""
     $kubeadm_init_flags = "--kubernetes-version=#{KUBERNETES_VERSION}"
 end
-KUBE_NETWORK = ENV['KUBE_NETWORK'] || 'flannel'.freeze
+KUBE_NETWORK = ENV['KUBE_NETWORK'] || 'flannel'
 KUBE_PROXY_IPVS = ENV['KUBE_PROXY_IPVS'] || false
 
 # Generate new using steps in README
-KUBETOKEN = ENV["KUBETOKEN"] || 'b029ee.968a33e8d8e6bb0d'.freeze
+KUBETOKEN = ENV["KUBETOKEN"] || 'b029ee.968a33e8d8e6bb0d'
+
+# The controller name is different per OS it seems (this is the case for at least Ubuntu right now).
+# For more information, see https://github.com/kusnier/vagrant-persistent-storage/issues/33.
+$storagecontroller = 'k8svmnSATAController'
 
 # Common scripts
 $kubeMasterScript = <<SCRIPT
@@ -97,4 +101,10 @@ sed -i 's/KUBELET_EXTRA_ARGS=/KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} /' "$KUBEL
 
 systemctl daemon-reload
 systemctl restart kubelet.service
+SCRIPT
+
+# Addons
+$kubeDashScript = <<SCRIPT
+# Kubernetes Dashboard Setup
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/#{K8S_DASHBOARD_VERSION}/src/deploy/recommended/kubernetes-dashboard.yaml
 SCRIPT
