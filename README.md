@@ -29,7 +29,8 @@ A demo of the start and destroy of a cluster can be found here: [README.md Demo 
 
 * `make`
 * `kubectl`
-* Vagrant (tested with `2.1.1`)
+* Vagrant (>= `2.2.0`)
+    * Tested with `2.2.2`
 * Virtualbox
 * `rsync`
 * `/dev/urandom` (only used to generate a kubeadm token, when no custom `KUBETOKEN` is given)
