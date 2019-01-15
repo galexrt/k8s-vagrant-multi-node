@@ -20,7 +20,7 @@ Vagrant.configure('2') do |config|
                 unless File.exist?(".vagrant/#{BOX_OS}-node#{NODE}-disk-#{diskI}.vdi")
                     vb.customize ['createhd', '--filename', ".vagrant/#{BOX_OS}-node#{NODE}-disk-#{diskI}.vdi", '--variant', 'Standard', '--size', DISK_SIZE_GB * 1024]
                 end
-                vb.customize ['storageattach', :id, '--storagectl', $storagecontroller, '--port', diskI - 1, '--device', 0, '--type', 'hdd', '--medium', ".vagrant/node#{NODE}-disk-#{diskI}.vdi"]
+                vb.customize ['storageattach', :id, '--storagectl', $storagecontroller, '--port', diskI - 1, '--device', 0, '--type', 'hdd', '--medium', ".vagrant/#{BOX_OS}-node#{NODE}-disk-#{diskI}.vdi"]
             end
         end
         subconfig.vm.synced_folder "data/#{BOX_OS}-node#{NODE}/", '/data', type: 'rsync',
