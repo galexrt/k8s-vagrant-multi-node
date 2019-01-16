@@ -64,13 +64,13 @@ token: ## Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_
 up: preflight ## Start Kubernetes Vagrant multi-node cluster. Creates, starts and bootsup the master and node VMs.
 	@$(MAKE) start
 
-start: preflight
+start: preflight pull
 	@$(MAKE) start-master start-nodes
 	@if $(KUBECTL_AUTO_CONF); then \
 		$(MAKE) kubectl; \
 	else \
 		echo "=>> kubectl auto configuration is disabled."; \
-		echo "Run 'make ssh-master' to connect to the Kubernetes master and then run 'sudo -i' to be able to use 'kubectl' on the cluster."; \
+		echo "Run '$(MAKE) ssh-master' to connect to the Kubernetes master and then run 'sudo -i' to be able to use 'kubectl' on the cluster."; \
 	fi
 
 kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` (automatically done by `up` target).
@@ -118,6 +118,17 @@ kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` 
 	@echo "kubectl has been configured to use started k8s-vagrant-multi-node Kubernetes cluster"
 	kubectl config current-context
 	@echo
+
+pull:
+	if !(vagrant box list | grep -q $(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f2)); then \
+		vagrant \
+			box \
+			add \
+			--provider=virtualbox \
+			$(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f2); \
+	else \
+		vagrant box update --box=$(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f2); \
+	fi
 
 start-master: preflight ## Start up master VM (automatically done by `up` target).
 	vagrant up
