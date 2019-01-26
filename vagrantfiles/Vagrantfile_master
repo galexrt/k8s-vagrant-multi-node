@@ -11,6 +11,8 @@ Vagrant.configure('2') do |config|
         subconfig.vm.hostname = 'master'
         subconfig.vm.network :private_network, ip: MASTER_IP
         subconfig.vm.provider :virtualbox do |vb|
+            # Network configuration
+            vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
             # Storage configuration
             if File.exist?(".vagrant/#{BOX_OS}-master-disk-1.vdi")
                 vb.customize ['storagectl', :id, '--name', $storagecontroller, '--remove']
