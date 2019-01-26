@@ -41,6 +41,13 @@ KUBETOKEN = ENV["KUBETOKEN"] || 'b029ee.968a33e8d8e6bb0d'
 $storagecontroller = 'k8svmnSATAController'
 
 # Common scripts
+
+$prepareScript = <<SCRIPT
+# Set mtu of ethernet devices lower, otherwise there may be issues when using a VPN
+ip link set mtu 1300 dev eth0
+ip link set mtu 1300 dev eth1
+SCRIPT
+
 $kubeMasterScript = <<SCRIPT
 set -x
 kubeadm reset -f
