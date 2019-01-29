@@ -1,0 +1,40 @@
+$baseInstallScript = <<SCRIPT
+set -x
+apt-get update
+apt-get install -y apt-transport-https curl software-properties-common ca-certificates
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
+deb https://apt.kubernetes.io/ kubernetes-xenial main
+EOF
+
+if [ -n "#{KUBERNETES_VERSION}" ]; then
+    KUBERNETES_PACKAGES="kubelet=#{KUBERNETES_VERSION}#{$kubernetes_pkg_version_suffix} kubeadm=#{KUBERNETES_VERSION}#{$kubernetes_pkg_version_suffix} kubectl=#{KUBERNETES_VERSION}#{$kubernetes_pkg_version_suffix}"
+else
+    KUBERNETES_PACKAGES="kubelet kubeadm kubectl"
+fi
+
+apt-get update
+apt-get install -y screen telnet docker-ce ${KUBERNETES_PACKAGES}
+apt-mark hold kubelet kubeadm kubectl
+
+swapoff -a
+sed -i '/swap/s/^/#/g' /etc/fstab
+echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
+
+if [ "#{KUBE_PROXY_IPVS}" != "false" ]; then
+    cat << EOF > /etc/modules-load.d/ipvs.conf
+overlay
+br_netfilter
+ip_vs
+ip_vs_rr
+ip_vs_wrr
+ip_vs_sh
+nf_conntrack
+EOF
+fi
+SCRIPT

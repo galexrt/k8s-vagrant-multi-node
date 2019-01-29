@@ -1,0 +1,28 @@
+# Load the Vagrantfile_common file
+$vagrantfilecommon = File.expand_path('../Vagrantfile_common', __FILE__)
+load $vagrantfilecommon
+
+# Vagrantfile set to use.
+BOX_OS = ENV["BOX_OS"] || 'fedora'.freeze
+
+# Load the type specific variables (e.g., master, node) (0 is equal to not a node)
+if NODE == 0
+    SERVER_TYPE = "master"
+    $osvariablefile = "../#{BOX_OS}/master"
+    $vagrantfilepath = "../Vagrantfile_master"
+else
+    SERVER_TYPE = "node"
+    $osvariablefile = "../#{BOX_OS}/node"
+    $vagrantfilepath = "../Vagrantfile_node"
+end
+
+$osvariablefile = File.expand_path($osvariablefile, __FILE__)
+load $osvariablefile
+
+# Load the common os file if it exists
+$oscommonvariablefile = File.expand_path("../#{BOX_OS}/common", __FILE__)
+load $oscommonvariablefile if File.exists?($oscommonvariablefile)
+
+# Load the common Vagrantfile_TYPE file
+$vagrantfilepath = File.expand_path($vagrantfilepath, __FILE__)
+load $vagrantfilepath

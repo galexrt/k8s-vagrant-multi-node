@@ -4,8 +4,10 @@ MFILECWD = $(shell pwd)
 REVERSE_LINES=sed -e '1!G;h;$$!d'
 
 # === BEGIN USER OPTIONS ===
+# Vagrantfile set to use.
+BOX_OS ?= fedora
 # Box setup
-BOX_IMAGE ?= generic/fedora27
+#BOX_IMAGE
 # Disk setup
 DISK_COUNT ?= 1
 DISK_SIZE_GB ?= 10
@@ -25,6 +27,7 @@ KUBECTL_AUTO_CONF ?= true
 
 # Kubernetes and kubeadm
 KUBERNETES_VERSION ?=
+KUBERNETES_PKG_VERSION_SUFFIX ?=
 # `kubeadm init` flags for master
 # NOTE: The `--kubernetes-version` is automatically set if `KUBERNETES_VERSION` is given.
 KUBEADM_INIT_FLAGS ?=
@@ -38,6 +41,8 @@ K8S_DASHBOARD ?= false
 K8S_DASHBOARD_VERSION ?= v1.10.1
 
 CLUSTER_NAME ?= $(shell basename $(MFILECWD))
+
+VAGRANT_VAGRANTFILE ?= $(MFILECWD)/vagrantfiles/Vagrantfile
 # === END USER OPTIONS ===
 
 preflight: token ## Run checks and gather variables, used for the the `up` target.
@@ -59,13 +64,13 @@ token: ## Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_
 up: preflight ## Start Kubernetes Vagrant multi-node cluster. Creates, starts and bootsup the master and node VMs.
 	@$(MAKE) start
 
-start:
+start: preflight pull
 	@$(MAKE) start-master start-nodes
 	@if $(KUBECTL_AUTO_CONF); then \
 		$(MAKE) kubectl; \
 	else \
 		echo "=>> kubectl auto configuration is disabled."; \
-		echo "Run 'make ssh-master' to connect to the Kubernetes master and then run 'sudo -i' to be able to use 'kubectl' on the cluster."; \
+		echo "Run '$(MAKE) ssh-master' to connect to the Kubernetes master and then run 'sudo -i' to be able to use 'kubectl' on the cluster."; \
 	fi
 
 kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` (automatically done by `up` target).
@@ -114,13 +119,24 @@ kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` 
 	kubectl config current-context
 	@echo
 
-start-master: ## Start up master VM (automatically done by `up` target).
+pull:
+	if !(vagrant box list | grep -q $(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f2)); then \
+		vagrant \
+			box \
+			add \
+			--provider=virtualbox \
+			$(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f2); \
+	else \
+		vagrant box update --box=$(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f2); \
+	fi
+
+start-master: preflight ## Start up master VM (automatically done by `up` target).
 	vagrant up
 
 start-node-%: preflight ## Start node VM, where `%` is the number of the node.
-	VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant up
+	NODE=$* vagrant up
 
-start-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "start-node-$$i"; done) ## Create and start all node VMs by utilizing the `node-X` target (automatically done by `up` target).
+start-nodes: preflight $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "start-node-$$i"; done) ## Create and start all node VMs by utilizing the `node-X` target (automatically done by `up` target).
 
 stop: stop-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "stop-node-$$i"; done) ## Stop/Halt master and all nodes VMs.
 
@@ -128,7 +144,7 @@ stop-master: ## Stop/Halt the master VM.
 	vagrant halt -f
 
 stop-node-%: ## Stop/Halt a node VM, where `%` is the number of the node.
-	VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant halt -f
+	NODE=$* vagrant halt -f
 
 stop-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "stop-node-$$i"; done) ## Stop/Halt all node VMs.
 
@@ -136,7 +152,7 @@ ssh-master: ## SSH into the master VM.
 	vagrant ssh
 
 ssh-node-%: ## SSH into a node VM, where `%` is the number of the node.
-	VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant ssh
+	NODE=$* vagrant ssh
 
 clean: clean-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done) clean-data ## Destroy master and node VMs, and delete data.
 
@@ -144,14 +160,24 @@ clean-master: ## Remove the master VM.
 	-vagrant destroy -f
 
 clean-node-%: ## Remove a node VM, where `%` is the number of the node.
-	-VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant destroy -f node$*
+	-NODE=$* vagrant destroy -f node$*
 
 clean-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done) ## Remove all node VMs.
 
 clean-data: ## Remove data (shared folders) and disks of all VMs (master and nodes).
-	rm -rf "$(PWD)/data/*"
-	rm -rf "$(PWD)/.vagrant/KUBETOKEN"
-	rm -rf "$(PWD)/.vagrant/*.vdi"
+	rm -v -rf "$(PWD)/data/"*
+	rm -v -rf "$(PWD)/.vagrant/KUBETOKEN"
+	rm -v -rf "$(PWD)/.vagrant/"*.vdi
+
+vagrant-reload: vagrant-reload-master vagrant-reload-nodes ## Run vagrant reload on master and nodes.
+
+vagrant-reload-master: ## Run vagrant reload for master VM.
+	vagrant reload
+
+vagrant-reload-node-%: ## Run `vagrant reload` for specific node  VM.
+	NODE=$* vagrant reload
+
+vagrant-reload-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "vagrant-reload-node-$$i"; done) ## Run `vagrant reload` for all node VMs.
 
 load-image: load-image-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "load-image-node-$$i"; done) ## Load local/pulled Docker image into master and all node VMs.
 
@@ -162,9 +188,9 @@ load-image-master: ## Load local/pulled image into master VM.
 	fi
 
 load-image-node-%: ## Load local/pulled image into node VM, where `%` is the number of the node.
-	docker save $(IMG) | VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant ssh "node$*" -t -c 'sudo docker load'
+	docker save $(IMG) | NODE=$* vagrant ssh "node$*" -t -c 'sudo docker load'
 	@if [ ! -z "$(TAG)" ]; then \
-		VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant ssh "node$*" -t -c 'sudo docker tag $(IMG) $(TAG)'; \
+		NODE=$* vagrant ssh "node$*" -t -c 'sudo docker tag $(IMG) $(TAG)'; \
 	fi
 
 load-image-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "load-image-node-$$i"; done) ## Load local/pulled Docker image into all node VMs.
@@ -180,7 +206,7 @@ status-master: ## Show status of the master VM.
 		fi
 
 status-node-%: ## Show status of a node VM, where `%` is the number of the node.
-	@STATUS_OUT="$$(VAGRANT_VAGRANTFILE=Vagrantfile_nodes NODE=$* vagrant status | tail -n+3)"; \
+	@STATUS_OUT="$$(NODE=$* vagrant status | tail -n+3)"; \
 		if (( $$(echo "$$STATUS_OUT" | wc -l) > 5 )); then \
 			echo "$$STATUS_OUT" | $(REVERSE_LINES) | tail -n +6 | $(REVERSE_LINES); \
 		else \
@@ -196,4 +222,5 @@ help: ## Show this help menu.
 .EXPORT_ALL_VARIABLES:
 .PHONY: clean clean-data clean-master clean-nodes help kubectl load-image \
 	load-image-master load-image-nodes preflight ssh-master start-master start-nodes \
-	status-master status-nodes status stop-master stop-nodes stop token up
+	status-master status-nodes status stop-master stop-nodes vagrant-reload \
+	vagrant-reload-master vagrant-reload-nodes stop token up
