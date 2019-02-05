@@ -27,7 +27,7 @@ KUBECTL_AUTO_CONF ?= true
 
 # Kubernetes and kubeadm
 KUBERNETES_VERSION ?=
-KUBERNETES_PKG_VERSION_SUFFIX ?=
+#KUBERNETES_PKG_VERSION_SUFFIX ?=
 # `kubeadm init` flags for master
 # NOTE: The `--kubernetes-version` is automatically set if `KUBERNETES_VERSION` is given.
 KUBEADM_INIT_FLAGS ?=
