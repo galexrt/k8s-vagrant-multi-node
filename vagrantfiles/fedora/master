@@ -27,7 +27,13 @@ setenforce 0
 sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
 swapoff -a
 sed -i '/swap/s/^/#/g' /etc/fstab
-echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
+
+modprobe br_netfilter
+cat << EOF >> /etc/sysctl.conf
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+sysctl -p /etc/sysctl.conf
+
 systemctl stop firewalld && systemctl disable firewalld && systemctl mask firewalld
 
 if [ "#{KUBE_PROXY_IPVS}" != "false" ]; then

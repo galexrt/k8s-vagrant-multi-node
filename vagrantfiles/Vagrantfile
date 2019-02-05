@@ -16,12 +16,12 @@ else
     $vagrantfilepath = "../Vagrantfile_node"
 end
 
-$osvariablefile = File.expand_path($osvariablefile, __FILE__)
-load $osvariablefile
-
 # Load the common os file if it exists
 $oscommonvariablefile = File.expand_path("../#{BOX_OS}/common", __FILE__)
 load $oscommonvariablefile if File.exists?($oscommonvariablefile)
+
+$osvariablefile = File.expand_path($osvariablefile, __FILE__)
+load $osvariablefile
 
 # Load the common Vagrantfile_TYPE file
 $vagrantfilepath = File.expand_path($vagrantfilepath, __FILE__)
