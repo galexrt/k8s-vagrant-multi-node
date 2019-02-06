@@ -54,17 +54,17 @@ module VagrantPlugins
 
             (1..DISK_COUNT.to_i).each do |diskID|
               puts("Adding disk #{diskID}")
-              diskName = ".vagrant/#{BOX_OS}-#{machine.name}-disk-#{diskID}.vdi"
-              if !File.exist?(diskName)
+              diskPath = ".vagrant/#{BOX_OS}-#{machine.name}-disk-#{diskID}.vdi"
+              if !File.exist?(diskPath)
                 puts("Creating disk #{diskID} for #{machine.name}")
-                unless system("VBoxManage createhd --variant Standard --size #{DISK_SIZE_GB * 1024} --filename .vagrant/#{BOX_OS}-#{machine.name}-disk-#{diskID}.vdi")
+                unless system("VBoxManage createhd --variant Standard --size #{DISK_SIZE_GB * 1024} --filename #{diskPath}")
                   abort("Failed to create disk #{diskID} for vm #{machine.name}")
                 end
                 puts("Created disk #{diskID} for #{machine.name}")
               else
                 puts("Disk #{diskID} for #{machine.name} already exists")
               end
-              unless system("VBoxManage storageattach #{$machineUUID} --storagectl #{$storagecontroller} --port #{(diskID - 1) + $diskIDModifier} --device 0 --type hdd --medium .vagrant/#{BOX_OS}-#{machine.name}-disk-#{diskID}.vdi")
+              unless system("VBoxManage storageattach #{$machineUUID} --storagectl #{$storagecontroller} --port #{(diskID - 1) + $diskIDModifier} --device 0 --type hdd --medium #{diskPath}")
                 abort("Failed to add disk #{diskID} for vm #{machine.name}")
               end
               puts("Added disk #{diskID}")
