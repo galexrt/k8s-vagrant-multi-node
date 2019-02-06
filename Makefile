@@ -42,6 +42,7 @@ K8S_DASHBOARD_VERSION ?= v1.10.1
 
 CLUSTER_NAME ?= $(shell basename $(MFILECWD))
 
+VAGRANT_LOG ?=
 VAGRANT_VAGRANTFILE ?= $(MFILECWD)/vagrantfiles/Vagrantfile
 # === END USER OPTIONS ===
 
@@ -134,26 +135,10 @@ pull:
 	fi
 
 start-master: preflight ## Start up master VM (automatically done by `up` target).
-	$(MAKE) disk-master
 	vagrant up
 
-disk-master: ## Create the disks for the master, automatically triggered by the `start-master` target.
-	for (( diskID=1; diskID<=$(DISK_COUNT); diskID++ )); do \
-		if [ ! -f ".vagrant/$(BOX_OS)-master-disk-$${diskID}.vdi" ]; then \
-			VBoxManage createhd --variant Standard --size $$(let result=$(DISK_SIZE_GB)*1024; echo $$result) --filename ".vagrant/$(BOX_OS)-master-disk-$${diskID}.vdi"; \
-		fi; \
-	done
-
 start-node-%: preflight ## Start node VM, where `%` is the number of the node.
-	$(MAKE) disk-node-$*
 	NODE=$* vagrant up
-
-disk-node-%: ## Create the disks for a node, automatically triggered by the `start-node-%` target.
-	for (( diskID=1; diskID<=$(DISK_COUNT); diskID++ )); do \
-		if [ ! -f ".vagrant/$(BOX_OS)-node$*-disk-$${diskID}.vdi" ]; then \
-			VBoxManage createhd --variant Standard --size $$(let result=$(DISK_SIZE_GB)*1024; echo $$result) --filename ".vagrant/$(BOX_OS)-node$*-disk-$${diskID}.vdi"; \
-		fi; \
-	done
 
 start-nodes: preflight $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "start-node-$$i"; done) ## Create and start all node VMs by utilizing the `node-X` target (automatically done by `up` target).
 

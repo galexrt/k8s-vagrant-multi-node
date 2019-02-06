@@ -1,3 +1,5 @@
+require File.expand_path('../vagrant-provision-disk-and-reboot-plugin.rb', __FILE__)
+
 # Load the Vagrantfile_common file
 $vagrantfilecommon = File.expand_path('../Vagrantfile_common', __FILE__)
 load $vagrantfilecommon

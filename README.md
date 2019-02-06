@@ -37,6 +37,7 @@ A demo of the start and destroy of a cluster can be found here: [README.md Demo 
 		* `vagrant-reload` (Run `make vagrant-plugin-vagrant-reload` to install it)
 * Virtualbox
 	* Tested with `6.0.0` (if you should experience issues, please upgrade to at least this version or higher)
+	* `VBoxManage` binary in `PATH`.
 * `rsync`
 * `/dev/urandom` (only used to generate a kubeadm token, when no custom `KUBETOKEN` is given)
 
@@ -212,7 +213,7 @@ up                             Start Kubernetes Vagrant multi-node cluster. Crea
 | `KUBERNETES_VERSION`            | `""` (empty)             | The `kubeadm` and `kubelet` package and API server version to install (`KUBEADM_INIT_FLAGS` will be set to `--kubernetes-version=$KUBERNETES_VERSION` if unset). |
 | `KUBERNETES_PKG_VERSION_SUFFIX` | `""` (empty)             | String which will be appended to the `kubeadm` and `kubelet` package versions when installed (only used for `vagrantfiles/ubuntu`).                              |
 | `KUBE_PROXY_IPVS`               | `false`                  | Enable IPVS kernel modules to then use IPVS for the kube-proxy.                                                                                                  |
-| `KUBE_NETWORK`                  | `flannel`                | What CNI to install, if empty don't install any CNI.                                                                                                             |
+| `KUBE_NETWORK`                  | `flannel`                | What CNI to install, if empty don't install any CNI. `flannel` and `canal` are supported options.                                                                |
 | `KUBECTL_AUTO_CONF`             | `true`                   | If `kubectl` should be  automatically configured to be able to talk with the cluster (if disabled, removes need for `kubectl` binary).                           |
 
 ## Demo

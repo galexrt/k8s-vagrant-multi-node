@@ -47,16 +47,19 @@ $storagecontroller = 'k8svmSATAController'
 $storagecontrollerneedstobecreated = true
 
 # Common scripts
+$osPrepareScript = ""
 
 $prepareScript = <<SCRIPT
 swapoff -a
 sed -i '/swap/s/^/#/g' /etc/fstab
 
 modprobe br_netfilter
-cat << EOF >> /etc/sysctl.conf
+cat << EOF > /etc/sysctl.conf
 net.ipv6.conf.all.disable_ipv6 = 0
 net.ipv6.conf.default.disable_ipv6 = 0
 net.ipv6.conf.lo.disable_ipv6 = 0
+net.ipv6.conf.all.accept_dad = 0
+net.ipv6.conf.default.accept_dad = 0
 net.bridge.bridge-nf-call-iptables = 1
 EOF
 sysctl -p /etc/sysctl.conf
@@ -127,6 +130,10 @@ chown $(id -u):$(id -g) $HOME/.kube/config
 if [ "#{KUBE_NETWORK}" == "flannel" ]; then
     curl --retry 5 --fail -s https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml | \
         awk '/- --kube-subnet-mgr/{print "        - --iface=eth1"}1' | \
+        kubectl apply -f -
+elif [ "#{KUBE_NETWORK}" == "canal" ]; then
+    curl --retry 5 --fail -s https://docs.projectcalico.org/v3.5/getting-started/kubernetes/installation/hosted/canal/canal.yaml | \
+        sed 's/canal_iface: ""/canal_iface: "eth1"/' | \
         kubectl apply -f -
 fi
 SCRIPT
