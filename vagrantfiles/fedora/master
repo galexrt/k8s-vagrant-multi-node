@@ -17,34 +17,12 @@ else
     KUBERNETES_PACKAGES="kubelet kubeadm"
 fi
 
+setenforce 0
+sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
+
 # Use yum so we can use this for CentOS too
 yum clean expire-cache
 yum install --nogpgcheck -y net-tools screen tree telnet docker rsync ${KUBERNETES_PACKAGES}
 systemctl enable kubelet && systemctl start kubelet
 systemctl enable docker && systemctl start docker
-
-setenforce 0
-sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
-swapoff -a
-sed -i '/swap/s/^/#/g' /etc/fstab
-
-modprobe br_netfilter
-cat << EOF >> /etc/sysctl.conf
-net.bridge.bridge-nf-call-iptables = 1
-EOF
-sysctl -p /etc/sysctl.conf
-
-systemctl stop firewalld && systemctl disable firewalld && systemctl mask firewalld
-
-if [ "#{KUBE_PROXY_IPVS}" != "false" ]; then
-    cat << EOF > /etc/modules-load.d/ipvs.conf
-overlay
-br_netfilter
-ip_vs
-ip_vs_rr
-ip_vs_wrr
-ip_vs_sh
-nf_conntrack
-EOF
-fi
 SCRIPT

@@ -2,6 +2,8 @@ Vagrant.configure('2') do |config|
     config.vm.box = $box_image
     config.vm.box_check_update = true
 
+    config.vm.boot_timeout = 600
+
     config.vm.provider 'virtualbox' do |l|
         l.cpus = NODE_CPUS
         l.memory = NODE_MEMORY_SIZE_GB * 1024
@@ -22,9 +24,9 @@ Vagrant.configure('2') do |config|
                 vb.customize ['storagectl', :id, '--name', $storagecontroller, '--add', 'sata']
             end
             (1..DISK_COUNT.to_i).each do |diskI|
-                diskID = (diskI - 1) + $diskIModifier
-                unless File.exist?(".vagrant/#{BOX_OS}-node#{NODE}-disk-#{diskID}.vdi")
-                    vb.customize ['createhd', '--filename', ".vagrant/#{BOX_OS}-node#{NODE}-disk-#{diskID}.vdi", '--variant', 'Standard', '--size', DISK_SIZE_GB * 1024]
+                diskID = (diskI - 1) + $diskIDModifier
+                if not File.exist?(".vagrant/#{BOX_OS}-node#{NODE}-disk-#{diskID}.vdi")
+                    vb.customize ['createhd', '--filename', '--variant', 'Standard', '--size', DISK_SIZE_GB * 1024, ".vagrant/#{BOX_OS}-node#{NODE}-disk-#{diskID}.vdi"]
                 end
                 vb.customize ['storageattach', :id, '--storagectl', $storagecontroller, '--port', diskID, '--device', 0, '--type', 'hdd', '--medium', ".vagrant/#{BOX_OS}-node#{NODE}-disk-#{diskID}.vdi"]
             end
@@ -34,6 +36,7 @@ Vagrant.configure('2') do |config|
             rsync__args: ["--rsync-path='sudo rsync'", '--archive', '--delete', '-z']
         # Provision
         subconfig.vm.provision :shell, inline: $prepareScript
+        subconfig.vm.provision :reload
         subconfig.vm.provision :shell, inline: $baseInstallScript
         subconfig.vm.provision :shell, inline: $kubeMinionScript
     end

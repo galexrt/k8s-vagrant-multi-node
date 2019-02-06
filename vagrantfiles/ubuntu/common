@@ -4,8 +4,8 @@ $storagecontroller = 'SATA Controller'
 $storagecontrollerneedstobecreated = false
 
 # bento Ubuntu image uses a SATA Controller by default so we start with one space more at port ID 2.
-# Calulation in the code is done like this: (diskID - 1) + $diskIModifier
-$diskIModifier = 2
+# Calulation in the code is done like this: (diskID - 1) + $diskIDModifier
+$diskIDModifier = 2
 
 if $kubernetes_pkg_version_suffix == ''
     $kubernetes_pkg_version_suffix = '-00'

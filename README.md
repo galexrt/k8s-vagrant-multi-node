@@ -32,8 +32,11 @@ A demo of the start and destroy of a cluster can be found here: [README.md Demo 
 * `grep`
 * `cut`
 * Vagrant (>= `2.2.0`)
-	* Tested with `2.2.2`
+	* Tested with `2.2.2` (if you should experience issues, please upgrade to at least this version or higher)
+	* Plugins:
+		* `vagrant-reload` (Run `make vagrant-plugin-vagrant-reload` to install it)
 * Virtualbox
+	* Tested with `6.0.0` (if you should experience issues, please upgrade to at least this version or higher)
 * `rsync`
 * `/dev/urandom` (only used to generate a kubeadm token, when no custom `KUBETOKEN` is given)
 

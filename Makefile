@@ -48,6 +48,9 @@ VAGRANT_VAGRANTFILE ?= $(MFILECWD)/vagrantfiles/Vagrantfile
 preflight: token ## Run checks and gather variables, used for the the `up` target.
 	$(eval KUBETOKEN := $(shell cat $(MFILECWD)/.vagrant/KUBETOKEN))
 
+vagrant-plugin-vagrant-reload:
+	vagrant plugin install vagrant-reload
+
 token: ## Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_MAKEFILE/.vagrant/KUBETOKEN`).
 	@## Kubeadm join token format is: `[a-z0-9]{6}.[a-z0-9]{16}`
 	@if [ ! -d "$(MFILECWD)/.vagrant" ]; then \
@@ -131,10 +134,26 @@ pull:
 	fi
 
 start-master: preflight ## Start up master VM (automatically done by `up` target).
+	$(MAKE) disk-master
 	vagrant up
 
+disk-master: ## Create the disks for the master, automatically triggered by the `start-master` target.
+	for (( diskID=1; diskID<=$(DISK_COUNT); diskID++ )); do \
+		if [ ! -f ".vagrant/$(BOX_OS)-master-disk-$${diskID}.vdi" ]; then \
+			VBoxManage createhd --variant Standard --size $$(let result=$(DISK_SIZE_GB)*1024; echo $$result) --filename ".vagrant/$(BOX_OS)-master-disk-$${diskID}.vdi"; \
+		fi; \
+	done
+
 start-node-%: preflight ## Start node VM, where `%` is the number of the node.
+	$(MAKE) disk-node-$*
 	NODE=$* vagrant up
+
+disk-node-%: ## Create the disks for a node, automatically triggered by the `start-node-%` target.
+	for (( diskID=1; diskID<=$(DISK_COUNT); diskID++ )); do \
+		if [ ! -f ".vagrant/$(BOX_OS)-node$*-disk-$${diskID}.vdi" ]; then \
+			VBoxManage createhd --variant Standard --size $$(let result=$(DISK_SIZE_GB)*1024; echo $$result) --filename ".vagrant/$(BOX_OS)-node$*-disk-$${diskID}.vdi"; \
+		fi; \
+	done
 
 start-nodes: preflight $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "start-node-$$i"; done) ## Create and start all node VMs by utilizing the `node-X` target (automatically done by `up` target).
 
@@ -167,6 +186,8 @@ clean-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-
 clean-data: ## Remove data (shared folders) and disks of all VMs (master and nodes).
 	rm -v -rf "$(PWD)/data/"*
 	rm -v -rf "$(PWD)/.vagrant/KUBETOKEN"
+
+clean-force: ## Remove all drives which should normally have been removed by the normal clean-master or clean-node-% targets.
 	rm -v -rf "$(PWD)/.vagrant/"*.vdi
 
 vagrant-reload: vagrant-reload-master vagrant-reload-nodes ## Run vagrant reload on master and nodes.

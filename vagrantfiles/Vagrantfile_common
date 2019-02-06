@@ -11,7 +11,7 @@ NODE_CPUS = ENV['NODE_CPUS'].to_i || 1
 NODE_MEMORY_SIZE_GB = ENV['NODE_MEMORY_SIZE_GB'].to_i || 1
 
 # BOX OS specific fixes
-$diskIModifier = 0
+$diskIDModifier = 0
 # currently only used by ubuntu
 $docker_version = ''
 
@@ -49,9 +49,43 @@ $storagecontrollerneedstobecreated = true
 # Common scripts
 
 $prepareScript = <<SCRIPT
+swapoff -a
+sed -i '/swap/s/^/#/g' /etc/fstab
+
+modprobe br_netfilter
+cat << EOF >> /etc/sysctl.conf
+net.ipv6.conf.all.disable_ipv6 = 0
+net.ipv6.conf.default.disable_ipv6 = 0
+net.ipv6.conf.lo.disable_ipv6 = 0
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+sysctl -p /etc/sysctl.conf
+
+cat << EOF > /etc/modules-load.d/ipvs.conf
+overlay
+br_netfilter
+ip_vs
+ip_vs_rr
+ip_vs_wrr
+ip_vs_sh
+nf_conntrack
+nf_conntrack_ipv6
+EOF
+
 # Set mtu of ethernet devices lower, otherwise there may be issues when using a VPN
-ip link set mtu 1300 dev eth0
-ip link set mtu 1300 dev eth1
+cat <<EOF > /etc/systemd/system/ip-set-mtu.service
+[Unit]
+After=network.target
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'ip link set mtu 1300 dev eth0'
+ExecStart=/bin/bash -c 'ip link set mtu 1300 dev eth1'
+[Install]
+WantedBy=default.target
+EOF
+systemctl daemon-reload
+systemctl enable ip-set-mtu.service
+systemctl start ip-set-mtu.service
 SCRIPT
 
 $kubeMasterScript = <<SCRIPT
