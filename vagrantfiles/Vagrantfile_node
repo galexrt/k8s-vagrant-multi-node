@@ -28,6 +28,7 @@ Vagrant.configure('2') do |config|
         end
         subconfig.vm.provision :shell, inline: $prepareScript
         subconfig.vm.provision :shell, inline: $baseInstallScript
+        subconfig.vm.provision :shell, inline: $verifyNodeScript
         subconfig.vm.provision :diskandreboot
         subconfig.vm.provision :shell, inline: $kubeMinionScript
     end

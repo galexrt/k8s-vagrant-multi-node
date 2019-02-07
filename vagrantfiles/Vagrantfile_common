@@ -76,7 +76,7 @@ nf_conntrack_ipv4
 nf_conntrack_ipv6
 EOF
 
-# Set mtu of ethernet devices lower, otherwise there may be issues when using a VPN
+# Set mtu of eth0 and eth1 devices to 1300, otherwise there may be issues when using a VPN on the host system.
 cat <<EOF > /etc/systemd/system/ip-set-mtu.service
 [Unit]
 After=network.target
@@ -90,6 +90,12 @@ EOF
 systemctl daemon-reload
 systemctl enable ip-set-mtu.service
 systemctl start ip-set-mtu.service
+SCRIPT
+
+$verifyNodeScript = <<SCRIPT
+docker version || { echo "Something wrong with docker"; exit 1; }
+kubeadm version || { echo "Something wrong with kubeadm"; exit 1; }
+kubelet --version || { echo "Something wrong with kubelet"; exit 1; }
 SCRIPT
 
 $kubeMasterScript = <<SCRIPT

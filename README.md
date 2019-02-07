@@ -218,6 +218,8 @@ up                             Start Kubernetes Vagrant multi-node cluster. Crea
 
 ## Demo
 
+Please note that these terminal recordings are currently outdated.
+
 ### Start Cluster
 
 [![asciicast](https://asciinema.org/a/186375.png)](https://asciinema.org/a/186375)
