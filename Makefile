@@ -34,8 +34,6 @@ KUBEADM_INIT_FLAGS ?=
 # `kubeadm join` flags for nodes
 KUBEADM_JOIN_FLAGS ?=
 
-KUBE_NETWORK ?= flannel
-
 # Addons
 K8S_DASHBOARD ?= false
 K8S_DASHBOARD_VERSION ?= v1.10.1
@@ -123,7 +121,7 @@ kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` 
 	kubectl config current-context
 	@echo
 
-pull:
+pull: ## Add and download, or update the box image on the host.
 	if !(vagrant box list | grep -q $(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f2)); then \
 		vagrant \
 			box \

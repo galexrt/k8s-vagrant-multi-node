@@ -16,8 +16,6 @@ $diskIDModifier = 0
 $docker_version = ''
 
 # Network
-NODE = ENV['NODE'].to_i || 1
-
 MASTER_IP = ENV["MASTER_IP"] || '192.168.26.10'
 POD_NW_CIDR = ENV["POD_NW_CIDR"] || '10.244.0.0/16'
 NODE_IP_NW = ENV['NODE_IP_NW'] || '192.168.26.'
@@ -35,7 +33,13 @@ $kubeadm_join_flags = ENV["KUBEADM_JOIN_FLAGS"] || ''
 if KUBERNETES_VERSION != "" && $kubeadm_init_flags == ""
     $kubeadm_init_flags = "--kubernetes-version=#{KUBERNETES_VERSION}"
 end
-KUBE_NETWORK = ENV['KUBE_NETWORK'] || 'flannel'
+
+# Only set default CNI, if `$kube_network` is undefined.
+# `$kube_network` is only set here already if an OS needs a specific CNI (e.g., ubuntu)).
+if $kube_network.nil? || $kube_network == ""
+    $kube_network = ENV['KUBE_NETWORK'] || 'flannel'
+end
+
 KUBE_PROXY_IPVS = ENV['KUBE_PROXY_IPVS'] || false
 
 # Generate new using steps in README
@@ -134,11 +138,11 @@ systemctl restart kubelet.service
 mkdir -p $HOME/.kube
 cp -Rf /etc/kubernetes/admin.conf $HOME/.kube/config
 chown $(id -u):$(id -g) $HOME/.kube/config
-if [ "#{KUBE_NETWORK}" == "flannel" ]; then
+if [ "#{$kube_network}" == "flannel" ]; then
     curl --retry 5 --fail -s https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml | \
         awk '/- --kube-subnet-mgr/{print "        - --iface=eth1"}1' | \
         kubectl apply -f -
-elif [ "#{KUBE_NETWORK}" == "canal" ]; then
+elif [ "#{$kube_network}" == "canal" ]; then
     curl --retry 5 --fail -s https://docs.projectcalico.org/v3.5/getting-started/kubernetes/installation/hosted/canal/canal.yaml | \
         sed 's/canal_iface: ""/canal_iface: "eth1"/' | \
         kubectl apply -f -
