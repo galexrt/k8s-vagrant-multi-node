@@ -5,3 +5,6 @@ if $kubernetes_pkg_version_suffix == ''
 end
 
 $docker_version = '5:18.09.1~3-0~ubuntu-bionic'
+
+# Just to be sure with Ubuntu, restart the boxes.
+$needs_box_reboot = true

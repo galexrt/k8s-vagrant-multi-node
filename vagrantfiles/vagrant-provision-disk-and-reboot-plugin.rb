@@ -64,7 +64,7 @@ module VagrantPlugins
               else
                 puts("Disk #{diskID} for #{machine.name} already exists")
               end
-              unless system("VBoxManage storageattach #{$machineUUID} --storagectl '#{$storagecontroller}' --port #{(diskID - 1) + $diskIDModifier} --device 0 --type hdd --medium #{diskPath}")
+              unless system("VBoxManage storageattach #{$machineUUID} --storagectl '#{$storagecontroller}' --port #{diskID - 1} --device 0 --type hdd --medium #{diskPath}")
                 abort("Failed to add disk #{diskID} for vm #{machine.name}")
               end
               puts("Added disk #{diskID}")

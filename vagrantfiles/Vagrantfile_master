@@ -29,7 +29,9 @@ Vagrant.configure('2') do |config|
         subconfig.vm.provision :shell, inline: $prepareScript
         subconfig.vm.provision :shell, inline: $baseInstallScript
         subconfig.vm.provision :shell, inline: $verifyNodeScript
-        subconfig.vm.provision :diskandreboot
+        if $needs_box_reboot
+            subconfig.vm.provision :diskandreboot
+        end
         subconfig.vm.provision :shell, inline: $kubeMasterScript
         # Addons
         if K8S_DASHBOARD.to_s == 'true'
