@@ -9,15 +9,25 @@ Vagrant.configure('2') do |config|
         l.memory = MASTER_MEMORY_SIZE_GB * 1024
     end
 
+    config.vm.provider 'libvirt' do |lv|
+        lv.cpus = MASTER_CPUS
+        lv.memory = MASTER_MEMORY_SIZE_GB * 1024
+    end
+
     config.vm.define 'master' do |subconfig|
         subconfig.vm.hostname = 'master'
         subconfig.vm.network :private_network, ip: MASTER_IP
-        subconfig.vm.provider :virtualbox do |vb|
-            vb.customize ['modifyvm', :id, '--uartmode1', 'disconnected']
-            # Network configuration
-            vb.customize ['modifyvm', :id, '--natdnshostresolver1', 'on']
-            # Storage configuration is done after provision in Makefile
-            # This is because Vagrant is only once reading the Vagrantfile
+        #subconfig.vm.provider :virtualbox do |vb|
+        #    vb.customize ['modifyvm', :id, '--uartmode1', 'disconnected']
+        #    # Network configuration
+        #    vb.customize ['modifyvm', :id, '--natdnshostresolver1', 'on']
+        #    # Storage configuration is done after provision in Makefile
+        #    # This is because Vagrant is only once reading the Vagrantfile
+        #end
+        subconfig.vm.provider :libvirt do |lv|
+            (1..DISK_COUNT.to_i).each do |diskID|
+                lv.storage :file, :size => "#{DISK_SIZE_GB}G"
+            end
         end
         subconfig.vm.synced_folder "data/#{BOX_OS}-master/", '/data', type: 'rsync',
             create: true, owner: 'root', group: 'root',
@@ -29,7 +39,7 @@ Vagrant.configure('2') do |config|
         subconfig.vm.provision :shell, inline: $prepareScript
         subconfig.vm.provision :shell, inline: $baseInstallScript
         subconfig.vm.provision :shell, inline: $verifyNodeScript
-        subconfig.vm.provision :diskandreboot
+        #subconfig.vm.provision :diskandreboot
         subconfig.vm.provision :shell, inline: $kubeMasterScript
         # Addons
         if K8S_DASHBOARD.to_s == 'true'

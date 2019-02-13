@@ -1,1 +1,1 @@
-$box_image = ENV["BOX_IMAGE"] || 'generic/centos7'.freeze
+$box_image = ENV["BOX_IMAGE"] || 'centos/7'.freeze

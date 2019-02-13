@@ -5,7 +5,7 @@ REVERSE_LINES=sed -e '1!G;h;$$!d'
 
 # === BEGIN USER OPTIONS ===
 # Vagrantfile set to use.
-BOX_OS ?= fedora
+BOX_OS ?= centos
 # Box setup
 #BOX_IMAGE
 # Disk setup
@@ -126,7 +126,7 @@ pull: ## Add and download, or update the box image on the host.
 		vagrant \
 			box \
 			add \
-			--provider=virtualbox \
+			--provider=libvirt \
 			$(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f2); \
 	else \
 		vagrant box update --box=$(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f2); \
