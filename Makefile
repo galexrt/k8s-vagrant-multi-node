@@ -47,9 +47,6 @@ VAGRANT_VAGRANTFILE ?= $(MFILECWD)/vagrantfiles/Vagrantfile
 preflight: token ## Run checks and gather variables, used for the the `up` target.
 	$(eval KUBETOKEN := $(shell cat $(MFILECWD)/.vagrant/KUBETOKEN))
 
-vagrant-plugin-vagrant-reload:
-	vagrant plugin install vagrant-reload
-
 token: ## Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_MAKEFILE/.vagrant/KUBETOKEN`).
 	@## Kubeadm join token format is: `[a-z0-9]{6}.[a-z0-9]{16}`
 	@if [ ! -d "$(MFILECWD)/.vagrant" ]; then \

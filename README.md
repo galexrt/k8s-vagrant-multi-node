@@ -33,8 +33,6 @@ A demo of the start and destroy of a cluster can be found here: [README.md Demo 
 * `cut`
 * Vagrant (>= `2.2.0`)
 	* Tested with `2.2.2` (if you should experience issues, please upgrade to at least this version or higher)
-	* Plugins:
-		* `vagrant-reload` (Run `make vagrant-plugin-vagrant-reload` to install it)
 * Virtualbox
 	* Tested with `6.0.0` (if you should experience issues, please upgrade to at least this version or higher)
 	* `VBoxManage` binary in `PATH`.
@@ -88,11 +86,11 @@ There are multiple sets of Vagrantfiles available (see [`vagrantfiles/`](/vagran
 
 List of currently available Vagrantfile sets:
 
-| Name     | Container Runtime                           | OS Version   |
-| -------- | ------------------------------------------- | ------------ |
-| `centos` | [Docker/Moby](https://github.com/moby/moby) | CentOS 7     |
-| `fedora` | [Docker/Moby](https://github.com/moby/moby) | Fedora 29    |
-| `ubuntu` | [Docker/Moby](https://github.com/moby/moby) | Ubuntu 18.04 |
+| Name     | Container Runtime                           | OS Version   | Special Notes                                                                           |
+| -------- | ------------------------------------------- | ------------ | --------------------------------------------------------------------------------------- |
+| `centos` | [Docker/Moby](https://github.com/moby/moby) | CentOS 7     | N/A                                                                                     |
+| `fedora` | [Docker/Moby](https://github.com/moby/moby) | Fedora 29    | N/A                                                                                     |
+| `ubuntu` | [Docker/Moby](https://github.com/moby/moby) | Ubuntu 18.04 | Google DNS Servers are used due to resolution issues with the ubuntu Vagrant Box image. |
 
 To use a different set than the default `fedora` one's, add `BOX_OS=__NAME__` (where `__NAME__` is, e.g., `fedora`).
 

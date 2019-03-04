@@ -1,1 +1,5 @@
 $kube_network = 'canal'
+
+$osPrepareScript = <<SCRIPT
+sed -i 's/^DNS=.*/DNS=8.8.8.8 8.8.4.4/' /etc/systemd/resolved.conf
+SCRIPT
