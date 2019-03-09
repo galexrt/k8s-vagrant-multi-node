@@ -54,7 +54,7 @@ token: ## Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_
 	fi
 	@if [ ! -f "$(MFILECWD)/.vagrant/KUBETOKEN" ]; then \
 		if [ -z "$(KUBETOKEN)" ]; then \
-			echo "$(shell LC_CTYPE=C tr -cd 'a-z0-9' < /dev/urandom | fold -w 6 | head -n 1).$(shell cat /dev/urandom | LC_CTYPE=C tr -cd 'a-z0-9' < /dev/urandom | fold -w 16 | head -n 1)" > "$(MFILECWD)/.vagrant/KUBETOKEN"; \
+			echo "$(shell LC_ALL=C tr -cd 'a-z0-9' < /dev/urandom | fold -w 6 | head -n 1).$(shell cat /dev/urandom | LC_ALL=C tr -cd 'a-z0-9' < /dev/urandom | fold -w 16 | head -n 1)" > "$(MFILECWD)/.vagrant/KUBETOKEN"; \
 		else \
 			echo "$(KUBETOKEN)" > "$(MFILECWD)/.vagrant/KUBETOKEN"; \
 		fi; \
@@ -119,7 +119,7 @@ kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` 
 	@echo
 
 pull: ## Add and download, or update the box image on the host.
-	if !(vagrant box list | grep -q $(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f2)); then \
+	@if !(vagrant box list | grep -q $(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f2)); then \
 		vagrant \
 			box \
 			add \
