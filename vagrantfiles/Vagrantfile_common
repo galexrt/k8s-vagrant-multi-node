@@ -129,7 +129,7 @@ fi
 if grep -q -- '--node-ip=' "$KUBELET_EXTRA_ARGS_FILE"; then
     sed -ri -e 's/KUBELET_EXTRA_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/KUBELET_EXTRA_ARGS=/' "$KUBELET_EXTRA_ARGS_FILE"
 fi
-sed -i 's/KUBELET_EXTRA_ARGS=/KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} /' "$KUBELET_EXTRA_ARGS_FILE"
+sed -i 's|KUBELET_EXTRA_ARGS=|KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} --cni-bin-dir=/usr/libexec/cni|' "$KUBELET_EXTRA_ARGS_FILE"
 
 systemctl daemon-reload
 systemctl restart kubelet.service
@@ -175,7 +175,7 @@ fi
 if grep -q -- '--node-ip=' "$KUBELET_EXTRA_ARGS_FILE"; then
     sed -ri -e 's/KUBELET_EXTRA_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/KUBELET_EXTRA_ARGS=/' "$KUBELET_EXTRA_ARGS_FILE"
 fi
-sed -i 's/KUBELET_EXTRA_ARGS=/KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} /' "$KUBELET_EXTRA_ARGS_FILE"
+sed -i 's|KUBELET_EXTRA_ARGS=|KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} --cni-bin-dir=/usr/libexec/cni|' "$KUBELET_EXTRA_ARGS_FILE"
 
 systemctl daemon-reload
 systemctl restart kubelet.service
