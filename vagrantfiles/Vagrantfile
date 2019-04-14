@@ -8,11 +8,9 @@ BOX_OS = ENV['BOX_OS'] || 'fedora'.freeze
 
 # Load the type specific variables (e.g., master, node) (0 is equal to not a node)
 if NODE == 0
-    SERVER_TYPE = "master"
     $osvariablefile = "../#{BOX_OS}/master"
     $vagrantfilepath = "../Vagrantfile_master"
 else
-    SERVER_TYPE = "node"
     $osvariablefile = "../#{BOX_OS}/node"
     $vagrantfilepath = "../Vagrantfile_node"
 end
