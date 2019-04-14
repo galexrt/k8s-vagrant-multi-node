@@ -186,6 +186,7 @@ stop-node-%                    Stop/Halt a node VM, where `%` is the number of t
 stop                           Stop/Halt master and all nodes VMs.
 token                          Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_MAKEFILE/.vagrant/KUBETOKEN`).
 up                             Start Kubernetes Vagrant multi-node cluster. Creates, starts and bootsup the master and node VMs.
+versions                       Print the "imporant" tools versions out for easier debugging.
 ```
 
 ## Variables
@@ -227,3 +228,6 @@ Please note that these terminal recordings are currently outdated.
 ### Destroy Cluster
 
 [![asciicast](https://asciinema.org/a/186376.png)](https://asciinema.org/a/186376)
+
+## Creating an Issue
+Please attach the `make versions` output to the issue as is shown in the issue template. This makes debugging easier.
