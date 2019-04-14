@@ -44,7 +44,7 @@ VAGRANT_LOG ?=
 VAGRANT_VAGRANTFILE ?= $(MFILECWD)/vagrantfiles/Vagrantfile
 # === END USER OPTIONS ===
 
-preflight: token ## Run checks and gather variables, used for the the `up` target.
+preflight: versions token ## Run checks and gather variables, used for the the `up` target.
 	$(eval KUBETOKEN := $(shell cat $(MFILECWD)/.vagrant/KUBETOKEN))
 
 token: ## Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_MAKEFILE/.vagrant/KUBETOKEN`).
@@ -54,11 +54,35 @@ token: ## Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_
 	fi
 	@if [ ! -f "$(MFILECWD)/.vagrant/KUBETOKEN" ]; then \
 		if [ -z "$(KUBETOKEN)" ]; then \
-			echo "$(shell LC_ALL=C tr -cd 'a-z0-9' < /dev/urandom | fold -w 6 | head -n 1).$(shell cat /dev/urandom | LC_ALL=C tr -cd 'a-z0-9' < /dev/urandom | fold -w 16 | head -n 1)" > "$(MFILECWD)/.vagrant/KUBETOKEN"; \
+			if [ -c /dev/urandom ]; then \
+				echo "$(shell LC_ALL=C tr -cd 'a-z0-9' < /dev/urandom | fold -w 6 | head -n 1).$(shell LC_ALL=C tr -cd 'a-z0-9' < /dev/urandom | fold -w 16 | head -n 1)" > "$(MFILECWD)/.vagrant/KUBETOKEN"; \
+			else \
+				echo "$(shell openssl rand -hex 3).$(shell openssl rand -hex 8)" > "$(MFILECWD)/.vagrant/KUBETOKEN"; \
+			fi; \
 		else \
 			echo "$(KUBETOKEN)" > "$(MFILECWD)/.vagrant/KUBETOKEN"; \
 		fi; \
 	fi
+
+versions: ## Print the "imporant" tools versions out for easier debugging.
+	@echo "=== BEGIN Version Info ==="
+
+	@echo "Repo state: $$(git rev-parse --verify HEAD) (dirty? $$(if git diff --quiet; then echo 'NO'; else echo 'YES'; fi))"
+
+	@echo "make: $$(command -v make)"
+	@echo "kubectl: $$(command -v kubectl)"
+	@echo "grep: $$(command -v grep)"
+	@echo "cut: $$(command -v cut)"
+	@echo "rsync: $$(command -v rsync)"
+	@echo "openssl: $$(command -v openssl)"
+	@echo "/dev/urandom: $$(if test -c /dev/urandom; then echo OK; else echo 404; fi)"
+
+	@echo "Vagrant version:"
+	@vagrant --version
+	@echo "vboxmanage version:"
+	@vboxmanage --version
+
+	@echo "=== END Version Info ==="
 
 up: preflight ## Start Kubernetes Vagrant multi-node cluster. Creates, starts and bootsup the master and node VMs.
 	@$(MAKE) start

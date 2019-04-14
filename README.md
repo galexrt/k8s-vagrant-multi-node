@@ -28,16 +28,18 @@ A demo of the start and destroy of a cluster can be found here: [README.md Demo 
 ## Prerequisites
 
 * `make`
-* `kubectl`
+* `kubectl` - Optional when `KUBECTL_AUTO_CONF=false` (default `true`) is set.
 * `grep`
 * `cut`
+* `rsync`
+* Source for randomness (only used to generate a kubeadm token, when no custom `KUBETOKEN` is given):
+	* `/dev/urandom`
+	* `openssl` command - Fallback for when `/dev/urandom` is not available.
 * Vagrant (>= `2.2.0`)
 	* Tested with `2.2.2` (if you should experience issues, please upgrade to at least this version or higher)
 * Virtualbox
 	* Tested with `6.0.0` (if you should experience issues, please upgrade to at least this version or higher)
 	* `VBoxManage` binary in `PATH`.
-* `rsync`
-* `/dev/urandom` (only used to generate a kubeadm token, when no custom `KUBETOKEN` is given)
 
 > **NOTE** `kubectl` is only needed when the `kubectl` auto configuration is enabled (default is enabled), to disable it set the variable `KUBECTL_AUTO_CONF` to `false`.
 > For more information, see the [Variables](#variables) section.
