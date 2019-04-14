@@ -36,7 +36,7 @@ end
 # Only set default CNI, if `$kube_network` is undefined.
 # `$kube_network` is only set here already if an OS needs a specific CNI (e.g., ubuntu)).
 if $kube_network.nil? || $kube_network == ""
-    $kube_network = ENV['KUBE_NETWORK'] || 'flannel'
+    $kube_network = ENV['KUBE_NETWORK'] || 'canal'
 end
 
 KUBE_PROXY_IPVS = ENV['KUBE_PROXY_IPVS'] || false
@@ -139,15 +139,23 @@ systemctl restart kubelet.service
 mkdir -p $HOME/.kube
 cp -Rf /etc/kubernetes/admin.conf $HOME/.kube/config
 chown $(id -u):$(id -g) $HOME/.kube/config
-if [ "#{$kube_network}" == "flannel" ]; then
-    curl --retry 5 --fail -s https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml | \
+
+case "#{$kube_network}" in
+# canal network
+[Cc][Aa][Nn][Aa][Ll])
+    curl --retry 5 --fail -s https://docs.projectcalico.org/v3.6/getting-started/kubernetes/installation/hosted/canal/canal.yaml | \
+        sed -e 's/canal_iface:.*/canal_iface: "eth1"/' | \
+        kubectl apply -f -
+  ;;
+# flannel network
+*)
+    curl --retry 5 --fail -s https://github.com/coreos/flannel/blob/v0.11.0/Documentation/kube-flannel.yml | \
         awk '/- --kube-subnet-mgr/{print "        - --iface=eth1"}1' | \
         kubectl apply -f -
-elif [ "#{$kube_network}" == "canal" ]; then
-    curl --retry 5 --fail -s https://docs.projectcalico.org/v3.5/getting-started/kubernetes/installation/hosted/canal/canal.yaml | \
-        sed 's/canal_iface: ""/canal_iface: "eth1"/' | \
-        kubectl apply -f -
-fi
+  ;;
+esac
+
+echo "Done."
 SCRIPT
 
 $kubeMinionScript = <<SCRIPT
@@ -181,6 +189,8 @@ sed -i 's|KUBELET_EXTRA_ARGS=|KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} --cni-bin-
 
 systemctl daemon-reload
 systemctl restart kubelet.service
+
+echo "Done."
 SCRIPT
 
 # Addons
