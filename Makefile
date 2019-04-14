@@ -153,7 +153,8 @@ ssh-master: ## SSH into the master VM.
 ssh-node-%: ## SSH into a node VM, where `%` is the number of the node.
 	NODE=$* vagrant ssh
 
-clean: clean-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done) clean-data ## Destroy master and node VMs, and delete data.
+clean: clean-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done) ## Destroy master and node VMs, and delete data.
+	@$(MAKE) clean-data
 
 clean-master: ## Remove the master VM.
 	-vagrant destroy -f
