@@ -4,7 +4,7 @@ require File.expand_path('../vagrant-provision-disk-and-reboot-plugin.rb', __FIL
 NODE = ENV['NODE'].to_i || 1
 
 # Vagrantfile set to use.
-BOX_OS = ENV["BOX_OS"] || 'fedora'.freeze
+BOX_OS = ENV['BOX_OS'] || 'fedora'.freeze
 
 # Load the type specific variables (e.g., master, node) (0 is equal to not a node)
 if NODE == 0

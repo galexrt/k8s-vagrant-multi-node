@@ -1,4 +1,4 @@
-$box_image = ENV["BOX_IMAGE"] || 'generic/centos7'.freeze
+$box_image = ENV['BOX_IMAGE'] || 'generic/centos7'.freeze
 
 $osPrepareScript = <<SCRIPT
 set -x

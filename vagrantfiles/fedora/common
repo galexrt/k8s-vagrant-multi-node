@@ -1,4 +1,4 @@
-$box_image = ENV["BOX_IMAGE"] || 'generic/fedora29'.freeze
+$box_image = ENV['BOX_IMAGE'] || 'generic/fedora29'.freeze
 
 $osPrepareScript = <<SCRIPT
 set -x
