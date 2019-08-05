@@ -147,6 +147,12 @@ case "#{$kube_network}" in
         sed -e 's/canal_iface:.*/canal_iface: "eth1"/' | \
         kubectl apply -f -
   ;;
+# Calico network: https://docs.projectcalico.org/v3.8/getting-started/kubernetes/installation/calico
+[Cc][Aa][Ll][Ii][Cc][Oo])
+    curl --retry 5 --fail -s https://docs.projectcalico.org/v3.8/manifests/calico.yaml | \
+        sed -e "s?192.168.0.0/16?${POD_NW_CIDR}?g" | \
+        kubectl apply -f -
+  ;;
 # flannel network
 *)
     curl --retry 5 --fail -s https://github.com/coreos/flannel/blob/v0.11.0/Documentation/kube-flannel.yml | \
