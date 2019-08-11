@@ -50,11 +50,10 @@ A demo of the start and destroy of a cluster can be found here: [README.md Demo 
     * CPU: 2 Cores
     * Memory: 2GB
 * 1x Node:
-    * CPU: 1 Core
-    * Memory: 1GB
+    * CPU: 2 Core
+    * Memory: 2GB
 
-These resources can currently only be changed by editing `Vagrantfile` and `Vagrantfile_nodes` directly,
-but will probably be configurable by environment variables in the future.
+These resources can be changed by setting the according variables for the `make up` command, see [Variables section](#variables),
 
 ## Quickstart
 
@@ -196,11 +195,11 @@ versions                       Print the "imporant" tools versions out for easie
 | `BOX_OS`                        | `fedora`                 | Which set of Vagrantfiles to use to start the VMs.                                                                                                               |
 | `BOX_IMAGE`                     | ``                       | Set the VM box image to use (only for override purposes).                                                                                                        |
 | `DISK_COUNT`                    | `1`                      | Set how many additional disks will be added to the VMs.                                                                                                          |
-| `DISK_SIZE_GB`                  | `10` GB                  | Size of additional disks added to the VMs.                                                                                                                       |
-| `MASTER_CPUS`                   | `1` Core                 | Amount of cores to use for the master VM.                                                                                                                        |
+| `DISK_SIZE_GB`                  | `25` GB                  | Size of additional disks added to the VMs.                                                                                                                       |
+| `MASTER_CPUS`                   | `2` Core                 | Amount of cores to use for the master VM.                                                                                                                        |
 | `MASTER_MEMORY_SIZE_GB`         | `2` GB                   | Size of memory (in GB) to be allocated for the master VM.                                                                                                        |
-| `NODE_CPUS`                     | `1`                      | Amount of cores to use for each node VM.                                                                                                                         |
-| `NODE_MEMORY_SIZE_GB`           | `1` GB                   | Size of memory (in GB) to be allocated for each node VM.                                                                                                         |
+| `NODE_CPUS`                     | `2`                      | Amount of cores to use for each node VM.                                                                                                                         |
+| `NODE_MEMORY_SIZE_GB`           | `2` GB                   | Size of memory (in GB) to be allocated for each node VM.                                                                                                         |
 | `NODE_COUNT`                    | `2`                      | How many worker nodes should be spawned.                                                                                                                         |
 | `MASTER_IP`                     | `192.168.26.10`          | The Kubernetes master node IP.                                                                                                                                   |
 | `NODE_IP_NW`                    | `192.168.26.`            | The first three parts of the IPs used for the nodes.                                                                                                             |
