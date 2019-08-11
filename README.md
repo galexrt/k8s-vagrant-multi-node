@@ -213,7 +213,7 @@ versions                       Print the "imporant" tools versions out for easie
 | `KUBERNETES_VERSION`            | `""` (empty)             | The `kubeadm` and `kubelet` package and API server version to install (`KUBEADM_INIT_FLAGS` will be set to `--kubernetes-version=$KUBERNETES_VERSION` if unset). |
 | `KUBERNETES_PKG_VERSION_SUFFIX` | `""` (empty)             | String which will be appended to the `kubeadm` and `kubelet` package versions when installed (only used for `vagrantfiles/ubuntu`).                              |
 | `KUBE_PROXY_IPVS`               | `false`                  | Enable IPVS kernel modules to then use IPVS for the kube-proxy.                                                                                                  |
-| `KUBE_NETWORK`                  | `flannel`                | What CNI to install, if empty don't install any CNI. `flannel` and `canal` are supported options.                                                                |
+| `KUBE_NETWORK`                  | `flannel`                | What CNI to install, if empty don't install any CNI. `flannel`, `canal` and `calico` are supported options.                                                                |
 | `KUBECTL_AUTO_CONF`             | `true`                   | If `kubectl` should be  automatically configured to be able to talk with the cluster (if disabled, removes need for `kubectl` binary).                           |
 
 ## Demo
