@@ -155,7 +155,7 @@ case "#{$kube_network}" in
   ;;
 # flannel network
 *)
-    curl --retry 5 --fail -s https://github.com/coreos/flannel/blob/v0.11.0/Documentation/kube-flannel.yml | \
+    curl --retry 5 --fail -s https://raw.githubusercontent.com/coreos/flannel/v0.11.0/Documentation/kube-flannel.yml | \
         awk '/- --kube-subnet-mgr/{print "        - --iface=eth1"}1' | \
         kubectl apply -f -
   ;;
