@@ -21,7 +21,7 @@ NODE_IP_NW = ENV['NODE_IP_NW'] || '192.168.26.'
 NODE_IP = NODE_IP_NW + (NODE + 10).to_s
 
 # Addons
-K8S_DASHBOARD = ENV['K8S_DASHBOARD'].to_bool || false
+K8S_DASHBOARD = ENV['K8S_DASHBOARD'].downcase == "true" || false
 K8S_DASHBOARD_VERSION = ENV['K8S_DASHBOARD_VERSION'] || 'v1.10.1'
 
 # Kubernetes and kubeadm
