@@ -143,18 +143,21 @@ chown $(id -u):$(id -g) $HOME/.kube/config
 case "#{$kube_network}" in
 # canal network
 [Cc][Aa][Nn][Aa][Ll])
-    curl --retry 5 --fail -s https://docs.projectcalico.org/v3.6/getting-started/kubernetes/installation/hosted/canal/canal.yaml | \
+    echo "Installing Canal CNI ..."
+    curl --retry 5 --fail -s https://docs.projectcalico.org/v3.9/getting-started/kubernetes/installation/hosted/canal/canal.yaml | \
         sed -e 's/canal_iface:.*/canal_iface: "eth1"/' | \
         kubectl apply -f -
   ;;
-# Calico network: https://docs.projectcalico.org/v3.8/getting-started/kubernetes/installation/calico
+# Calico network: https://docs.projectcalico.org/v3.9/getting-started/kubernetes/installation/calico
 [Cc][Aa][Ll][Ii][Cc][Oo])
-    curl --retry 5 --fail -s https://docs.projectcalico.org/v3.8/manifests/calico.yaml | \
+    echo "Installing Calico CNI ..."
+    curl --retry 5 --fail -s https://docs.projectcalico.org/v3.9/manifests/calico.yaml | \
         sed -e "s?192.168.0.0/16?${POD_NW_CIDR}?g" | \
         kubectl apply -f -
   ;;
 # flannel network
 *)
+    echo "Installing Flannel CNI ..."
     curl --retry 5 --fail -s https://raw.githubusercontent.com/coreos/flannel/v0.11.0/Documentation/kube-flannel.yml | \
         awk '/- --kube-subnet-mgr/{print "        - --iface=eth1"}1' | \
         kubectl apply -f -
