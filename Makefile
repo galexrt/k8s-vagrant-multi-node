@@ -150,7 +150,11 @@ pull: ## Add and download, or update the box image on the host.
 			--provider=virtualbox \
 			$(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4); \
 	else \
-		vagrant box update --box=$(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4); \
+		vagrant \
+			box \
+			update \
+			--provider=virtualbox \
+			--box=$(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4); \
 	fi
 
 start-master: preflight ## Start up master VM (automatically done by `up` target).
