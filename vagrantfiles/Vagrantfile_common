@@ -153,7 +153,7 @@ case "#{$kube_network}" in
 [Cc][Aa][Ll][Ii][Cc][Oo])
     echo "Installing Calico CNI ..."
     curl --retry 5 --fail -s https://docs.projectcalico.org/v3.9/manifests/calico.yaml | \
-        sed -e "s?192.168.0.0/16?${POD_NW_CIDR}?g" | \
+        sed -e 's?192.168.0.0/16?#{POD_NW_CIDR}?g' | \
         kubectl apply -f -
   ;;
 # flannel network
