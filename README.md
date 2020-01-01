@@ -158,26 +158,31 @@ See the `data/VM_NAME/` directories, where `VM_NAME` is for example `master`.
 
 ```
 $ make help
-clean                          Destroy master and node VMs, and delete data.
+Usage: make [TARGET ...]
+
 clean-data                     Remove data (shared folders) and disks of all VMs (master and nodes).
-clean-master                   Remove the master VM.
+clean-force                    Remove all drives which should normally have been removed by the normal clean-master or clean-node-% targets.
+clean                          Destroy master and node VMs, delete data and the kubectl context.
+clean-master                   Remove the master VM and the kubectl context.
 clean-node-%                   Remove a node VM, where `%` is the number of the node.
 clean-nodes                    Remove all node VMs.
 help                           Show this help menu.
 kubectl                        Configure kubeconfig context for the cluster using `kubectl config` (automatically done by `up` target).
+kubectl-delete                 Delete the created CLUSTER_NAME context from the kubeconfig (uses kubectl).
 load-image                     Load local/pulled Docker image into master and all node VMs.
 load-image-master              Load local/pulled image into master VM.
 load-image-node-%              Load local/pulled image into node VM, where `%` is the number of the node.
 load-image-nodes               Load local/pulled Docker image into all node VMs.
 preflight                      Run checks and gather variables, used for the the `up` target.
+pull                           Add and download, or update the box image on the host.
 ssh-master                     SSH into the master VM.
 ssh-node-%                     SSH into a node VM, where `%` is the number of the node.
 start-master                   Start up master VM (automatically done by `up` target).
-start-nodes                    Create and start all node VMs by utilizing the `node-X` target (automatically done by `up` target).
 start-node-%                   Start node VM, where `%` is the number of the node.
+start-nodes                    Create and start all node VMs by utilizing the `node-X` target (automatically done by `up` target).
 status-master                  Show status of the master VM.
-status-node-%                  Show status of a node VM, where `%` is the number of the node.
 status-nodes                   Show status of all node VMs.
+status-node-%                  Show status of a node VM, where `%` is the number of the node.
 status                         Show status of master and all node VMs.
 stop-master                    Stop/Halt the master VM.
 stop-nodes                     Stop/Halt all node VMs.
@@ -185,6 +190,10 @@ stop-node-%                    Stop/Halt a node VM, where `%` is the number of t
 stop                           Stop/Halt master and all nodes VMs.
 token                          Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_MAKEFILE/.vagrant/KUBETOKEN`).
 up                             Start Kubernetes Vagrant multi-node cluster. Creates, starts and bootsup the master and node VMs.
+vagrant-reload-master          Run vagrant reload for master VM.
+vagrant-reload-node-%          Run `vagrant reload` for specific node  VM.
+vagrant-reload-nodes           Run `vagrant reload` for all node VMs.
+vagrant-reload                 Run vagrant reload on master and nodes.
 versions                       Print the "imporant" tools versions out for easier debugging.
 ```
 
@@ -210,7 +219,7 @@ versions                       Print the "imporant" tools versions out for easie
 | `KUBETOKEN`                     | `""` (empty)             | The `kubeadm` "join" token to use. Will be generated automatically using `/dev/urandom/` when empty.                                                                                                                                   |
 | `KUBEADM_INIT_FLAGS`            | `""` (empty)             | The `kubeadm init` flags to use. (When `KUBERNETES_VERSION` is set and `KUBEADM_INIT_FLAGS` is empty, `KUBEADM_INIT_FLAGS` will automatically be set to `--kubernetes-version=$KUBERNETES_VERSION`).                                   |
 | `KUBEADM_JOIN_FLAGS`            | `""` (empty)             | The `kubeadm join` flags to use.                                                                                                                                                                                                       |
-| `KUBERNETES_VERSION`            | `""` (empty)             | The `kubeadm` and `kubelet` package and API server version to install. Must be a fully qualified version string, e.g., `1.15.3` and not just `1.15`.                                                                                 |
+| `KUBERNETES_VERSION`            | `""` (empty)             | The `kubeadm` and `kubelet` package and API server version to install. Must be a fully qualified version string, e.g., `1.15.3` and not just `1.15`.                                                                                   |
 | `KUBERNETES_PKG_VERSION_SUFFIX` | `""` (empty)             | String which will be appended to the `kubeadm` and `kubelet` package versions when installed (only used for `vagrantfiles/ubuntu`).                                                                                                    |
 | `KUBE_PROXY_IPVS`               | `false`                  | Enable IPVS kernel modules to then use IPVS for the kube-proxy.                                                                                                                                                                        |
 | `KUBE_NETWORK`                  | `flannel`                | What CNI to install, if empty don't install any CNI. `flannel`, `canal` and `calico` are supported options. Ubuntu CNI is forced to use `canal` and can't be changed (see [Different OS / Vagrantfiles](#different-os--vagrantfiles)). |
