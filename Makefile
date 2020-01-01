@@ -142,6 +142,11 @@ kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` 
 	kubectl config current-context
 	@echo
 
+kubectl-delete: ## Delete the created CLUSTER_NAME context from the kubeconfig (uses kubectl).
+	$(eval CLUSTERCERTSDIR := $(shell mktemp -d))
+	
+	kubectl config delete-context $(CLUSTER_NAME)
+
 pull: ## Add and download, or update the box image on the host.
 	@if !(vagrant box list | grep -q $(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4)); then \
 		vagrant \
@@ -181,10 +186,10 @@ ssh-master: ## SSH into the master VM.
 ssh-node-%: ## SSH into a node VM, where `%` is the number of the node.
 	NODE=$* vagrant ssh
 
-clean: clean-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done) ## Destroy master and node VMs, and delete data.
+clean: kubectl-delete clean-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done) ## Destroy master and node VMs, delete data and the kubectl context.
 	@$(MAKE) clean-data
 
-clean-master: ## Remove the master VM.
+clean-master: kubectl-delete ## Remove the master VM and the kubectl context.
 	-vagrant destroy -f
 
 clean-node-%: ## Remove a node VM, where `%` is the number of the node.
@@ -246,11 +251,13 @@ status-node-%: ## Show status of a node VM, where `%` is the number of the node.
 status-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "status-node-$$i"; done) ## Show status of all node VMs.
 
 help: ## Show this help menu.
-	grep -E '^[a-zA-Z_%-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	@echo "Usage: make [TARGET ...]"
+	@echo
+	@grep -E '^[a-zA-Z_%-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 .DEFAULT_GOAL := help
 .EXPORT_ALL_VARIABLES:
-.PHONY: clean clean-data clean-master clean-nodes help kubectl load-image \
-	load-image-master load-image-nodes preflight ssh-master start-master start-nodes \
-	status-master status-nodes status stop-master stop-nodes vagrant-reload \
-	vagrant-reload-master vagrant-reload-nodes stop token up
+.PHONY: clean clean-data clean-master clean-nodes help kubectl kubectl-delete \
+	load-image load-image-master load-image-nodes preflight ssh-master start-master \
+	start-nodes status-master status-nodes status stop-master stop-nodes \
+	vagrant-reload vagrant-reload-master vagrant-reload-nodes stop token up
