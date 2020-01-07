@@ -144,8 +144,7 @@ kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` 
 
 kubectl-delete: ## Delete the created CLUSTER_NAME context from the kubeconfig (uses kubectl).
 	$(eval CLUSTERCERTSDIR := $(shell mktemp -d))
-	
-	kubectl config delete-context $(CLUSTER_NAME)
+	if (kubectl config get-contexts $(CLUSTER_NAME) > /dev/null 2>&1); then kubectl config delete-context $(CLUSTER_NAME); fi
 
 pull: ## Add and download, or update the box image on the host.
 	@if !(vagrant box list | grep -q $(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4)); then \
