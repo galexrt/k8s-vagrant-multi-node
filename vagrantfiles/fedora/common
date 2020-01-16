@@ -1,4 +1,4 @@
-$box_image = ENV['BOX_IMAGE'] || 'generic/fedora29'.freeze
+$box_image = ENV['BOX_IMAGE'] || 'generic/fedora30'.freeze
 
 $osPrepareScript = <<SCRIPT
 set -x
@@ -6,4 +6,7 @@ set -x
 systemctl stop firewalld
 systemctl disable firewalld
 systemctl mask firewalld
+
+update-alternatives --set iptables /usr/sbin/iptables-legacy
+
 SCRIPT
