@@ -90,7 +90,7 @@ List of currently available Vagrantfile sets:
 | Name     | Container Runtime                           | OS Version   | Special Notes                                                                                                                           |
 | -------- | ------------------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `centos` | [Docker/Moby](https://github.com/moby/moby) | CentOS 7     | N/A                                                                                                                                     |
-| `fedora` | [Docker/Moby](https://github.com/moby/moby) | Fedora 29    | N/A                                                                                                                                     |
+| `fedora` | [Docker/Moby](https://github.com/moby/moby) | Fedora 30    | N/A                                                                                                                                     |
 | `ubuntu` | [Docker/Moby](https://github.com/moby/moby) | Ubuntu 18.04 | `canal` is used here due to issues with Ubuntu. Google DNS Servers are used due to resolution issues with the ubuntu Vagrant Box image. |
 
 To use a different set than the default `fedora` one's, add `BOX_OS=__NAME__` (where `__NAME__` is, e.g., `fedora`).
