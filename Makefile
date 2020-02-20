@@ -6,8 +6,8 @@ REVERSE_LINES=sed -e '1!G;h;$$!d'
 # === BEGIN USER OPTIONS ===
 # Vagrantfile set to use.
 BOX_OS ?= fedora
-# Box setup
-#BOX_IMAGE
+# Vagrant Provider
+VAGRANT_DEFAULT_PROVIDER ?= virtualbox
 # Disk setup
 DISK_COUNT ?= 1
 DISK_SIZE_GB ?= 25
@@ -22,6 +22,8 @@ NODE_COUNT ?= 2
 MASTER_IP ?= 192.168.26.10
 NODE_IP_NW ?= 192.168.26.
 POD_NW_CIDR ?= 10.244.0.0/16
+
+KUBETOKEN =
 
 KUBECTL_AUTO_CONF ?= true
 
@@ -64,6 +66,9 @@ token: ## Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_
 		fi; \
 	fi
 
+libvirt-prep:
+	sh ./scripts/virsh_create_network.sh
+
 versions: ## Print the "imporant" tools versions out for easier debugging.
 	@echo "=== BEGIN Version Info ==="
 
@@ -88,7 +93,13 @@ up: preflight ## Start Kubernetes Vagrant multi-node cluster. Creates, starts an
 	@$(MAKE) start
 
 start: preflight pull
+ifeq ($(VAGRANT_DEFAULT_PROVIDER), "virtualbox")
 	@$(MAKE) start-master start-nodes
+else
+	# Define network first 
+	@$(MAKE) libvirt-prep
+	@$(MAKE) start-master start-nodes
+endif
 	@if $(KUBECTL_AUTO_CONF); then \
 		$(MAKE) kubectl; \
 	else \
@@ -151,13 +162,11 @@ pull: ## Add and download, or update the box image on the host.
 		vagrant \
 			box \
 			add \
-			--provider=virtualbox \
 			$(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4); \
 	else \
 		vagrant \
 			box \
 			update \
-			--provider=virtualbox \
 			--box=$(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4); \
 	fi
 
@@ -201,7 +210,7 @@ clean-data: ## Remove data (shared folders) and disks of all VMs (master and nod
 	rm -v -rf "$(PWD)/.vagrant/KUBETOKEN"
 
 clean-force: ## Remove all drives which should normally have been removed by the normal clean-master or clean-node-% targets.
-	rm -v -rf "$(PWD)/.vagrant/"*.vdi
+	rm -v -rf "$(PWD)/.vagrant/"*.vdi "$(PWD)/.vagrant/"*.img
 
 vagrant-reload: vagrant-reload-master vagrant-reload-nodes ## Run vagrant reload on master and nodes.
 

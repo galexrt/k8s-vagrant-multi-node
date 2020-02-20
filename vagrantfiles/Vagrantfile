@@ -1,34 +1,91 @@
 require File.expand_path('../vagrant-provision-disk-and-reboot-plugin.rb', __FILE__)
 
-# Node ID if it is a node.
+# Node ID if it is a node
 NODE = ENV['NODE'].to_i || 1
 
-# Vagrantfile set to use.
-BOX_OS = ENV['BOX_OS'] || 'fedora'.freeze
+# Vagrantfile provider to use
+VAGRANT_DEFAULT_PROVIDER = ENV['VAGRANT_DEFAULT_PROVIDER'] || 'virtualbox'.freeze
 
-# Load the type specific variables (e.g., master, node) (0 is equal to not a node)
-if NODE == 0
-    $osvariablefile = "../#{BOX_OS}/master"
-    $vagrantfilepath = "../Vagrantfile_master"
-else
-    $osvariablefile = "../#{BOX_OS}/node"
-    $vagrantfilepath = "../Vagrantfile_node"
-end
+# Vagrantfile OS set to use
+BOX_OS = ENV['BOX_OS'] || 'fedora'.freeze
 
 $osprefile = File.expand_path("../#{BOX_OS}/pre", __FILE__)
 load $osprefile if File.exist?($osprefile)
 
-# Load the Vagrantfile_common file
-$vagrantfilecommon = File.expand_path('../Vagrantfile_common', __FILE__)
+# Load the Vagrantfile_vars file
+$vagrantfilecommon = File.expand_path('../Vagrantfile_vars', __FILE__)
 load $vagrantfilecommon
 
 # Load the common os file if it exists
 $oscommonvariablefile = File.expand_path("../#{BOX_OS}/common", __FILE__)
 load $oscommonvariablefile if File.exist?($oscommonvariablefile)
 
+# Load the type specific variables (e.g., master, node) (0 is equal to not a node)
+if NODE == 0
+    $osvariablefile = "../#{BOX_OS}/master"
+    hostname = 'master'
+    vmip = MASTER_IP
+else
+    $osvariablefile = "../#{BOX_OS}/node"
+    hostname = "node#{NODE}"
+    vmip = NODE_IP
+end
 $osvariablefile = File.expand_path($osvariablefile, __FILE__)
 load $osvariablefile
 
-# Load the common Vagrantfile_TYPE file
-$vagrantfilepath = File.expand_path($vagrantfilepath, __FILE__)
-load $vagrantfilepath
+Vagrant.configure('2') do |config|
+    config.vm.box = $box_image
+    config.vm.box_check_update = true
+
+    config.vm.boot_timeout = 900
+
+    config.vm.provider VAGRANT_DEFAULT_PROVIDER do |l|
+        l.cpus = MASTER_CPUS
+        l.memory = MASTER_MEMORY_SIZE_GB * 1024
+        if VAGRANT_DEFAULT_PROVIDER == 'libvirt'
+            (1..DISK_COUNT.to_i).each do |diskID|
+                diskPath = "#{BOX_OS}-#{hostname}-disk-#{diskID}.img"
+                l. storage :file, :size => "#{DISK_SIZE_GB}GB", :path => diskPath, :allow_existing => true
+            end
+        end
+    end
+
+    config.vm.define hostname do |subconfig|
+        subconfig.vm.hostname = hostname
+        subconfig.vm.network :private_network, ip: vmip
+        subconfig.vm.provider :virtualbox do |vb|
+            vb.customize ['modifyvm', :id, '--uartmode1', 'disconnected']
+            # Network configuration
+            vb.customize ['modifyvm', :id, '--natdnshostresolver1', 'on']
+            # Storage configuration is done after provision in Makefile
+            # This is because Vagrant is only once reading the Vagrantfile
+        end
+        subconfig.vm.provider :libvirt do |vb|
+            vb.disk_bus = "sata"
+        end
+        subconfig.vm.synced_folder "data/#{BOX_OS}-#{hostname}/", '/data', type: 'rsync',
+            create: true, owner: 'root', group: 'root',
+            rsync__args: ["--rsync-path='sudo rsync'", '--archive', '--delete', '-z']
+        # Provision
+        if $osPrepareScript != ""
+            subconfig.vm.provision :shell, inline: $osPrepareScript
+        end
+        subconfig.vm.provision :shell, inline: $prepareScript
+        subconfig.vm.provision :shell, inline: $baseInstallScript
+        subconfig.vm.provision :shell, inline: $verifyNodeScript
+        if VAGRANT_DEFAULT_PROVIDER == 'virtualbox'
+            subconfig.vm.provision :diskandreboot
+        end
+        if hostname.include? "node"
+            subconfig.vm.provision :shell, inline: $kubeMinionScript
+        end
+        if hostname == 'master'
+            subconfig.vm.provision :shell, inline: $kubeMasterScript
+            # Addons
+            if K8S_DASHBOARD
+                subconfig.vm.provision :shell, inline: $kubeDashScript
+                subconfig.vm.network 'forwarded_port', guest: 8443, host: 2443
+            end
+        end
+    end
+end

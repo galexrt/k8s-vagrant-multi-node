@@ -11,35 +11,37 @@ A demo of the start and destroy of a cluster can be found here: [README.md Demo 
 - [Quickstart](#quickstart)
 - [Different OS / Vagrantfiles](#different-os--vagrantfiles)
 - [Usage](#usage)
-	- [Starting the environment](#starting-the-environment)
-	- [Faster (parallel) environment start](#faster-parallel-environment-start)
-	- [Show status of VMs](#show-status-of-vms)
-	- [Shutting down the environment](#shutting-down-the-environment)
-	- [Copy local Docker image into VMs](#copy-local-docker-image-into-vms)
-	- [Data inside VM](#data-inside-vm)
-	- [Show `make` targets](#show-make-targets)
+  - [Starting the environment](#starting-the-environment)
+  - [Faster (parallel) environment start](#faster-parallel-environment-start)
+  - [Show status of VMs](#show-status-of-vms)
+  - [Shutting down the environment](#shutting-down-the-environment)
+  - [Copy local Docker image into VMs](#copy-local-docker-image-into-vms)
+  - [Data inside VM](#data-inside-vm)
+  - [Show `make` targets](#show-make-targets)
 - [Variables](#variables)
 - [Demo](#demo)
-	- [Start Cluster](#start-cluster)
-	- [Destroy Cluster](#destroy-cluster)
+  - [Start Cluster](#start-cluster)
+  - [Destroy Cluster](#destroy-cluster)
 
 <!-- /TOC -->
 
 ## Prerequisites
 
 * `make`
-* `kubectl` - Optional when `KUBECTL_AUTO_CONF=false` (default `true`) is set.
+* `kubectl` - Optional when `KUBECTL_AUTO_CONF` is set to `false` (default: `true`).
 * `grep`
 * `cut`
 * `rsync`
 * Source for randomness (only used to generate a kubeadm token, when no custom `KUBETOKEN` is given):
-	* `/dev/urandom`
-	* `openssl` command - Fallback for when `/dev/urandom` is not available.
+  * `/dev/urandom`
+  * `openssl` command - Fallback for when `/dev/urandom` is not available.
 * Vagrant (>= `2.2.0`)
-	* Tested with `2.2.2` (if you should experience issues, please upgrade to at least this version or higher)
-* Virtualbox
-	* Tested with `6.0.0` (if you should experience issues, please upgrade to at least this version or higher)
-	* `VBoxManage` binary in `PATH`.
+  * Tested with `2.2.2` (if you should experience issues, please upgrade to at least this Vagrant version or higher)
+* Vagrant Provider (one of the following two is needed)
+  * Virtualbox
+    * Tested with `6.0.0` (if you should experience issues, please upgrade to at least this version or higher)
+    * `VBoxManage` binary in `PATH`.
+  * libvirt (`vagrant plugin install vagrant-libvirt`)
 
 > **NOTE** `kubectl` is only needed when the `kubectl` auto configuration is enabled (default is enabled), to disable it set the variable `KUBECTL_AUTO_CONF` to `false`.
 > For more information, see the [Variables](#variables) section.
@@ -47,26 +49,28 @@ A demo of the start and destroy of a cluster can be found here: [README.md Demo 
 ## Hardware Requirements
 
 * Master
-    * CPU: 2 Cores
-    * Memory: 2GB
+  * CPU: 2 Cores
+  * Memory: 2GB
 * 1x Node:
-    * CPU: 2 Core
-    * Memory: 2GB
+  * CPU: 2 Core
+  * Memory: 2GB
 
-These resources can be changed by setting the according variables for the `make up` command, see [Variables section](#variables),
+These resources can be changed by setting the according variables for the `make up` command, see [Variables](#variables) section.
 
 ## Quickstart
 
 To start with the defaults, 1x master and 2x workers, run the following:
-```
+
+```shell
 $ make up -j 3
 ```
+
 The `-j3` will cause three VMs to be started in parallel to speed up the cluster creation.
 > **NOTE** Your `kubectl` is automatically configured to use a context for the
 > created cluster, after the master VM is started.
 > The context is named after the directory the `Makefile` is in.
 
-```
+```shell
 $ kubectl config current-context
 k8s-vagrant-multi-node
 $ kubectl get componentstatus
@@ -76,9 +80,9 @@ controller-manager   Healthy   ok
 etcd-0               Healthy   {"health": "true"}
 $ kubectl get nodes
 NAME      STATUS    ROLES     AGE       VERSION
-master    Ready     master    4m        v1.10.4
-node1     Ready     <none>    4m        v1.10.4
-node2     Ready     <none>    4m        v1.10.4
+master    Ready     master    4m        v1.17.3
+node1     Ready     <none>    4m        v1.17.3
+node2     Ready     <none>    4m        v1.17.3
 ```
 
 ## Different OS / Vagrantfiles
@@ -100,9 +104,11 @@ To use a different set than the default `fedora` one's, add `BOX_OS=__NAME__` (w
 ### Starting the environment
 
 To start up the Vagrant Kubernetes multi node environment with the default of two worker nodes + a master (not parallel) run:
-```
+
+```shell
 $ make up
 ```
+
 > **NOTE** Your `kubectl` is automatically configured to use a context for the
 > created cluster, after the master VM is started.
 > The context is named after the directory the `Makefile` is in.
@@ -110,16 +116,18 @@ $ make up
 ### Faster (parallel) environment start
 
 To start up 4 VMs in parallel run (`-j` flag does not control how many (worker) VMs are started, the `NODE_COUNT` variable is used for that):
-```
+
+```shell
 $ NODE_COUNT=3 make up -j4
 ```
+
 The flag `-j CORES/THREADS` allows yout to set how many VMs (Makefile targets) will be run at the same time.
 You can also use `-j $(nproc)` to start as many VMs as cores/threads you have in your machine.
 So to start up all VMs (master and three nodes) in parallel, you would add one to the chosen `NODE_COUNT`.
 
 ### Show status of VMs
 
-```
+```shell
 $ make status
 master                    not created (virtualbox)
 node1                     not created (virtualbox)
@@ -129,7 +137,8 @@ node2                     not created (virtualbox)
 ### Shutting down the environment
 
 To destroy the Vagrant environment run:
-```
+
+```shell
 $ make clean
 $ make clean-data
 ```
@@ -138,7 +147,8 @@ $ make clean-data
 
 The `make load-image` target can be used to copy a docker image from your local docker daemon to all the VMs in your cluster.
 The `IMG` variable can be expressed in a few ways, for example:
-```
+
+```shell
 $ make load-image IMG=your_name/your_image_name:your_tag
 $ make load-image IMG=your_name/your_image_name
 $ make load-image IMG=my-private-registry.com/your_name/your_image_name:your_tag
@@ -146,7 +156,8 @@ $ make load-image IMG=my-private-registry.com/your_name/your_image_name:your_tag
 
 You can also specify a new image name and tag to use after the image has been copied to the VM's by setting the `TAG` variable.
 This will not change the image/tag in your local docker daemon, it will only affect the image in the VM's.
-```
+
+```shell
 $ make load-image IMG=repo/image:tag TAG=new_repo/new_image:new_tag
 ```
 
@@ -156,7 +167,7 @@ See the `data/VM_NAME/` directories, where `VM_NAME` is for example `master`.
 
 ### Show `make` targets
 
-```
+```shell
 $ make help
 Usage: make [TARGET ...]
 
@@ -202,6 +213,7 @@ versions                       Print the "imporant" tools versions out for easie
 | Variable Name                   | Default Value            | Description                                                                                                                                                                                                                            |
 | ------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `BOX_OS`                        | `fedora`                 | Which set of Vagrantfiles to use to start the VMs.                                                                                                                                                                                     |
+| `VAGRANT_DEFAULT_PROVIDER`      | `virtualbox`             | Which Vagrant provider to use. Available are `virtualbox` and `libvirt`.                                                                                                                                                               |
 | `BOX_IMAGE`                     | ``                       | Set the VM box image to use (only for override purposes).                                                                                                                                                                              |
 | `DISK_COUNT`                    | `1`                      | Set how many additional disks will be added to the VMs.                                                                                                                                                                                |
 | `DISK_SIZE_GB`                  | `25` GB                  | Size of additional disks added to the VMs.                                                                                                                                                                                             |
@@ -238,4 +250,5 @@ Please note that these terminal recordings are currently outdated.
 [![asciicast](https://asciinema.org/a/186376.png)](https://asciinema.org/a/186376)
 
 ## Creating an Issue
+
 Please attach the `make versions` output to the issue as is shown in the issue template. This makes debugging easier.
