@@ -43,6 +43,8 @@ A demo of the start and destroy of a cluster can be found here: [README.md Demo 
     * `VBoxManage` binary in `PATH`.
   * libvirt (`vagrant plugin install vagrant-libvirt`)
     * Tested with `libvirtd` version `5.10.0`.
+    * Libvirt support is still a bit experimental and can be unstable (e.g., VMs not getting IPs).
+      * Troubleshooting: If your VM creation is hanging at `Waiting for domain to get an IP address...`, using `virsh` run `virsh force reset VM_NAME` (`VM_NAME` can be obtained using `virsh list` command) or in virt-manager `Force Reset` on the VM.
 
 > **NOTE** `kubectl` is only needed when the `kubectl` auto configuration is enabled (default is enabled), to disable it set the variable `KUBECTL_AUTO_CONF` to `false`.
 > For more information, see the [Variables](#variables) section.

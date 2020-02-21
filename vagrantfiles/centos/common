@@ -1,9 +1,9 @@
-$box_image = ENV['BOX_IMAGE'] || 'generic/centos7'.freeze
+$box_image = ENV['BOX_IMAGE'] || 'centos/7'.freeze
 
 $osPrepareScript = <<SCRIPT
 set -x
 
-systemctl stop firewalld
-systemctl disable firewalld
-systemctl mask firewalld
+systemctl stop firewalld || true
+systemctl disable firewalld || true
+systemctl mask firewalld || true
 SCRIPT
