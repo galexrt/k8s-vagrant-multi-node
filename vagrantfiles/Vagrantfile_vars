@@ -54,6 +54,8 @@ $storagecontrollerneedstobecreated = true
 $osPrepareScript = ""
 
 $prepareScript = <<SCRIPT
+set -x
+
 swapoff -a
 sed -i '/swap/s/^/#/g' /etc/fstab
 
@@ -101,10 +103,14 @@ $verifyNodeScript = <<SCRIPT
 docker version || { echo "Something wrong with docker"; exit 1; }
 kubeadm version || { echo "Something wrong with kubeadm"; exit 1; }
 kubelet --version || { echo "Something wrong with kubelet"; exit 1; }
+
+systemctl enable kubelet
+
 SCRIPT
 
 $kubeMasterScript = <<SCRIPT
 set -x
+
 kubeadm reset -f
 
 retries=5

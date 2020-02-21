@@ -66,9 +66,6 @@ token: ## Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_
 		fi; \
 	fi
 
-libvirt-prep:
-	sh "$(MFILECWD)/scripts/virsh_create_network.sh"
-
 versions: ## Print the "imporant" tools versions out for easier debugging.
 	@echo "=== BEGIN Version Info ==="
 
@@ -102,9 +99,9 @@ start: preflight pull
 ifeq ($(VAGRANT_DEFAULT_PROVIDER), "virtualbox")
 	@$(MAKE) start-master start-nodes
 else
-	# Define network first
-	@$(MAKE) libvirt-prep
-	@$(MAKE) start-master start-nodes
+	# Need to start master and nodes separately due to some weird IP assignment side effects
+	@$(MAKE) start-master
+	@$(MAKE) start-nodes
 endif
 	@if $(KUBECTL_AUTO_CONF); then \
 		$(MAKE) kubectl; \
@@ -163,8 +160,8 @@ kubectl-delete: ## Delete the created CLUSTER_NAME context from the kubeconfig (
 	$(eval CLUSTERCERTSDIR := $(shell mktemp -d))
 	if (kubectl config get-contexts $(CLUSTER_NAME) > /dev/null 2>&1); then kubectl config delete-context $(CLUSTER_NAME); fi
 
-pull: ## Add and download, or update the box image on the host.
-	@if !(vagrant box list | grep -q $(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4)); then \
+pull: ## Add and download, or update the box image for the chosen provider on the host.
+	@if !(vagrant box list | grep "$$(grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4)" | grep -qi "$(VAGRANT_DEFAULT_PROVIDER)"); then \
 		vagrant \
 			box \
 			add \
