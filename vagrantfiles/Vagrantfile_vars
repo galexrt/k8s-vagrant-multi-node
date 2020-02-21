@@ -25,6 +25,7 @@ K8S_DASHBOARD = ENV['K8S_DASHBOARD'].downcase == "true" || false
 K8S_DASHBOARD_VERSION = ENV['K8S_DASHBOARD_VERSION'] || 'v1.10.1'
 
 # Kubernetes and kubeadm
+CLUSTER_NAME = ENV['CLUSTER_NAME'] || 'k8s-vagrant-multi-node'
 KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || ''
 $kubernetes_pkg_version_suffix = ENV['KUBERNETES_PKG_VERSION_SUFFIX'] || ""
 $kubeadm_init_flags = ENV['KUBEADM_INIT_FLAGS'] || ''

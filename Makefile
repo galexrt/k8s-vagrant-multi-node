@@ -84,8 +84,14 @@ versions: ## Print the "imporant" tools versions out for easier debugging.
 
 	@echo "Vagrant version:"
 	@vagrant --version
+ifeq ($(VAGRANT_DEFAULT_PROVIDER), "virtualbox")
 	@echo "vboxmanage version:"
 	@vboxmanage --version
+endif
+ifeq ($(VAGRANT_DEFAULT_PROVIDER), "libvirt")
+	@echo "libvirtd version:
+	@libvirtd --version
+endif
 
 	@echo "=== END Version Info ==="
 
@@ -162,19 +168,21 @@ pull: ## Add and download, or update the box image on the host.
 		vagrant \
 			box \
 			add \
+			--provider $(VAGRANT_DEFAULT_PROVIDER) \
 			$(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4); \
 	else \
 		vagrant \
 			box \
 			update \
+			--provider $(VAGRANT_DEFAULT_PROVIDER) \
 			--box=$(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4); \
 	fi
 
 start-master: preflight ## Start up master VM (automatically done by `up` target).
-	vagrant up
+	vagrant up --provider $(VAGRANT_DEFAULT_PROVIDER)
 
 start-node-%: preflight ## Start node VM, where `%` is the number of the node.
-	NODE=$* vagrant up
+	NODE=$* vagrant up --provider $(VAGRANT_DEFAULT_PROVIDER)
 
 start-nodes: preflight $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "start-node-$$i"; done) ## Create and start all node VMs by utilizing the `node-X` target (automatically done by `up` target).
 

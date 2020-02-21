@@ -42,6 +42,7 @@ A demo of the start and destroy of a cluster can be found here: [README.md Demo 
     * Tested with `6.0.0` (if you should experience issues, please upgrade to at least this version or higher)
     * `VBoxManage` binary in `PATH`.
   * libvirt (`vagrant plugin install vagrant-libvirt`)
+    * Tested with `libvirtd` version `5.10.0`.
 
 > **NOTE** `kubectl` is only needed when the `kubectl` auto configuration is enabled (default is enabled), to disable it set the variable `KUBECTL_AUTO_CONF` to `false`.
 > For more information, see the [Variables](#variables) section.
