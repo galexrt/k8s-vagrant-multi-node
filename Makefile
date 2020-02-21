@@ -214,11 +214,11 @@ clean-node-%: ## Remove a node VM, where `%` is the number of the node.
 clean-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done) ## Remove all node VMs.
 
 clean-data: ## Remove data (shared folders) and disks of all VMs (master and nodes).
-	rm -v -rf "$(PWD)/data/"*
-	rm -v -rf "$(PWD)/.vagrant/KUBETOKEN"
+	rm -v -rf "$(MFILECWD)/data/"*
+	rm -v -rf "$(MFILECWD)/.vagrant/KUBETOKEN"
 
 clean-force: ## Remove all drives which should normally have been removed by the normal clean-master or clean-node-% targets.
-	rm -v -rf "$(PWD)/.vagrant/"*.vdi "$(PWD)/.vagrant/"*.img
+	rm -v -rf "$(MFILECWD)/.vagrant/"*.vdi "$(MFILECWD)/.vagrant/"*.img
 
 vagrant-reload: vagrant-reload-master vagrant-reload-nodes ## Run vagrant reload on master and nodes.
 
