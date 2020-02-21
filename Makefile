@@ -67,7 +67,7 @@ token: ## Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_
 	fi
 
 libvirt-prep:
-	sh ./scripts/virsh_create_network.sh
+	sh "$(MFILECWD)/scripts/virsh_create_network.sh"
 
 versions: ## Print the "imporant" tools versions out for easier debugging.
 	@echo "=== BEGIN Version Info ==="
@@ -102,7 +102,7 @@ start: preflight pull
 ifeq ($(VAGRANT_DEFAULT_PROVIDER), "virtualbox")
 	@$(MAKE) start-master start-nodes
 else
-	# Define network first 
+	# Define network first
 	@$(MAKE) libvirt-prep
 	@$(MAKE) start-master start-nodes
 endif
