@@ -1,6 +1,8 @@
 #!/bin/sh
 
-virsh net-define /dev/stdin <<EOF
+tmpfile="$(mktemp /tmp/virsh_create_network.XXXXXX)"
+
+cat <<EOF > "$tmpfile"
 <network connections='1' ipv6='yes'>
   <name>${CLUSTER_NAME}0</name>
   <uuid>3cb1df91-bb69-46a2-b670-e6e20d19890f</uuid>
@@ -18,3 +20,5 @@ virsh net-define /dev/stdin <<EOF
   </ip>
 </network>
 EOF
+
+virsh net-define "${tmpfile}" || { echo "Failed to virsh net-define because it already exists"; exit 0; }
