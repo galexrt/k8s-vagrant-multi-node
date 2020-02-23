@@ -23,12 +23,16 @@ load $oscommonvariablefile if File.exist?($oscommonvariablefile)
 # Load the type specific variables (e.g., master, node) (0 is equal to not a node)
 if NODE == 0
     $osvariablefile = "../#{BOX_OS}/master"
-    hostname = 'master'
-    vmip = MASTER_IP
+    $hostname = 'master'
+    $vmip = MASTER_IP
+    $vmCPUs = MASTER_CPUS
+    $vmMemory = MASTER_MEMORY_SIZE_GB * 1024
 else
     $osvariablefile = "../#{BOX_OS}/node"
-    hostname = "node#{NODE}"
-    vmip = NODE_IP
+    $hostname = "node#{NODE}"
+    $vmip = NODE_IP
+    $vmCPUs = NODE_CPUS
+    $vmMemory = NODE_MEMORY_SIZE_GB * 1024
 end
 $osvariablefile = File.expand_path($osvariablefile, __FILE__)
 load $osvariablefile
@@ -41,12 +45,12 @@ Vagrant.configure('2') do |config|
 
     config.vm.provider VAGRANT_DEFAULT_PROVIDER do |l|
         # Configure resources
-        l.cpus = MASTER_CPUS
-        l.memory = MASTER_MEMORY_SIZE_GB * 1024
+        l.cpus = $vmCPUs
+        l.memory = $vmMemory
         # Add disks for libvirt here as no (workaround) plugin is needed as for Virtualbox
         if VAGRANT_DEFAULT_PROVIDER == 'libvirt'
             (1..DISK_COUNT.to_i).each do |diskID|
-                diskPath = "#{BOX_OS}-#{hostname}-disk-#{diskID}.img"
+                diskPath = "#{BOX_OS}-#{$hostname}-disk-#{diskID}.img"
                 l. storage :file,
                     :size => "#{DISK_SIZE_GB}GB",
                     :path => diskPath,
@@ -55,8 +59,8 @@ Vagrant.configure('2') do |config|
         end
     end
 
-    config.vm.define hostname do |subconfig|
-        subconfig.vm.hostname = hostname
+    config.vm.define $hostname do |subconfig|
+        subconfig.vm.hostname = $hostname
 
         # Virtualbox
         subconfig.vm.provider :virtualbox do |vb|
@@ -71,12 +75,17 @@ Vagrant.configure('2') do |config|
         end
 
         subconfig.vm.network :private_network,
-            :ip => vmip
+            :ip => $vmip
 
-        subconfig.vm.synced_folder "data/#{BOX_OS}-#{hostname}/", '/data', type: 'rsync',
+        subconfig.vm.synced_folder "data/#{BOX_OS}-#{$hostname}/", '/data', type: 'rsync',
             create: true, owner: 'root', group: 'root',
             rsync__args: ["--rsync-path='sudo rsync'", '--archive', '--delete', '-z']
 
+        # Add SSH pub key from user if specified
+        if $userSSHPubKey != ""
+            subconfig.vm.provision :file, source: $userSSHPubKey, destination: "~/.ssh/user.pub"
+            subconfig.vm.provision :shell, inline: 'cat /home/vagrant/.ssh/user.pub >> /home/vagrant/.ssh/authorized_keys'
+        end
         # Common Provision
         if $osPrepareScript != ""
             subconfig.vm.provision :shell, inline: $osPrepareScript
@@ -89,11 +98,11 @@ Vagrant.configure('2') do |config|
             subconfig.vm.provision :diskandreboot
         end
         # Node Provision
-        if hostname.include? "node"
+        if $hostname.include? "node"
             subconfig.vm.provision :shell, inline: $kubeMinionScript
         end
         # Master Provision
-        if hostname == 'master'
+        if $hostname == 'master'
             subconfig.vm.provision :shell, inline: $kubeMasterScript
             # Addons
             if K8S_DASHBOARD

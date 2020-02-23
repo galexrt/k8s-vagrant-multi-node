@@ -243,6 +243,7 @@ versions                       Print the "imporant" tools versions out for easie
 | `KUBE_PROXY_IPVS`               | `false`                  | Enable IPVS kernel modules to then use IPVS for the kube-proxy.                                                                                                                                                                        |
 | `KUBE_NETWORK`                  | `flannel`                | What CNI to install, if empty don't install any CNI. `flannel`, `canal` and `calico` are supported options. Ubuntu CNI is forced to use `canal` and can't be changed (see [Different OS / Vagrantfiles](#different-os--vagrantfiles)). |
 | `KUBECTL_AUTO_CONF`             | `true`                   | If `kubectl` should be  automatically configured to be able to talk with the cluster (if disabled, removes need for `kubectl` binary).                                                                                                 |
+| `USER_SSHPUBKEY`                | `""` (empty)             | Your SSH **public key** (not private) to add to the VMs `vagrant` users `.ssh/authorized_keys` file during VM provisioning.                                                                                                            |
 
 ## Demo
 

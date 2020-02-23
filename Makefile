@@ -41,6 +41,7 @@ K8S_DASHBOARD ?= false
 K8S_DASHBOARD_VERSION ?= v1.10.1
 
 CLUSTER_NAME ?= $(shell basename $(MFILECWD))
+USER_SSHPUBKEY ?=
 
 VAGRANT_LOG ?=
 VAGRANT_VAGRANTFILE ?= $(MFILECWD)/vagrantfiles/Vagrantfile
