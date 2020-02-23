@@ -1,5 +1,6 @@
 $baseInstallScript = <<SCRIPT
 set -x
+
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
@@ -23,6 +24,6 @@ sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
 # Use yum so we can use this for CentOS too
 yum clean expire-cache
 yum install --nogpgcheck -y net-tools screen tree telnet conntrack socat docker rsync ${KUBERNETES_PACKAGES}
-systemctl enable kubelet && systemctl start kubelet
+
 systemctl enable docker && systemctl start docker
 SCRIPT

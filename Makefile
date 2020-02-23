@@ -6,8 +6,8 @@ REVERSE_LINES=sed -e '1!G;h;$$!d'
 # === BEGIN USER OPTIONS ===
 # Vagrantfile set to use.
 BOX_OS ?= fedora
-# Box setup
-#BOX_IMAGE
+# Vagrant Provider
+VAGRANT_DEFAULT_PROVIDER ?= virtualbox
 # Disk setup
 DISK_COUNT ?= 1
 DISK_SIZE_GB ?= 25
@@ -22,6 +22,8 @@ NODE_COUNT ?= 2
 MASTER_IP ?= 192.168.26.10
 NODE_IP_NW ?= 192.168.26.
 POD_NW_CIDR ?= 10.244.0.0/16
+
+KUBETOKEN =
 
 KUBECTL_AUTO_CONF ?= true
 
@@ -39,6 +41,7 @@ K8S_DASHBOARD ?= false
 K8S_DASHBOARD_VERSION ?= v1.10.1
 
 CLUSTER_NAME ?= $(shell basename $(MFILECWD))
+USER_SSHPUBKEY ?=
 
 VAGRANT_LOG ?=
 VAGRANT_VAGRANTFILE ?= $(MFILECWD)/vagrantfiles/Vagrantfile
@@ -79,8 +82,14 @@ versions: ## Print the "imporant" tools versions out for easier debugging.
 
 	@echo "Vagrant version:"
 	@vagrant --version
+ifeq ($(VAGRANT_DEFAULT_PROVIDER), "virtualbox")
 	@echo "vboxmanage version:"
 	@vboxmanage --version
+endif
+ifeq ($(VAGRANT_DEFAULT_PROVIDER), "libvirt")
+	@echo "libvirtd version:
+	@libvirtd --version
+endif
 
 	@echo "=== END Version Info ==="
 
@@ -88,7 +97,13 @@ up: preflight ## Start Kubernetes Vagrant multi-node cluster. Creates, starts an
 	@$(MAKE) start
 
 start: preflight pull
+ifeq ($(VAGRANT_DEFAULT_PROVIDER), "virtualbox")
 	@$(MAKE) start-master start-nodes
+else
+	# Need to start master and nodes separately due to some weird IP assignment side effects
+	@$(MAKE) start-master
+	@$(MAKE) start-nodes
+endif
 	@if $(KUBECTL_AUTO_CONF); then \
 		$(MAKE) kubectl; \
 	else \
@@ -146,26 +161,26 @@ kubectl-delete: ## Delete the created CLUSTER_NAME context from the kubeconfig (
 	$(eval CLUSTERCERTSDIR := $(shell mktemp -d))
 	if (kubectl config get-contexts $(CLUSTER_NAME) > /dev/null 2>&1); then kubectl config delete-context $(CLUSTER_NAME); fi
 
-pull: ## Add and download, or update the box image on the host.
-	@if !(vagrant box list | grep -q $(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4)); then \
+pull: ## Add and download, or update the box image for the chosen provider on the host.
+	@if !(vagrant box list | grep "$$(grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4)" | grep -qi "$(VAGRANT_DEFAULT_PROVIDER)"); then \
 		vagrant \
 			box \
 			add \
-			--provider=virtualbox \
+			--provider $(VAGRANT_DEFAULT_PROVIDER) \
 			$(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4); \
 	else \
 		vagrant \
 			box \
 			update \
-			--provider=virtualbox \
+			--provider $(VAGRANT_DEFAULT_PROVIDER) \
 			--box=$(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4); \
 	fi
 
 start-master: preflight ## Start up master VM (automatically done by `up` target).
-	vagrant up
+	vagrant up --provider $(VAGRANT_DEFAULT_PROVIDER)
 
 start-node-%: preflight ## Start node VM, where `%` is the number of the node.
-	NODE=$* vagrant up
+	NODE=$* vagrant up --provider $(VAGRANT_DEFAULT_PROVIDER)
 
 start-nodes: preflight $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "start-node-$$i"; done) ## Create and start all node VMs by utilizing the `node-X` target (automatically done by `up` target).
 
@@ -197,11 +212,11 @@ clean-node-%: ## Remove a node VM, where `%` is the number of the node.
 clean-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done) ## Remove all node VMs.
 
 clean-data: ## Remove data (shared folders) and disks of all VMs (master and nodes).
-	rm -v -rf "$(PWD)/data/"*
-	rm -v -rf "$(PWD)/.vagrant/KUBETOKEN"
+	rm -v -rf "$(MFILECWD)/data/"*
+	rm -v -rf "$(MFILECWD)/.vagrant/KUBETOKEN"
 
 clean-force: ## Remove all drives which should normally have been removed by the normal clean-master or clean-node-% targets.
-	rm -v -rf "$(PWD)/.vagrant/"*.vdi
+	rm -v -rf "$(MFILECWD)/.vagrant/"*.vdi "$(MFILECWD)/.vagrant/"*.img
 
 vagrant-reload: vagrant-reload-master vagrant-reload-nodes ## Run vagrant reload on master and nodes.
 
@@ -228,6 +243,16 @@ load-image-node-%: ## Load local/pulled image into node VM, where `%` is the num
 	fi
 
 load-image-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "load-image-node-$$i"; done) ## Load local/pulled Docker image into all node VMs.
+
+ssh-config: ssh-config-master ssh-config-nodes ## Generate SSH config for master and nodes.
+
+ssh-config-master: ## Generate SSH config just for the master.
+	@vagrant ssh-config --host "master"
+
+ssh-config-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "ssh-config-$$i"; done) ## Generate SSH config just for the nodes.
+
+ssh-config-node-%: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "ssh-config-$$i"; done) ## Generate SSH config just for the one node number given.
+	@NODE=$* vagrant ssh-config --host "master"
 
 status: status-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "status-node-$$i"; done) ## Show status of master and all node VMs.
 
@@ -259,4 +284,6 @@ help: ## Show this help menu.
 .PHONY: clean clean-data clean-master clean-nodes help kubectl kubectl-delete \
 	load-image load-image-master load-image-nodes preflight ssh-master start-master \
 	start-nodes status-master status-nodes status stop-master stop-nodes \
-	vagrant-reload vagrant-reload-master vagrant-reload-nodes stop token up
+	vagrant-reload vagrant-reload-master vagrant-reload-nodes stop token up \
+	ssh-config ssh-config-master ssh-config-nodes
+

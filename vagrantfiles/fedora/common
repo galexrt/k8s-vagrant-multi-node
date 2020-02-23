@@ -1,12 +1,9 @@
-$box_image = ENV['BOX_IMAGE'] || 'generic/fedora30'.freeze
+$box_image = ENV['BOX_IMAGE'] || 'fedora/30-cloud-base'.freeze
 
+# Use iptables-legacy for iptables
 $osPrepareScript = <<SCRIPT
-set -x
-
-systemctl stop firewalld
-systemctl disable firewalld
-systemctl mask firewalld
-
+if [ ! -f /usr/sbin/iptables-legacy ]; then
+    dnf install -y iptables
+fi
 update-alternatives --set iptables /usr/sbin/iptables-legacy
-
 SCRIPT
