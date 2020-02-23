@@ -188,7 +188,11 @@ load-image-master              Load local/pulled image into master VM.
 load-image-node-%              Load local/pulled image into node VM, where `%` is the number of the node.
 load-image-nodes               Load local/pulled Docker image into all node VMs.
 preflight                      Run checks and gather variables, used for the the `up` target.
-pull                           Add and download, or update the box image on the host.
+pull                           Add and download, or update the box image for the chosen provider on the host.
+ssh-config-master              Generate SSH config just for the master.
+ssh-config-node-%              Generate SSH config just for the one node number given.
+ssh-config-nodes               Generate SSH config just for the nodes.
+ssh-config                     Generate SSH config for master and nodes.
 ssh-master                     SSH into the master VM.
 ssh-node-%                     SSH into a node VM, where `%` is the number of the node.
 start-master                   Start up master VM (automatically done by `up` target).

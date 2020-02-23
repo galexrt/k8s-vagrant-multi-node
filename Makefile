@@ -243,6 +243,16 @@ load-image-node-%: ## Load local/pulled image into node VM, where `%` is the num
 
 load-image-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "load-image-node-$$i"; done) ## Load local/pulled Docker image into all node VMs.
 
+ssh-config: ssh-config-master ssh-config-nodes ## Generate SSH config for master and nodes.
+
+ssh-config-master: ## Generate SSH config just for the master.
+	@vagrant ssh-config --host "master"
+
+ssh-config-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "ssh-config-$$i"; done) ## Generate SSH config just for the nodes.
+
+ssh-config-node-%: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "ssh-config-$$i"; done) ## Generate SSH config just for the one node number given.
+	@NODE=$* vagrant ssh-config --host "master"
+
 status: status-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "status-node-$$i"; done) ## Show status of master and all node VMs.
 
 status-master: ## Show status of the master VM.
@@ -273,4 +283,6 @@ help: ## Show this help menu.
 .PHONY: clean clean-data clean-master clean-nodes help kubectl kubectl-delete \
 	load-image load-image-master load-image-nodes preflight ssh-master start-master \
 	start-nodes status-master status-nodes status stop-master stop-nodes \
-	vagrant-reload vagrant-reload-master vagrant-reload-nodes stop token up
+	vagrant-reload vagrant-reload-master vagrant-reload-nodes stop token up \
+	ssh-config ssh-config-master ssh-config-nodes
+
