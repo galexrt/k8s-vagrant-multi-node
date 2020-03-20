@@ -49,6 +49,9 @@ Vagrant.configure('2') do |config|
         l.memory = $vmMemory
         # Add disks for libvirt here as no (workaround) plugin is needed as for Virtualbox
         if VAGRANT_DEFAULT_PROVIDER == 'libvirt'
+            if LIBVIRT_STORAGE_POOL != 'default'
+                l.storage_pool_name = "#{LIBVIRT_STORAGE_POOL}"
+            end
             (1..DISK_COUNT.to_i).each do |diskID|
                 diskPath = "#{BOX_OS}-#{$hostname}-disk-#{diskID}.img"
                 l. storage :file,

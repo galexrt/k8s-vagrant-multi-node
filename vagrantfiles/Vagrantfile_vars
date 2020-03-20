@@ -14,6 +14,9 @@ NODE_MEMORY_SIZE_GB = ENV['NODE_MEMORY_SIZE_GB'].to_i || 1
 # currently only used by ubuntu
 $docker_version = ''
 
+# Libvirt specific config
+LIBVIRT_STORAGE_POOL = ENV['LIBVIRT_STORAGE_POOL'] || "default"
+
 # Network
 MASTER_IP = ENV['MASTER_IP'] || '192.168.26.10'
 POD_NW_CIDR = ENV['POD_NW_CIDR'] || '10.244.0.0/16'
