@@ -1,9 +1,27 @@
 $box_image = ENV['BOX_IMAGE'] || 'centos/7'.freeze
 
+# Stop and disable firewalld service
 $osPrepareScript = <<SCRIPT
 set -x
 
 systemctl stop firewalld || true
 systemctl disable firewalld || true
 systemctl mask firewalld || true
+SCRIPT
+
+$containerRuntimeInstallScript = <<SCRIPT
+set -x
+
+retries=5
+for ((i=0; i<retries; i++)); do
+    yum install -y yum-utils \
+        device-mapper-persistent-data \
+        lvm2
+    yum-config-manager \
+        --add-repo \
+        https://download.docker.com/linux/centos/docker-ce.repo
+    yum install -y docker-ce docker-ce-cli containerd.io && \
+        break
+done
+[[ $retries -eq i ]] && { echo "Failed to install docker-ce after 5 tries"; exit 1; }
 SCRIPT

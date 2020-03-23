@@ -1,19 +1,6 @@
 $baseInstallScript = <<SCRIPT
 set -x
 
-retries=5
-for ((i=0; i<retries; i++)); do
-    apt-get update
-    apt-get -y install apt-transport-https curl software-properties-common ca-certificates && \
-        break
-done
-[[ $retries -eq i ]] && { echo "Failed to install apt-transport-https and other dependenices after 5 tries"; exit 1; }
-
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable"
 curl curl --retry 5 --fail -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 cat <<EOF > /etc/apt/sources.list.d/kubernetes.list
 deb https://apt.kubernetes.io/ kubernetes-xenial main
@@ -28,13 +15,15 @@ fi
 retries=5
 for ((i=0; i<retries; i++)); do
     apt-get update
-    apt-get -y install screen telnet conntrack socat docker-ce=#{$docker_version} ${KUBERNETES_PACKAGES} && \
+    apt-get -y install screen telnet conntrack socat ${KUBERNETES_PACKAGES} && \
         break
 done
-[[ $retries -eq i ]] && { echo "Failed to install docker, kubelet, kubeadm and other dependenices after 5 tries"; exit 1; }
+[[ $retries -eq i ]] && { echo "Failed to install kubelet, kubeadm and other dependenices after 5 tries"; exit 1; }
 
 apt-mark hold kubelet kubeadm kubectl
 
 # Increase /run dir as it is/was a problem on Ubuntu 18.04 (at least on bento box image)
 echo 'tmpfs /run tmpfs rw,nosuid,noexec,relatime,size=614460k,mode=755' >> /etc/fstab
+
+systemctl enable docker && systemctl start docker
 SCRIPT
