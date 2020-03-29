@@ -50,6 +50,10 @@ KUBE_PROXY_IPVS = ENV['KUBE_PROXY_IPVS'] || false
 # Generate new using steps in README
 KUBETOKEN = ENV['KUBETOKEN'] || 'b029ee.968a33e8d8e6bb0d'
 
+if $kubeletExtraArgsFile.nil? || $kubeletExtraArgsFile == ""
+    $kubeletExtraArgsFile = '/etc/sysconfig/kubelet'
+end
+
 # The controller name is different per OS it seems (this is the case for at least Ubuntu right now).
 # For more information, see https://github.com/kusnier/vagrant-persistent-storage/issues/33.
 $storagecontroller = 'k8svmSATAController'
@@ -111,6 +115,22 @@ kubelet --version || { echo "Something wrong with kubelet"; exit 1; }
 
 systemctl enable kubelet
 
+mkdir -p /etc/docker
+cat > /etc/docker/daemon.json <<EOF
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2",
+  "storage-opts": [
+    "overlay2.override_kernel_check=true"
+  ]
+}
+EOF
+
+mkdir -p /etc/systemd/system/docker.service.d
 SCRIPT
 
 $kubeMasterScript = <<SCRIPT
@@ -119,8 +139,8 @@ set -x
 kubeadm reset -f
 
 retries=5
-for ((i=0; i<retries; i++)); do
-    # For now ignore SystemVerification error
+for ((i=1; i<=retries; i++)); do
+    # For now ignore preflight SystemVerification error
     kubeadm init \
         #{$kubeadm_init_flags} \
         --ignore-preflight-errors=SystemVerification \
@@ -128,23 +148,23 @@ for ((i=0; i<retries; i++)); do
         --pod-network-cidr=#{POD_NW_CIDR} \
         --token "#{KUBETOKEN}" \
         --token-ttl 0 && \
-        break
+            break
+
+    [[ $retries -eq i ]] && { echo "Failed to run kubeadm init after 5 tries"; exit 1; }
     echo "kubeadm join failed, trying again in 3 seconds (try ${i}/${retries})..."
     sleep 3
 done
-[[ $retries -eq i ]] && { echo "Failed to run kubeadm init after 5 tries"; exit 1; }
 
-KUBELET_EXTRA_ARGS_FILE=/etc/sysconfig/kubelet
-if [ -f /etc/default/kubelet ]; then
-    KUBELET_EXTRA_ARGS_FILE=/etc/default/kubelet
+KUBELET_EXTRA_ARGS_FILE="#{$kubeletExtraArgsFile}"
+
+if [ -f "$KUBELET_EXTRA_ARGS_FILE" ]; then
+    if grep -q -- '--node-ip=' "$KUBELET_EXTRA_ARGS_FILE"; then
+        sed -ri -e 's|KUBELET_EXTRA_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+|KUBELET_EXTRA_ARGS=|' "$KUBELET_EXTRA_ARGS_FILE"
+    fi
+    sed -i 's|KUBELET_EXTRA_ARGS=|KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} --cni-bin-dir=/opt/cni/bin,/usr/libexec/cni |' "$KUBELET_EXTRA_ARGS_FILE"
 else
-    KUBELET_EXTRA_ARGS_FILE=/etc/sysconfig/kubelet
+    echo "KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} " > "$KUBELET_EXTRA_ARGS_FILE"
 fi
-
-if grep -q -- '--node-ip=' "$KUBELET_EXTRA_ARGS_FILE"; then
-    sed -ri -e 's|KUBELET_EXTRA_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+|KUBELET_EXTRA_ARGS=|' "$KUBELET_EXTRA_ARGS_FILE"
-fi
-sed -i 's|KUBELET_EXTRA_ARGS=|KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} --cni-bin-dir=/opt/cni/bin,/usr/libexec/cni |' "$KUBELET_EXTRA_ARGS_FILE"
 
 systemctl daemon-reload
 systemctl restart kubelet.service
@@ -185,7 +205,7 @@ set -x
 kubeadm reset -f
 
 retries=5
-for ((i=0; i<retries; i++)); do
+for ((i=1; i<=retries; i++)); do
     # For now ignore SystemVerification error
     kubeadm join \
         #{$kubeadm_join_flags} \
@@ -194,20 +214,22 @@ for ((i=0; i<retries; i++)); do
         --token "#{KUBETOKEN}" \
         "#{MASTER_IP}:6443" && \
         break
+
+    [[ $retries -eq i ]] && { echo "Failed to run kubeadm join after 5 tries"; exit 1; }
     echo "kubeadm join failed, trying again in 3 seconds (try ${i}/${retries})..."
     sleep 3
 done
-[[ $retries -eq i ]] && { echo "Failed to run kubeadm join after 5 tries"; exit 1; }
 
-KUBELET_EXTRA_ARGS_FILE=/etc/sysconfig/kubelet
-if [ ! -f /etc/sysconfig/kubelet ]; then
-    KUBELET_EXTRA_ARGS_FILE=/etc/default/kubelet
-fi
+KUBELET_EXTRA_ARGS_FILE="#{$kubeletExtraArgsFile}"
 
-if grep -q -- '--node-ip=' "$KUBELET_EXTRA_ARGS_FILE"; then
-    sed -ri -e 's/KUBELET_EXTRA_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/KUBELET_EXTRA_ARGS=/' "$KUBELET_EXTRA_ARGS_FILE"
+if [ -f "$KUBELET_EXTRA_ARGS_FILE" ]; then
+    if grep -q -- '--node-ip=' "$KUBELET_EXTRA_ARGS_FILE"; then
+        sed -ri -e 's|KUBELET_EXTRA_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+|KUBELET_EXTRA_ARGS=|' "$KUBELET_EXTRA_ARGS_FILE"
+    fi
+    sed -i 's|KUBELET_EXTRA_ARGS=|KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} --cni-bin-dir=/opt/cni/bin,/usr/libexec/cni |' "$KUBELET_EXTRA_ARGS_FILE"
+else
+    echo "KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} " > "$KUBELET_EXTRA_ARGS_FILE"
 fi
-sed -i 's|KUBELET_EXTRA_ARGS=|KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} --cni-bin-dir=/opt/cni/bin,/usr/libexec/cni |' "$KUBELET_EXTRA_ARGS_FILE"
 
 systemctl daemon-reload
 systemctl restart kubelet.service

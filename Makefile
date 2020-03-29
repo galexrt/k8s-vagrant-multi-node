@@ -4,6 +4,7 @@ MFILECWD = $(shell pwd)
 REVERSE_LINES=sed -e '1!G;h;$$!d'
 
 # === BEGIN USER OPTIONS ===
+KUBECTL ?= kubectl
 # Vagrantfile set to use.
 BOX_OS ?= fedora
 # Vagrant Provider
@@ -95,12 +96,16 @@ endif
 
 up: preflight ## Start Kubernetes Vagrant multi-node cluster. Creates, starts and bootsup the master and node VMs.
 	@$(MAKE) start
+	@echo
+	$(KUBECTL) get nodes
+	@echo
+	@echo "Your k8s-vagrant-multi-node Kuberenetes cluster should be ready now."
 
 start: preflight pull
 ifeq ($(VAGRANT_DEFAULT_PROVIDER), "virtualbox")
 	@$(MAKE) start-master start-nodes
 else
-	# Need to start master and nodes separately due to some weird IP assignment side effects
+	# Need to start master and nodes separately due to some weird IP assignment side effects (at least on my machine)
 	@$(MAKE) start-master
 	@$(MAKE) start-nodes
 endif
@@ -128,14 +133,14 @@ kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` 
 		> $(CLUSTERCERTSDIR)/client-key.key
 
 	# kubectl create cluster
-	kubectl \
+	$(KUBECTL) \
 		config set-cluster \
 			$(CLUSTER_NAME) \
 			--embed-certs=true \
 			--server=https://$(MASTER_IP):6443 \
 			--certificate-authority=$(CLUSTERCERTSDIR)/ca.crt
 	# kubectl create user
-	kubectl \
+	$(KUBECTL) \
 		config set-credentials \
 			$(CLUSTER_NAME)-kubernetes-admin \
 			--embed-certs=true \
@@ -144,7 +149,7 @@ kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` 
 			--client-key=$(CLUSTERCERTSDIR)/client-key.key
 	@rm -rf $(CLUSTERCERTSDIR)
 	# kubectl create context
-	kubectl \
+	$(KUBECTL) \
 		config set-context \
 			$(CLUSTER_NAME) \
 			--cluster=$(CLUSTER_NAME) \
