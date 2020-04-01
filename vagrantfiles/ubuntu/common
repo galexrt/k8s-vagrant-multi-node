@@ -4,6 +4,26 @@ if $kubernetes_pkg_version_suffix == ''
     $kubernetes_pkg_version_suffix = '-00'
 end
 
+$osPrepareScript = <<SCRIPT
+set -x
+
+sed -i 's/^DNS=.*/DNS=8.8.8.8 8.8.4.4/' /etc/systemd/resolved.conf
+
+sudo update-alternatives --set iptables /usr/sbin/iptables-legacy
+sudo update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
+sudo update-alternatives --set arptables /usr/sbin/arptables-legacy
+sudo update-alternatives --set ebtables /usr/sbin/ebtables-legacy
+
+retries=5
+for ((i=1; i<=retries; i++)); do
+    apt-get update
+    apt-get -y install apt-transport-https curl software-properties-common ca-certificates && \
+        break
+
+    [[ $retries -eq i ]] && { echo "Failed to install apt-transport-https and other dependenices after 5 tries"; exit 1; }
+done
+SCRIPT
+
 $docker_version = '5:18.09.1~3-0~ubuntu-bionic'
 
 $containerRuntimeInstallScript = <<SCRIPT
@@ -24,3 +44,7 @@ for ((i=1; i<=retries; i++)); do
     [[ $retries -eq i ]] && { echo "Failed to install docker-ce after 5 tries"; exit 1; }
 done
 SCRIPT
+
+$kubeletExtraArgsFile = '/etc/default/kubelet'
+
+$kube_network = 'canal'

@@ -9,9 +9,6 @@ VAGRANT_DEFAULT_PROVIDER = ENV['VAGRANT_DEFAULT_PROVIDER'] || 'virtualbox'.freez
 # Vagrantfile OS set to use
 BOX_OS = ENV['BOX_OS'] || 'fedora'.freeze
 
-$osprefile = File.expand_path("../#{BOX_OS}/pre", __FILE__)
-load $osprefile if File.exist?($osprefile)
-
 # Load the Vagrantfile_vars file
 $vagrantfilecommon = File.expand_path('../Vagrantfile_vars', __FILE__)
 load $vagrantfilecommon
