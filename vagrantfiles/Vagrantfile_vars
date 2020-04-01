@@ -60,7 +60,7 @@ $storagecontroller = 'k8svmSATAController'
 $storagecontrollerneedstobecreated = true
 
 # Common scripts
-$osPrepareScript = ""
+$osPrepareScript = "echo OS PREPARE SCRIPT EMPTY."
 
 $prepareScript = <<SCRIPT
 set -x
