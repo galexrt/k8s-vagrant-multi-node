@@ -60,7 +60,9 @@ $storagecontroller = 'k8svmSATAController'
 $storagecontrollerneedstobecreated = true
 
 # Common scripts
-$osPrepareScript = ""
+if $osPrepareScript.nil? || $osPrepareScript == ""
+   $osPrepareScript = ""
+end
 
 $prepareScript = <<SCRIPT
 set -x
