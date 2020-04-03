@@ -301,13 +301,16 @@ SCRIPT
 ## kube-web-view
 $kubeWebViewScript = <<SCRIPT
 kubectl create namespace kube-web-view
-for url in https://codeberg.org/hjacobs/kube-web-view/raw/commit/1deac0a8f878e25de9639cce2215048ad8701cdf/deploy/rbac.yaml
-    https://codeberg.org/hjacobs/kube-web-view/raw/commit/1deac0a8f878e25de9639cce2215048ad8701cdf/deploy/service.yaml
+for url in https://codeberg.org/hjacobs/kube-web-view/raw/commit/1deac0a8f878e25de9639cce2215048ad8701cdf/deploy/rbac.yaml \
+    https://codeberg.org/hjacobs/kube-web-view/raw/commit/1deac0a8f878e25de9639cce2215048ad8701cdf/deploy/service.yaml \
     https://codeberg.org/hjacobs/kube-web-view/raw/commit/1deac0a8f878e25de9639cce2215048ad8701cdf/deploy/deployment.yaml ; do
-(
-    if [ -n "#{HTTP_PROXY}" ]; then
-        export HTTP_PROXY="#{HTTP_PROXY}" HTTPS_PROXY="#{HTTPS_PROXY}" NO_PROXY="#{NO_PROXY}"
-    fi
-    curl --retry 5 --fail -s "$url"
-) |  kubectl apply -n kube-web-view -f -
+    (
+        if [ -n "#{HTTP_PROXY}" ]; then
+            export HTTP_PROXY="#{HTTP_PROXY}" HTTPS_PROXY="#{HTTPS_PROXY}" NO_PROXY="#{NO_PROXY}"
+        fi
+        curl --retry 5 --fail -s "$url"
+    ) | \
+        sed 's/namespace: default/namespace: kube-web-view/g' | \
+        kubectl apply -n kube-web-view -f -
+done
 SCRIPT
