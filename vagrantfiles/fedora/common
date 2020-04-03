@@ -4,6 +4,14 @@ $box_image = ENV['BOX_IMAGE'] || 'fedora/30-cloud-base'.freeze
 $osPrepareScript = <<SCRIPT
 set -x
 
+if [ -n "#{HTTP_PROXY}" ]; then
+    cat <<EOF >> /etc/dnf/dnf.conf
+proxy=#{HTTP_PROXY}
+proxy_username=#{HTTP_PROXY_USERNAME}
+proxy_password=#{HTTP_PROXY_PASSWORD}
+EOF
+fi
+
 if [ ! -f /usr/sbin/iptables-legacy ]; then
     retries=5
     for ((i=1; i<=retries; i++)); do

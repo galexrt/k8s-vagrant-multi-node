@@ -47,6 +47,12 @@ end
 
 KUBE_PROXY_IPVS = ENV['KUBE_PROXY_IPVS'] || false
 
+HTTP_PROXY = ENV['HTTP_PROXY'] || ''
+HTTPS_PROXY = ENV['HTTPS_PROXY'] || HTTP_PROXY
+HTTP_PROXY_USERNAME = ENV['HTTP_PROXY_USERNAME'] || ''
+HTTP_PROXY_PASSWORD = ENV['HTTP_PROXY_PASSWORD'] || ''
+NO_PROXY = ENV['NO_PROXY'] || ''
+
 # Generate new using steps in README
 KUBETOKEN = ENV['KUBETOKEN'] || 'b029ee.968a33e8d8e6bb0d'
 
@@ -108,13 +114,8 @@ systemctl enable ip-set-mtu.service
 systemctl start ip-set-mtu.service
 SCRIPT
 
-$verifyNodeScript = <<SCRIPT
-docker version || { echo "Something wrong with docker"; exit 1; }
-kubeadm version || { echo "Something wrong with kubeadm"; exit 1; }
-kubelet --version || { echo "Something wrong with kubelet"; exit 1; }
-
-systemctl enable kubelet
-
+$containerRuntimeConfigScript = <<SCRIPT
+set -x
 mkdir -p /etc/docker
 cat > /etc/docker/daemon.json <<EOF
 {
@@ -131,6 +132,37 @@ cat > /etc/docker/daemon.json <<EOF
 EOF
 
 mkdir -p /etc/systemd/system/docker.service.d
+set +x
+if [ -n "#{HTTP_PROXY}" ]; then
+    cat <<EOF > /etc/systemd/system/docker.service.d/http-proxy.conf
+[Service]
+Environment="HTTP_PROXY=#{HTTP_PROXY}"
+EOF
+fi
+if [ -n "#{HTTPS_PROXY}" ]; then
+    cat <<EOF > /etc/systemd/system/docker.service.d/https-proxy.conf
+[Service]
+Environment="HTTPS_PROXY=#{HTTPS_PROXY}"
+EOF
+fi
+if [ -n "#{NO_PROXY}" ]; then
+    cat <<EOF > /etc/systemd/system/docker.service.d/no-proxy.conf
+[Service]
+Environment="NO_PROXY=#{NO_PROXY}"
+EOF
+fi
+set -x
+
+systemctl daemon-reload
+systemctl enable docker && systemctl restart docker
+SCRIPT
+
+$verifyNodeScript = <<SCRIPT
+docker version || { echo "Something wrong with docker"; exit 1; }
+kubeadm version || { echo "Something wrong with kubeadm"; exit 1; }
+kubelet --version || { echo "Something wrong with kubelet"; exit 1; }
+
+systemctl enable kubelet
 SCRIPT
 
 $kubeMasterScript = <<SCRIPT
@@ -177,21 +209,36 @@ case "#{$kube_network}" in
 # canal network
 [Cc][Aa][Nn][Aa][Ll])
     echo "Installing Canal CNI ..."
-    curl --retry 5 --fail -s https://docs.projectcalico.org/v3.13/getting-started/kubernetes/installation/hosted/canal/canal.yaml | \
+    (
+        if [ -n "#{HTTP_PROXY}" ]; then
+            export HTTP_PROXY="#{HTTP_PROXY}" HTTPS_PROXY="#{HTTPS_PROXY}" NO_PROXY="#{NO_PROXY}"
+        fi
+        curl --retry 5 --fail -s https://docs.projectcalico.org/v3.13/getting-started/kubernetes/installation/hosted/canal/canal.yaml
+    ) | \
         sed -e 's/canal_iface:.*/canal_iface: "eth1"/' | \
         kubectl apply -f -
   ;;
 # Calico network: https://docs.projectcalico.org/v3.13/getting-started/kubernetes/installation/calico
 [Cc][Aa][Ll][Ii][Cc][Oo])
     echo "Installing Calico CNI ..."
-    curl --retry 5 --fail -s https://docs.projectcalico.org/v3.13/manifests/calico.yaml | \
+    (
+        if [ -n "#{HTTP_PROXY}" ]; then
+            export HTTP_PROXY="#{HTTP_PROXY}" HTTPS_PROXY="#{HTTPS_PROXY}" NO_PROXY="#{NO_PROXY}"
+        fi
+        curl --retry 5 --fail -s https://docs.projectcalico.org/v3.13/manifests/calico.yaml
+    ) | \
         sed -e 's?192.168.0.0/16?#{POD_NW_CIDR}?g' | \
         kubectl apply -f -
   ;;
 # flannel network
 *)
     echo "Installing Flannel CNI ..."
-    curl --retry 5 --fail -s https://raw.githubusercontent.com/coreos/flannel/v0.12.0/Documentation/kube-flannel.yml | \
+    (
+        if [ -n "#{HTTP_PROXY}" ]; then
+            export HTTP_PROXY="#{HTTP_PROXY}" HTTPS_PROXY="#{HTTPS_PROXY}" NO_PROXY="#{NO_PROXY}"
+        fi
+        curl --retry 5 --fail -s https://raw.githubusercontent.com/coreos/flannel/v0.12.0/Documentation/kube-flannel.yml
+    ) | \
         awk '/- --kube-subnet-mgr/{print "        - --iface=eth1"}1' | \
         kubectl apply -f -
   ;;
@@ -238,7 +285,12 @@ echo "Done."
 SCRIPT
 
 # Addons
+## Kubernetes Dashboard
 $kubeDashScript = <<SCRIPT
-# Kubernetes Dashboard Setup
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/#{K8S_DASHBOARD_VERSION}/src/deploy/recommended/kubernetes-dashboard.yaml
+(
+    if [ -n "#{HTTP_PROXY}" ]; then
+        export HTTP_PROXY="#{HTTP_PROXY}" HTTPS_PROXY="#{HTTPS_PROXY}" NO_PROXY="#{NO_PROXY}"
+    fi
+    curl --retry 5 --fail -s https://raw.githubusercontent.com/kubernetes/dashboard/#{K8S_DASHBOARD_VERSION}/src/deploy/recommended/kubernetes-dashboard.yaml
+) | kubectl apply -f -
 SCRIPT

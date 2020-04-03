@@ -4,6 +4,14 @@ $box_image = ENV['BOX_IMAGE'] || 'centos/7'.freeze
 $osPrepareScript = <<SCRIPT
 set -x
 
+if [ -n "#{HTTP_PROXY}" ]; then
+    cat <<EOF >> /etc/yum.conf
+proxy=#{HTTP_PROXY}
+proxy_username=#{HTTP_PROXY_USERNAME}
+proxy_password=#{HTTP_PROXY_PASSWORD}
+EOF
+fi
+
 systemctl stop firewalld || true
 systemctl disable firewalld || true
 systemctl mask firewalld || true

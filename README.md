@@ -22,6 +22,7 @@ A demo of the start and destroy of a cluster can be found here: [README.md Demo 
 - [Demo](#demo)
   - [Start Cluster](#start-cluster)
   - [Destroy Cluster](#destroy-cluster)
+- [Creating an Issue](#creating-an-issue)
 
 <!-- /TOC -->
 
@@ -245,6 +246,11 @@ versions                       Print the "imporant" tools versions out for easie
 | `KUBE_NETWORK`                  | `flannel`                | What CNI to install, if empty don't install any CNI. `flannel`, `canal` and `calico` are supported options. Ubuntu CNI is forced to use `canal` and can't be changed (see [Different OS / Vagrantfiles](#different-os--vagrantfiles)). |
 | `KUBECTL_AUTO_CONF`             | `true`                   | If `kubectl` should be  automatically configured to be able to talk with the cluster (if disabled, removes need for `kubectl` binary).                                                                                                 |
 | `USER_SSHPUBKEY`                | `""` (empty)             | Your SSH **public key** (not private) to add to the VMs `vagrant` users `.ssh/authorized_keys` file during VM provisioning.                                                                                                            |
+| `HTTP_PROXY`                    | `""` (empty)             | HTTP proxy to set for package installation and the Docker daemon (for pulling images).                                                                                                                                                 |
+| `HTTPS_PROXY`                   | `""` (empty)             | HTTPS proxy to set for package installation and the Docker daemon (for pulling images).                                                                                                                                                |
+| `HTTP_PROXY_USERNAME`           | `""` (empty)             | Only used for CentOS `yum` and Fedora `dnf` package managers. HTTP and HTTPS proxy username.                                                                                                                                           |
+| `HTTP_PROXY_PASSWORD`           | `""` (empty)             | Only used for CentOS `yum` and Fedora `dnf` package managers. HTTP and HTTPS proxy password.                                                                                                                                           |
+| `NO_PROXY`                      | `""` (empty)             | `NO_PROXY` / `no_proxy` list to set for the Docker daemon (for pulling images). It is currently not possible to set this for package installation.                                                                                     |
 
 ## Demo
 
