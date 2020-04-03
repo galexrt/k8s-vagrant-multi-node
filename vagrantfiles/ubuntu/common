@@ -1,4 +1,4 @@
-$box_image = ENV['BOX_IMAGE'] || 'generic/ubuntu1804'.freeze
+$box_image = ENV['BOX_IMAGE'].to_s.strip.empty? ? 'generic/ubuntu1804'.freeze : ENV['BOX_IMAGE']
 
 if $kubernetes_pkg_version_suffix == ''
     $kubernetes_pkg_version_suffix = '-00'

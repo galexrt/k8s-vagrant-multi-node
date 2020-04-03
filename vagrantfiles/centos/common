@@ -1,4 +1,4 @@
-$box_image = ENV['BOX_IMAGE'] || 'centos/7'.freeze
+$box_image = ENV['BOX_IMAGE'].to_s.strip.empty? ? 'centos/7'.freeze : ENV['BOX_IMAGE']
 
 # Stop and disable firewalld service
 $osPrepareScript = <<SCRIPT

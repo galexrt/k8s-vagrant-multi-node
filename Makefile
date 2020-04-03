@@ -1,52 +1,62 @@
-MFILECWD = $(shell pwd)
+# Set Makefile directory in variable for referencing other files
+MFILECWD = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # sed 1-liner to reverse the lines in an input stream
 REVERSE_LINES=sed -e '1!G;h;$$!d'
 
-# === BEGIN USER OPTIONS ===
+# Which kubectl to use, default is to use kubectl from `PATH`
 KUBECTL ?= kubectl
-# Vagrantfile set to use.
-BOX_OS ?= fedora
+
+# === BEGIN USER OPTIONS ===
 # Vagrant Provider
 VAGRANT_DEFAULT_PROVIDER ?= virtualbox
+# Vagrantfile set to use.
+BOX_OS ?= fedora
+# Vagrant Box image to use.
+BOX_IMAGE ?= $(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4)
 # Disk setup
-DISK_COUNT ?= 1
-DISK_SIZE_GB ?= 25
+DISK_COUNT ?=
+DISK_SIZE_GB ?=
 # VM Resources
-MASTER_CPUS ?= 2
-MASTER_MEMORY_SIZE_GB ?= 2
-NODE_CPUS ?= 2
-NODE_MEMORY_SIZE_GB ?= 2
-
-NODE_COUNT ?= 2
+MASTER_CPUS ?=
+MASTER_MEMORY_SIZE_GB ?=
+NODE_CPUS ?=
+NODE_MEMORY_SIZE_GB ?=
+NODE_COUNT ?=
+# Libvirt
+LIBVIRT_STORAGE_POOL ?=
 # Network
-MASTER_IP ?= 192.168.26.10
-NODE_IP_NW ?= 192.168.26.
-POD_NW_CIDR ?= 10.244.0.0/16
-
-KUBETOKEN =
-
-KUBECTL_AUTO_CONF ?= true
-
+MASTER_IP ?=
+NODE_IP_NW ?=
+POD_NW_CIDR ?=
+# Addons
+## Kubernetes Dashboard
+K8S_DASHBOARD ?=
+K8S_DASHBOARD_VERSION ?=
+## kube-web-view
+KUBE_WEB_VIEW ?=
+CLUSTER_NAME ?= $(shell basename $(MFILECWD))
+KUBETOKEN ?=
 # Kubernetes and kubeadm
-KUBERNETES_VERSION ?=
-#KUBERNETES_PKG_VERSION_SUFFIX ?=
 # `kubeadm init` flags for master
 # NOTE: The `--kubernetes-version` is automatically set if `KUBERNETES_VERSION` is given.
 KUBEADM_INIT_FLAGS ?=
 # `kubeadm join` flags for nodes
 KUBEADM_JOIN_FLAGS ?=
-
-# Addons
-K8S_DASHBOARD ?= false
-K8S_DASHBOARD_VERSION ?= v1.10.1
-
-CLUSTER_NAME ?= $(shell basename $(MFILECWD))
+KUBERNETES_VERSION ?=
+KUBERNETES_PKG_VERSION_SUFFIX ?=
+KUBE_NETWORK ?=
+KUBECTL_AUTO_CONF ?=
 USER_SSHPUBKEY ?=
+HTTP_PROXY ?=
+HTTPS_PROXY ?=
+HTTP_PROXY_USERNAME ?=
+HTTP_PROXY_PASSWORD ?=
+NO_PROXY ?=
+# === END USER OPTIONS ===
 
 VAGRANT_LOG ?=
 VAGRANT_VAGRANTFILE ?= $(MFILECWD)/vagrantfiles/Vagrantfile
-# === END USER OPTIONS ===
 
 preflight: versions token ## Run checks and gather variables, used for the the `up` target.
 	$(eval KUBETOKEN := $(shell cat $(MFILECWD)/.vagrant/KUBETOKEN))
@@ -102,7 +112,7 @@ up: preflight ## Start Kubernetes Vagrant multi-node cluster. Creates, starts an
 	@echo "Your k8s-vagrant-multi-node Kuberenetes cluster should be ready now."
 
 start: preflight pull
-ifeq ($(VAGRANT_DEFAULT_PROVIDER), "virtualbox")
+ifeq ($(VAGRANT_DEFAULT_PROVIDER),virtualbox)
 	@$(MAKE) start-master start-nodes
 else
 	# Need to start master and nodes separately due to some weird IP assignment side effects (at least on my machine)
@@ -167,18 +177,19 @@ kubectl-delete: ## Delete the created CLUSTER_NAME context from the kubeconfig (
 	if (kubectl config get-contexts $(CLUSTER_NAME) > /dev/null 2>&1); then kubectl config delete-context $(CLUSTER_NAME); fi
 
 pull: ## Add and download, or update the box image for the chosen provider on the host.
-	@if !(vagrant box list | grep "$$(grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4)" | grep -qi "$(VAGRANT_DEFAULT_PROVIDER)"); then \
+	echo $(MFILECWD)
+	if ! (vagrant box list | grep "$(BOX_IMAGE)" | grep -qi "$(VAGRANT_DEFAULT_PROVIDER)"); then \
 		vagrant \
 			box \
 			add \
 			--provider $(VAGRANT_DEFAULT_PROVIDER) \
-			$(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4); \
+			$(BOX_IMAGE); \
 	else \
 		vagrant \
 			box \
 			update \
 			--provider $(VAGRANT_DEFAULT_PROVIDER) \
-			--box=$(shell grep "^\$$box_image.*=.*'.*'\.freeze" "$(MFILECWD)/vagrantfiles/$(BOX_OS)/common" | cut -d\' -f4); \
+			--box=$(BOX_IMAGE); \
 	fi
 
 start-master: preflight ## Start up master VM (automatically done by `up` target).
@@ -286,9 +297,12 @@ help: ## Show this help menu.
 
 .DEFAULT_GOAL := help
 .EXPORT_ALL_VARIABLES:
-.PHONY: clean clean-data clean-master clean-nodes help kubectl kubectl-delete \
-	load-image load-image-master load-image-nodes preflight ssh-master start-master \
-	start-nodes status-master status-nodes status stop-master stop-nodes \
-	vagrant-reload vagrant-reload-master vagrant-reload-nodes stop token up \
-	ssh-config ssh-config-master ssh-config-nodes
-
+.PHONY: help kubectl kubectl-delete preflight token up \
+	clean clean-data clean-master clean-nodes \
+	load-image load-image-master load-image-nodes \
+	ssh-config ssh-config-master ssh-config-nodes \
+	ssh-master \
+	start-master start-nodes \
+	status status-master \
+	stop stop-master stop-nodes \
+	vagrant-reload vagrant-reload-master vagrant-reload-nodes
