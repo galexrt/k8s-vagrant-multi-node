@@ -10,12 +10,17 @@ VAGRANT_DEFAULT_PROVIDER = ENV['VAGRANT_DEFAULT_PROVIDER'].to_s.strip.empty? ? '
 BOX_OS = ENV['BOX_OS'].to_s.strip.empty? ? 'fedora'.freeze : ENV['BOX_OS']
 
 # Load the Vagrantfile_vars file
-$vagrantfilecommon = File.expand_path('../Vagrantfile_vars', __FILE__)
-load $vagrantfilecommon
+$vagrantfilevars = File.expand_path('../Vagrantfile_vars', __FILE__)
+load $vagrantfilevars
 
 # Load the common os file if it exists
-$oscommonvariablefile = File.expand_path("../#{BOX_OS}/common", __FILE__)
-load $oscommonvariablefile if File.exist?($oscommonvariablefile)
+$oscommonvarsfile = File.expand_path("../#{BOX_OS}/common", __FILE__)
+load $oscommonvarsfile if File.exist?($oscommonvarsfile)
+
+# After all variables are loaded and per BOX_OS vars are overriden, load scripts
+# Load the `Vagrantfile_scripts` file
+$vagrantfilescripts = File.expand_path('../Vagrantfile_scripts', __FILE__)
+load $vagrantfilescripts
 
 # Load the type specific variables (e.g., master, node) (0 is equal to not a node)
 if NODE == 0
