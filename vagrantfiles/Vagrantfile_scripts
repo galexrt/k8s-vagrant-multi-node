@@ -1,0 +1,244 @@
+# Scripts
+$osPrepareScript = 'echo OS PREPARE SCRIPT EMPTY.'
+
+$prepareScript = <<SCRIPT
+set -x
+
+swapoff -a
+sed -i '/swap/s/^/#/g' /etc/fstab
+
+modprobe br_netfilter
+cat << EOF > /etc/sysctl.conf
+net.ipv6.conf.all.disable_ipv6 = 0
+net.ipv6.conf.default.disable_ipv6 = 0
+net.ipv6.conf.lo.disable_ipv6 = 0
+net.ipv6.conf.all.accept_dad = 0
+net.ipv6.conf.default.accept_dad = 0
+net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.conf.all.rp_filter = 0
+EOF
+sysctl -p /etc/sysctl.conf
+
+cat << EOF > /etc/modules-load.d/ipvs.conf
+overlay
+br_netfilter
+ip_vs
+ip_vs_wrr
+ip_vs_sh
+ip_vs_rr
+nf_conntrack
+nf_conntrack_ipv4
+nf_conntrack_ipv6
+EOF
+
+# Set mtu of eth0 and eth1 devices to 1300, otherwise there may be issues when using a VPN on the host system.
+cat <<EOF > /etc/systemd/system/ip-set-mtu.service
+[Unit]
+After=network.target
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'ip link set mtu 1300 dev eth0'
+ExecStart=/bin/bash -c 'ip link set mtu 1300 dev eth1'
+[Install]
+WantedBy=default.target
+EOF
+systemctl daemon-reload
+systemctl enable ip-set-mtu.service
+systemctl start ip-set-mtu.service
+SCRIPT
+
+$containerRuntimeConfigScript = <<SCRIPT
+set -x
+mkdir -p /etc/docker
+cat > /etc/docker/daemon.json <<EOF
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2",
+  "storage-opts": [
+    "overlay2.override_kernel_check=true"
+  ]
+}
+EOF
+
+mkdir -p /etc/systemd/system/docker.service.d
+set +x
+if [ -n "#{HTTP_PROXY}" ]; then
+    cat <<EOF > /etc/systemd/system/docker.service.d/http-proxy.conf
+[Service]
+Environment="HTTP_PROXY=#{HTTP_PROXY}"
+EOF
+fi
+if [ -n "#{HTTPS_PROXY}" ]; then
+    cat <<EOF > /etc/systemd/system/docker.service.d/https-proxy.conf
+[Service]
+Environment="HTTPS_PROXY=#{HTTPS_PROXY}"
+EOF
+fi
+if [ -n "#{NO_PROXY}" ]; then
+    cat <<EOF > /etc/systemd/system/docker.service.d/no-proxy.conf
+[Service]
+Environment="NO_PROXY=#{NO_PROXY}"
+EOF
+fi
+set -x
+
+systemctl daemon-reload
+systemctl enable docker && systemctl restart docker
+SCRIPT
+
+$verifyNodeScript = <<SCRIPT
+docker version || { echo "Something wrong with docker"; exit 1; }
+kubeadm version || { echo "Something wrong with kubeadm"; exit 1; }
+kubelet --version || { echo "Something wrong with kubelet"; exit 1; }
+
+systemctl enable kubelet
+SCRIPT
+
+$kubeMasterScript = <<SCRIPT
+set -x
+
+kubeadm reset -f
+
+retries=5
+for ((i=1; i<=retries; i++)); do
+    # For now ignore preflight SystemVerification error
+    kubeadm init \
+        #{$kubeadm_init_flags} \
+        --ignore-preflight-errors=SystemVerification \
+        --apiserver-advertise-address=#{MASTER_IP} \
+        --pod-network-cidr=#{POD_NW_CIDR} \
+        --token "#{KUBETOKEN}" \
+        --token-ttl 0 && \
+            break
+
+    [[ $retries -eq i ]] && { echo "Failed to run kubeadm init after 5 tries"; exit 1; }
+    echo "kubeadm join failed, trying again in 3 seconds (try ${i}/${retries})..."
+    sleep 3
+done
+
+KUBELET_EXTRA_ARGS_FILE="#{$kubeletExtraArgsFile}"
+if [ -f "$KUBELET_EXTRA_ARGS_FILE" ]; then
+    if grep -q -- '--node-ip=' "$KUBELET_EXTRA_ARGS_FILE"; then
+        sed -ri -e 's|KUBELET_EXTRA_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+|KUBELET_EXTRA_ARGS=|' "$KUBELET_EXTRA_ARGS_FILE"
+    fi
+    sed -i 's|KUBELET_EXTRA_ARGS=|KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} --cni-bin-dir=/opt/cni/bin,/usr/libexec/cni |' "$KUBELET_EXTRA_ARGS_FILE"
+else
+    echo "KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} " > "$KUBELET_EXTRA_ARGS_FILE"
+fi
+
+systemctl daemon-reload
+systemctl restart kubelet.service
+
+mkdir -p $HOME/.kube
+cp -Rf /etc/kubernetes/admin.conf $HOME/.kube/config
+chown $(id -u):$(id -g) $HOME/.kube/config
+
+case "#{$kube_network}" in
+# canal network
+[Cc][Aa][Nn][Aa][Ll])
+    echo "Installing Canal CNI ..."
+    (
+        if [ -n "#{HTTP_PROXY}" ]; then
+            export HTTP_PROXY="#{HTTP_PROXY}" HTTPS_PROXY="#{HTTPS_PROXY}" NO_PROXY="#{NO_PROXY}"
+        fi
+        curl --retry 5 --fail -s https://docs.projectcalico.org/v3.13/getting-started/kubernetes/installation/hosted/canal/canal.yaml
+    ) | \
+        sed -e 's/canal_iface:.*/canal_iface: "eth1"/' | \
+        kubectl apply -f -
+  ;;
+# Calico network: https://docs.projectcalico.org/v3.13/getting-started/kubernetes/installation/calico
+[Cc][Aa][Ll][Ii][Cc][Oo])
+    echo "Installing Calico CNI ..."
+    (
+        if [ -n "#{HTTP_PROXY}" ]; then
+            export HTTP_PROXY="#{HTTP_PROXY}" HTTPS_PROXY="#{HTTPS_PROXY}" NO_PROXY="#{NO_PROXY}"
+        fi
+        curl --retry 5 --fail -s https://docs.projectcalico.org/v3.13/manifests/calico.yaml
+    ) | \
+        sed -e 's?192.168.0.0/16?#{POD_NW_CIDR}?g' | \
+        kubectl apply -f -
+  ;;
+# flannel network
+*)
+    echo "Installing Flannel CNI ..."
+    (
+        if [ -n "#{HTTP_PROXY}" ]; then
+            export HTTP_PROXY="#{HTTP_PROXY}" HTTPS_PROXY="#{HTTPS_PROXY}" NO_PROXY="#{NO_PROXY}"
+        fi
+        curl --retry 5 --fail -s https://raw.githubusercontent.com/coreos/flannel/v0.12.0/Documentation/kube-flannel.yml
+    ) | \
+        awk '/- --kube-subnet-mgr/{print "        - --iface=eth1"}1' | \
+        kubectl apply -f -
+  ;;
+esac
+
+echo "Done."
+SCRIPT
+
+$kubeMinionScript = <<SCRIPT
+set -x
+kubeadm reset -f
+
+retries=5
+for ((i=1; i<=retries; i++)); do
+    # For now ignore SystemVerification error
+    kubeadm join \
+        #{$kubeadm_join_flags} \
+        --ignore-preflight-errors=SystemVerification \
+        --discovery-token-unsafe-skip-ca-verification \
+        --token "#{KUBETOKEN}" \
+        "#{MASTER_IP}:6443" && \
+        break
+
+    [[ $retries -eq i ]] && { echo "Failed to run kubeadm join after 5 tries"; exit 1; }
+    echo "kubeadm join failed, trying again in 3 seconds (try ${i}/${retries})..."
+    sleep 3
+done
+
+KUBELET_EXTRA_ARGS_FILE="#{$kubeletExtraArgsFile}"
+if [ -f "$KUBELET_EXTRA_ARGS_FILE" ]; then
+    if grep -q -- '--node-ip=' "$KUBELET_EXTRA_ARGS_FILE"; then
+        sed -ri -e 's|KUBELET_EXTRA_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+|KUBELET_EXTRA_ARGS=|' "$KUBELET_EXTRA_ARGS_FILE"
+    fi
+    sed -i 's|KUBELET_EXTRA_ARGS=|KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} --cni-bin-dir=/opt/cni/bin,/usr/libexec/cni |' "$KUBELET_EXTRA_ARGS_FILE"
+else
+    echo "KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} " > "$KUBELET_EXTRA_ARGS_FILE"
+fi
+
+systemctl daemon-reload
+systemctl restart kubelet.service
+
+echo "Done."
+SCRIPT
+
+# Addons
+## Kubernetes Dashboard
+$kubeDashScript = <<SCRIPT
+(
+    if [ -n "#{HTTP_PROXY}" ]; then
+        export HTTP_PROXY="#{HTTP_PROXY}" HTTPS_PROXY="#{HTTPS_PROXY}" NO_PROXY="#{NO_PROXY}"
+    fi
+    curl --retry 5 --fail -s "https://raw.githubusercontent.com/kubernetes/dashboard/#{K8S_DASHBOARD_VERSION}/src/deploy/recommended/kubernetes-dashboard.yaml"
+) | kubectl apply -f -
+SCRIPT
+
+## kube-web-view
+$kubeWebViewScript = <<SCRIPT
+kubectl create namespace kube-web-view
+for url in https://codeberg.org/hjacobs/kube-web-view/raw/commit/1deac0a8f878e25de9639cce2215048ad8701cdf/deploy/rbac.yaml \
+    https://codeberg.org/hjacobs/kube-web-view/raw/commit/1deac0a8f878e25de9639cce2215048ad8701cdf/deploy/service.yaml \
+    https://codeberg.org/hjacobs/kube-web-view/raw/commit/1deac0a8f878e25de9639cce2215048ad8701cdf/deploy/deployment.yaml ; do
+    (
+        if [ -n "#{HTTP_PROXY}" ]; then
+            export HTTP_PROXY="#{HTTP_PROXY}" HTTPS_PROXY="#{HTTPS_PROXY}" NO_PROXY="#{NO_PROXY}"
+        fi
+        curl --retry 5 --fail -s "$url"
+    ) | \
+        sed 's/namespace: default/namespace: kube-web-view/g' | \
+        kubectl apply -n kube-web-view -f -
+done
+SCRIPT

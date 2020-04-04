@@ -1,4 +1,4 @@
-$box_image = ENV['BOX_IMAGE'] || 'generic/ubuntu1804'.freeze
+$box_image = ENV['BOX_IMAGE'].to_s.strip.empty? ? 'generic/ubuntu1804'.freeze : ENV['BOX_IMAGE']
 
 if $kubernetes_pkg_version_suffix == ''
     $kubernetes_pkg_version_suffix = '-00'
@@ -8,6 +8,17 @@ $osPrepareScript = <<SCRIPT
 set -x
 
 sed -i 's/^DNS=.*/DNS=8.8.8.8 8.8.4.4/' /etc/systemd/resolved.conf
+
+if [ -n "#{HTTP_PROXY}" ]; then
+    cat <<EOF > /etc/apt/apt.conf.d/http-proxy.conf
+Acquire::http::Proxy "#{HTTP_PROXY}";
+EOF
+fi
+if [ -n "#{HTTPS_PROXY}" ]; then
+    cat <<EOF > /etc/apt/apt.conf.d/https-proxy.conf
+Acquire::https::Proxy "#{HTTPS_PROXY}";
+EOF
+fi
 
 sudo update-alternatives --set iptables /usr/sbin/iptables-legacy
 sudo update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
@@ -28,8 +39,12 @@ $docker_version = '5:18.09.1~3-0~ubuntu-bionic'
 
 $containerRuntimeInstallScript = <<SCRIPT
 set -x
-
-curl --retry 5 -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+(
+    if [ -n "#{HTTP_PROXY}" ]; then
+        export HTTP_PROXY="#{HTTP_PROXY}" HTTPS_PROXY="#{HTTPS_PROXY}" NO_PROXY="#{NO_PROXY}"
+    fi
+    curl --retry 5 -fsSL https://download.docker.com/linux/ubuntu/gpg
+) | sudo apt-key add -
 add-apt-repository \
    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
    $(lsb_release -cs) \

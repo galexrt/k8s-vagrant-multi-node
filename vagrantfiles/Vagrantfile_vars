@@ -1,244 +1,65 @@
+# Variables
+
 # $box_image must be set in each Vagrantfile set.
 
 # Disk setup
-DISK_COUNT = ENV['DISK_COUNT'].to_i || 2
-DISK_SIZE_GB = ENV['DISK_SIZE_GB'].to_i || 10
+DISK_COUNT = ENV['DISK_COUNT'].to_s.strip.empty? ? 2 : ENV['DISK_COUNT'].to_i
+DISK_SIZE_GB = ENV['DISK_SIZE_GB'].to_s.strip.empty? ? 10 : ENV['DISK_SIZE_GB'].to_i
 
 # Resources
-MASTER_CPUS = ENV['MASTER_CPUS'].to_i || 2
-MASTER_MEMORY_SIZE_GB = ENV['MASTER_MEMORY_SIZE_GB'].to_i || 2
-NODE_CPUS = ENV['NODE_CPUS'].to_i || 1
-NODE_MEMORY_SIZE_GB = ENV['NODE_MEMORY_SIZE_GB'].to_i || 1
+MASTER_CPUS = ENV['MASTER_CPUS'].to_s.strip.empty? ? 2 : ENV['MASTER_CPUS'].to_i
+MASTER_MEMORY_SIZE_GB = ENV['MASTER_MEMORY_SIZE_GB'].to_s.strip.empty? ? 2 : ENV['MASTER_MEMORY_SIZE_GB'].to_i
+NODE_CPUS = ENV['NODE_CPUS'].to_s.strip.empty? ? 1 : ENV['NODE_CPUS'].to_i
+NODE_MEMORY_SIZE_GB = ENV['NODE_MEMORY_SIZE_GB'].to_s.strip.empty? ? 1 : ENV['NODE_MEMORY_SIZE_GB'].to_i
 
-# BOX OS specific fixes
-# currently only used by ubuntu
+# BOX_OS specific fixes
+## Currently only used by ubuntu
 $docker_version = ''
 
 # Libvirt specific config
-LIBVIRT_STORAGE_POOL = ENV['LIBVIRT_STORAGE_POOL'] || "default"
+LIBVIRT_STORAGE_POOL = ENV['LIBVIRT_STORAGE_POOL'].to_s.strip.empty? ? 'default' : ENV['LIBVIRT_STORAGE_POOL']
 
 # Network
-MASTER_IP = ENV['MASTER_IP'] || '192.168.26.10'
-POD_NW_CIDR = ENV['POD_NW_CIDR'] || '10.244.0.0/16'
-NODE_IP_NW = ENV['NODE_IP_NW'] || '192.168.26.'
+MASTER_IP = ENV['MASTER_IP'].to_s.strip.empty? ? '192.168.26.10' : ENV['MASTER_IP']
+POD_NW_CIDR = ENV['POD_NW_CIDR'].to_s.strip.empty? ? '10.244.0.0/16' : ENV['POD_NW_CIDR']
+NODE_IP_NW = ENV['NODE_IP_NW'].to_s.strip.empty? ? '192.168.26.' : ENV['NODE_IP_NW']
 NODE_IP = NODE_IP_NW + (NODE + 10).to_s
 
-$userSSHPubKey = ENV['USER_SSHPUBKEY'] || ''
+$userSSHPubKey = ENV['USER_SSHPUBKEY'].to_s.strip.empty? ? '' : ENV['USER_SSHPUBKEY']
 
 # Addons
-K8S_DASHBOARD = ENV['K8S_DASHBOARD'].downcase == "true" || false
-K8S_DASHBOARD_VERSION = ENV['K8S_DASHBOARD_VERSION'] || 'v1.10.1'
+## Kubernetes Dashboard
+K8S_DASHBOARD = ENV['K8S_DASHBOARD'].to_s.strip.empty? ? false : ENV['K8S_DASHBOARD'].downcase == 'true'
+K8S_DASHBOARD_VERSION = ENV['K8S_DASHBOARD_VERSION'].to_s.strip.empty? ? 'v1.10.1' : ENV['K8S_DASHBOARD_VERSION']
+## kube-web-view
+KUBE_WEB_VIEW = ENV['KUBE_WEB_VIEW'].to_s.strip.empty? ? false : ENV['KUBE_WEB_VIEW'].downcase == 'true'
 
 # Kubernetes and kubeadm
-CLUSTER_NAME = ENV['CLUSTER_NAME'] || 'k8s-vagrant-multi-node'
-KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || ''
-$kubernetes_pkg_version_suffix = ENV['KUBERNETES_PKG_VERSION_SUFFIX'] || ""
-$kubeadm_init_flags = ENV['KUBEADM_INIT_FLAGS'] || ''
-$kubeadm_join_flags = ENV['KUBEADM_JOIN_FLAGS'] || ''
-if KUBERNETES_VERSION != "" && $kubeadm_init_flags == ""
+CLUSTER_NAME = ENV['CLUSTER_NAME'].to_s.strip.empty? ? 'k8s-vagrant-multi-node' : ENV['CLUSTER_NAME']
+KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'].to_s.strip.empty? ? '' : ENV['KUBERNETES_VERSION']
+$kubernetes_pkg_version_suffix = ENV['KUBERNETES_PKG_VERSION_SUFFIX'].to_s.strip.empty? ? '' : ENV['KUBERNETES_PKG_VERSION_SUFFIX']
+$kubeadm_init_flags = ENV['KUBEADM_INIT_FLAGS'].to_s.strip.empty? ? '' : ENV['KUBEADM_INIT_FLAGS']
+$kubeadm_join_flags = ENV['KUBEADM_JOIN_FLAGS'].to_s.strip.empty? ? '' : ENV['KUBEADM_JOIN_FLAGS']
+if KUBERNETES_VERSION != '' && $kubeadm_init_flags == ''
     $kubeadm_init_flags = "--kubernetes-version=#{KUBERNETES_VERSION}"
 end
 
-# Only set default CNI, if `$kube_network` is undefined.
-# `$kube_network` is only set here already if an OS needs a specific CNI (e.g., ubuntu)).
-if $kube_network.nil? || $kube_network == ""
-    $kube_network = ENV['KUBE_NETWORK'] || 'canal'
-end
+$kube_network = ENV['KUBE_NETWORK'].to_s.strip.empty? ? 'canal' : ENV['KUBE_NETWORK']
 
-KUBE_PROXY_IPVS = ENV['KUBE_PROXY_IPVS'] || false
+KUBE_PROXY_IPVS = ENV['KUBE_PROXY_IPVS'].to_s.strip.empty? ? false : ENV['KUBE_PROXY_IPVS'].downcase == 'true'
+
+HTTP_PROXY = ENV['HTTP_PROXY'].to_s.strip.empty? ? '' : ENV['HTTP_PROXY']
+HTTPS_PROXY = ENV['HTTPS_PROXY'].to_s.strip.empty? ? '' : ENV['HTTPS_PROXY']
+HTTP_PROXY_USERNAME = ENV['HTTP_PROXY_USERNAME'].to_s.strip.empty? ? '' : ENV['HTTP_PROXY_USERNAME']
+HTTP_PROXY_PASSWORD = ENV['HTTP_PROXY_PASSWORD'].to_s.strip.empty? ? '' : ENV['HTTP_PROXY_PASSWORD']
+NO_PROXY = ENV['NO_PROXY'].to_s.strip.empty? ? '' : ENV['NO_PROXY']
 
 # Generate new using steps in README
 KUBETOKEN = ENV['KUBETOKEN'] || 'b029ee.968a33e8d8e6bb0d'
 
-if $kubeletExtraArgsFile.nil? || $kubeletExtraArgsFile == ""
-    $kubeletExtraArgsFile = '/etc/sysconfig/kubelet'
-end
+$kubeletExtraArgsFile = '/etc/sysconfig/kubelet'
 
 # The controller name is different per OS it seems (this is the case for at least Ubuntu right now).
 # For more information, see https://github.com/kusnier/vagrant-persistent-storage/issues/33.
 $storagecontroller = 'k8svmSATAController'
 $storagecontrollerneedstobecreated = true
-
-# Common scripts
-$osPrepareScript = "echo OS PREPARE SCRIPT EMPTY."
-
-$prepareScript = <<SCRIPT
-set -x
-
-swapoff -a
-sed -i '/swap/s/^/#/g' /etc/fstab
-
-modprobe br_netfilter
-cat << EOF > /etc/sysctl.conf
-net.ipv6.conf.all.disable_ipv6 = 0
-net.ipv6.conf.default.disable_ipv6 = 0
-net.ipv6.conf.lo.disable_ipv6 = 0
-net.ipv6.conf.all.accept_dad = 0
-net.ipv6.conf.default.accept_dad = 0
-net.bridge.bridge-nf-call-iptables = 1
-net.ipv4.conf.all.rp_filter = 0
-EOF
-sysctl -p /etc/sysctl.conf
-
-cat << EOF > /etc/modules-load.d/ipvs.conf
-overlay
-br_netfilter
-ip_vs
-ip_vs_wrr
-ip_vs_sh
-ip_vs_rr
-nf_conntrack
-nf_conntrack_ipv4
-nf_conntrack_ipv6
-EOF
-
-# Set mtu of eth0 and eth1 devices to 1300, otherwise there may be issues when using a VPN on the host system.
-cat <<EOF > /etc/systemd/system/ip-set-mtu.service
-[Unit]
-After=network.target
-[Service]
-Type=oneshot
-ExecStart=/bin/bash -c 'ip link set mtu 1300 dev eth0'
-ExecStart=/bin/bash -c 'ip link set mtu 1300 dev eth1'
-[Install]
-WantedBy=default.target
-EOF
-systemctl daemon-reload
-systemctl enable ip-set-mtu.service
-systemctl start ip-set-mtu.service
-SCRIPT
-
-$verifyNodeScript = <<SCRIPT
-docker version || { echo "Something wrong with docker"; exit 1; }
-kubeadm version || { echo "Something wrong with kubeadm"; exit 1; }
-kubelet --version || { echo "Something wrong with kubelet"; exit 1; }
-
-systemctl enable kubelet
-
-mkdir -p /etc/docker
-cat > /etc/docker/daemon.json <<EOF
-{
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
-  "storage-driver": "overlay2",
-  "storage-opts": [
-    "overlay2.override_kernel_check=true"
-  ]
-}
-EOF
-
-mkdir -p /etc/systemd/system/docker.service.d
-SCRIPT
-
-$kubeMasterScript = <<SCRIPT
-set -x
-
-kubeadm reset -f
-
-retries=5
-for ((i=1; i<=retries; i++)); do
-    # For now ignore preflight SystemVerification error
-    kubeadm init \
-        #{$kubeadm_init_flags} \
-        --ignore-preflight-errors=SystemVerification \
-        --apiserver-advertise-address=#{MASTER_IP} \
-        --pod-network-cidr=#{POD_NW_CIDR} \
-        --token "#{KUBETOKEN}" \
-        --token-ttl 0 && \
-            break
-
-    [[ $retries -eq i ]] && { echo "Failed to run kubeadm init after 5 tries"; exit 1; }
-    echo "kubeadm join failed, trying again in 3 seconds (try ${i}/${retries})..."
-    sleep 3
-done
-
-KUBELET_EXTRA_ARGS_FILE="#{$kubeletExtraArgsFile}"
-
-if [ -f "$KUBELET_EXTRA_ARGS_FILE" ]; then
-    if grep -q -- '--node-ip=' "$KUBELET_EXTRA_ARGS_FILE"; then
-        sed -ri -e 's|KUBELET_EXTRA_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+|KUBELET_EXTRA_ARGS=|' "$KUBELET_EXTRA_ARGS_FILE"
-    fi
-    sed -i 's|KUBELET_EXTRA_ARGS=|KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} --cni-bin-dir=/opt/cni/bin,/usr/libexec/cni |' "$KUBELET_EXTRA_ARGS_FILE"
-else
-    echo "KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} " > "$KUBELET_EXTRA_ARGS_FILE"
-fi
-
-systemctl daemon-reload
-systemctl restart kubelet.service
-
-mkdir -p $HOME/.kube
-cp -Rf /etc/kubernetes/admin.conf $HOME/.kube/config
-chown $(id -u):$(id -g) $HOME/.kube/config
-
-case "#{$kube_network}" in
-# canal network
-[Cc][Aa][Nn][Aa][Ll])
-    echo "Installing Canal CNI ..."
-    curl --retry 5 --fail -s https://docs.projectcalico.org/v3.13/getting-started/kubernetes/installation/hosted/canal/canal.yaml | \
-        sed -e 's/canal_iface:.*/canal_iface: "eth1"/' | \
-        kubectl apply -f -
-  ;;
-# Calico network: https://docs.projectcalico.org/v3.13/getting-started/kubernetes/installation/calico
-[Cc][Aa][Ll][Ii][Cc][Oo])
-    echo "Installing Calico CNI ..."
-    curl --retry 5 --fail -s https://docs.projectcalico.org/v3.13/manifests/calico.yaml | \
-        sed -e 's?192.168.0.0/16?#{POD_NW_CIDR}?g' | \
-        kubectl apply -f -
-  ;;
-# flannel network
-*)
-    echo "Installing Flannel CNI ..."
-    curl --retry 5 --fail -s https://raw.githubusercontent.com/coreos/flannel/v0.12.0/Documentation/kube-flannel.yml | \
-        awk '/- --kube-subnet-mgr/{print "        - --iface=eth1"}1' | \
-        kubectl apply -f -
-  ;;
-esac
-
-echo "Done."
-SCRIPT
-
-$kubeMinionScript = <<SCRIPT
-set -x
-kubeadm reset -f
-
-retries=5
-for ((i=1; i<=retries; i++)); do
-    # For now ignore SystemVerification error
-    kubeadm join \
-        #{$kubeadm_join_flags} \
-        --ignore-preflight-errors=SystemVerification \
-        --discovery-token-unsafe-skip-ca-verification \
-        --token "#{KUBETOKEN}" \
-        "#{MASTER_IP}:6443" && \
-        break
-
-    [[ $retries -eq i ]] && { echo "Failed to run kubeadm join after 5 tries"; exit 1; }
-    echo "kubeadm join failed, trying again in 3 seconds (try ${i}/${retries})..."
-    sleep 3
-done
-
-KUBELET_EXTRA_ARGS_FILE="#{$kubeletExtraArgsFile}"
-
-if [ -f "$KUBELET_EXTRA_ARGS_FILE" ]; then
-    if grep -q -- '--node-ip=' "$KUBELET_EXTRA_ARGS_FILE"; then
-        sed -ri -e 's|KUBELET_EXTRA_ARGS=--node-ip=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+|KUBELET_EXTRA_ARGS=|' "$KUBELET_EXTRA_ARGS_FILE"
-    fi
-    sed -i 's|KUBELET_EXTRA_ARGS=|KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} --cni-bin-dir=/opt/cni/bin,/usr/libexec/cni |' "$KUBELET_EXTRA_ARGS_FILE"
-else
-    echo "KUBELET_EXTRA_ARGS=--node-ip=#{NODE_IP} " > "$KUBELET_EXTRA_ARGS_FILE"
-fi
-
-systemctl daemon-reload
-systemctl restart kubelet.service
-
-echo "Done."
-SCRIPT
-
-# Addons
-$kubeDashScript = <<SCRIPT
-# Kubernetes Dashboard Setup
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/#{K8S_DASHBOARD_VERSION}/src/deploy/recommended/kubernetes-dashboard.yaml
-SCRIPT
