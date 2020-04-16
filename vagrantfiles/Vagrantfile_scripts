@@ -1,6 +1,4 @@
 # Scripts
-$osPrepareScript = 'echo OS PREPARE SCRIPT EMPTY.'
-
 $prepareScript = <<SCRIPT
 set -x
 

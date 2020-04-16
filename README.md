@@ -252,6 +252,7 @@ versions                       Print the "imporant" tools versions out for easie
 | `HTTP_PROXY_USERNAME`           | `""` (empty)             | Only used for CentOS `yum` and Fedora `dnf` package managers. HTTP and HTTPS proxy username.                                                                                                                                                 |
 | `HTTP_PROXY_PASSWORD`           | `""` (empty)             | Only used for CentOS `yum` and Fedora `dnf` package managers. HTTP and HTTPS proxy password.                                                                                                                                                 |
 | `NO_PROXY`                      | `""` (empty)             | `NO_PROXY` / `no_proxy` list to set for the Docker daemon (for pulling images). It is currently not possible to set this for package installation.                                                                                           |
+| `INSTALL_ADDITIONAL_PACKAGES`   | `""` (empty)             | List of additional packages to install in the VMs (packages are space separated; the variable is directly passed to the pacakge manager install command).                                                                                    |
 
 ## Demo
 
