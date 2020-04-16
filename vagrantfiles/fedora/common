@@ -24,6 +24,7 @@ fi
 update-alternatives --set iptables /usr/sbin/iptables-legacy
 
 if [ -n '#{INSTALL_ADDITIONAL_PACKAGES}' ]; then
+    dnf clean packages
     retries=5
     for ((i=1; i<=retries; i++)); do
         dnf -y install #{INSTALL_ADDITIONAL_PACKAGES} && \

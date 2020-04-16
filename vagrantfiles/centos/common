@@ -17,6 +17,7 @@ systemctl disable firewalld || true
 systemctl mask firewalld || true
 
 if [ -n '#{INSTALL_ADDITIONAL_PACKAGES}' ]; then
+    yum clean packages
     retries=5
     for ((i=1; i<=retries; i++)); do
         yum -y install #{INSTALL_ADDITIONAL_PACKAGES} && \
