@@ -12,6 +12,7 @@ deb https://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 
 if [ -n "#{KUBERNETES_VERSION}" ]; then
+    KUBERNETES_VERSION="$(echo "#{KUBERNETES_VERSION}" | sed 's/^v//')"
     KUBERNETES_PACKAGES="kubelet=#{KUBERNETES_VERSION}#{$kubernetes_pkg_version_suffix} kubeadm=#{KUBERNETES_VERSION}#{$kubernetes_pkg_version_suffix} kubectl=#{KUBERNETES_VERSION}#{$kubernetes_pkg_version_suffix}"
 else
     KUBERNETES_PACKAGES="kubelet kubeadm kubectl"

@@ -13,7 +13,8 @@ gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
 EOF
 
 if [ -n "#{KUBERNETES_VERSION}" ]; then
-    KUBERNETES_PACKAGES="kubelet-#{KUBERNETES_VERSION} kubeadm-#{KUBERNETES_VERSION}"
+    KUBERNETES_VERSION="$(echo "#{KUBERNETES_VERSION}" | sed 's/^v//')"
+    KUBERNETES_PACKAGES="kubelet-${KUBERNETES_VERSION} kubeadm-${KUBERNETES_VERSION}"
 else
     KUBERNETES_PACKAGES="kubelet kubeadm"
 fi

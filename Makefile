@@ -274,20 +274,24 @@ ssh-config-node-%: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "ssh-c
 status: status-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "status-node-$$i"; done) ## Show status of master and all node VMs.
 
 status-master: ## Show status of the master VM.
-	@STATUS_OUT="$$(vagrant status | tail -n+3)"; \
+	@set -o pipefail; \
+		STATUS_OUT="$$(vagrant status | tail -n+3)"; \
 		if (( $$(echo "$$STATUS_OUT" | wc -l) > 5 )); then \
 			echo "$$STATUS_OUT" | $(REVERSE_LINES) | tail -n +6 | $(REVERSE_LINES); \
 		else \
 			echo "$$STATUS_OUT" | $(REVERSE_LINES) | tail -n +3 | $(REVERSE_LINES); \
-		fi
+		fi | \
+			sed '/^$$/d'
 
 status-node-%: ## Show status of a node VM, where `%` is the number of the node.
-	@STATUS_OUT="$$(NODE=$* vagrant status | tail -n+3)"; \
+	@set -o pipefail; \
+		STATUS_OUT="$$(NODE=$* vagrant status | tail -n+3)"; \
 		if (( $$(echo "$$STATUS_OUT" | wc -l) > 5 )); then \
 			echo "$$STATUS_OUT" | $(REVERSE_LINES) | tail -n +6 | $(REVERSE_LINES); \
 		else \
 			echo "$$STATUS_OUT" | $(REVERSE_LINES) | tail -n +3 | $(REVERSE_LINES); \
-		fi
+		fi | \
+			sed '/^$$/d'
 
 status-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "status-node-$$i"; done) ## Show status of all node VMs.
 
