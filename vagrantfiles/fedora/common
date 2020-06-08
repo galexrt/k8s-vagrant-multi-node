@@ -39,11 +39,13 @@ set -x
 
 retries=5
 for ((i=1; i<retries; i++)); do
-    dnf -y install dnf-plugins-core
+    dnf -y install dnf-plugins-core grubby
     dnf config-manager \
         --add-repo \
         https://download.docker.com/linux/fedora/docker-ce.repo
     sed -i 's/$releasever/31/g' /etc/yum.repos.d/docker-ce.repo
+    grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0"
+
     dnf -y install docker-ce docker-ce-cli containerd.io && \
         break
 
