@@ -1,4 +1,4 @@
-$box_image = ENV['BOX_IMAGE'].to_s.strip.empty? ? 'fedora/30-cloud-base'.freeze : ENV['BOX_IMAGE']
+$box_image = ENV['BOX_IMAGE'].to_s.strip.empty? ? 'fedora/32-cloud-base'.freeze : ENV['BOX_IMAGE']
 
 # Use iptables-legacy for iptables
 $osPrepareScript = <<SCRIPT
@@ -43,7 +43,8 @@ for ((i=1; i<retries; i++)); do
     dnf config-manager \
         --add-repo \
         https://download.docker.com/linux/fedora/docker-ce.repo
-    dnf install -y docker-ce docker-ce-cli containerd.io && \
+    sed -i 's/$releasever/31/g' /etc/yum.repos.d/docker-ce.repo
+    dnf -y install docker-ce docker-ce-cli containerd.io && \
         break
 
     [[ $retries -eq i ]] && { echo "Failed to install docker-ce after 5 tries"; exit 1; }
