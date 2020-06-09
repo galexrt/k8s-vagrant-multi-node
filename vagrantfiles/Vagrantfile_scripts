@@ -32,7 +32,7 @@ EOF
 # Set mtu of eth0 and eth1 devices to 1300, otherwise there may be issues when using a VPN on the host system.
 cat <<EOF > /etc/systemd/system/ip-set-mtu.service
 [Unit]
-After=network.target
+After=network-online.target
 [Service]
 Type=oneshot
 ExecStart=/bin/bash -c 'ip link set mtu 1300 dev eth0'
