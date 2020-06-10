@@ -295,6 +295,10 @@ status-node-%: ## Show status of a node VM, where `%` is the number of the node.
 
 status-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "status-node-$$i"; done) ## Show status of all node VMs.
 
+test-bats: ## Run bats tests
+	KUBERNETES_VERSION=$$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt | sed 's/^v//') \
+		bats ./tests/cluster-up.bats ./tests/cluster-clean.bats
+
 help: ## Show this help menu.
 	@echo "Usage: make [TARGET ...]"
 	@echo
@@ -310,4 +314,5 @@ help: ## Show this help menu.
 	start-master start-nodes \
 	status status-master \
 	stop stop-master stop-nodes \
+	test-bats \
 	vagrant-reload vagrant-reload-master vagrant-reload-nodes
