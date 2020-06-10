@@ -209,6 +209,7 @@ stop-master                    Stop/Halt the master VM.
 stop-nodes                     Stop/Halt all node VMs.
 stop-node-%                    Stop/Halt a node VM, where `%` is the number of the node.
 stop                           Stop/Halt master and all nodes VMs.
+test-bats                      Run bats tests
 token                          Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_MAKEFILE/.vagrant/KUBETOKEN`).
 up                             Start Kubernetes Vagrant multi-node cluster. Creates, starts and bootsup the master and node VMs.
 vagrant-reload-master          Run vagrant reload for master VM.
@@ -223,7 +224,7 @@ versions                       Print the "imporant" tools versions out for easie
 | Variable Name                   | Default Value            | Description                                                                                                                                                                                                                                               |
 | ------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `VAGRANT_DEFAULT_PROVIDER`      | `virtualbox`             | Which Vagrant provider to use. Available are `virtualbox` and `libvirt`.                                                                                                                                                                                  |
-| `BOX_OS`                        | `fedora`                 | Which set of Vagrantfiles to use to start the VMs.                                                                                                                                                                                                        |
+| `BOX_OS`                        | `fedora`                 | Which set of Vagrantfiles to use to start the VMs, see [Different OS / Vagrantfiles](#different-os--vagrantfiles) section.                                                                                                                                |
 | `BOX_IMAGE`                     | `""` (empty)             | Override the VM box image used (only use for override purposes as the image is set based on the `BOX_OS` variable).                                                                                                                                       |
 | `DISK_COUNT`                    | `1`                      | Set how many additional disks will be added to the VMs.                                                                                                                                                                                                   |
 | `DISK_SIZE_GB`                  | `25` GB                  | Size of additional disks added to the VMs.                                                                                                                                                                                                                |

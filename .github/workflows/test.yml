@@ -11,6 +11,13 @@ jobs:
     # Use macos as it has nested virtualization, Virtualbox
     # and Vagrant ready for use
     runs-on: macos-latest
+    strategy:
+      matrix:
+        box_os:
+          - centos7
+          - centos8
+          - fedora
+          - ubuntu
     steps:
       - uses: actions/checkout@v2
         with:
@@ -22,5 +29,7 @@ jobs:
         run: |
           make versions
       - name: Run bats tests
+        env:
+          BOX_OS: ${{ matrix.box_os }}
         run: |
           make test-bats
