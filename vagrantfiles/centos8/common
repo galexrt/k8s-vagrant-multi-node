@@ -49,4 +49,6 @@ SCRIPT
 
 # Enforce Calico as canal is "broken" (inter node connectivity not working)
 # under CentOS 8 as of 10. June 2020
-$kube_network = 'calico'
+if $kube_network != 'none'
+    $kube_network = 'calico'
+end

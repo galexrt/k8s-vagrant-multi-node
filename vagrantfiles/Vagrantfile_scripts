@@ -145,7 +145,7 @@ fi
 
 case "#{$kube_network}" in
 # canal network
-[Cc][Aa][Nn][Aa][Ll])
+canal)
     echo "Installing Canal CNI ..."
     (
         if [ -n "#{HTTP_PROXY}" ]; then
@@ -156,8 +156,8 @@ case "#{$kube_network}" in
         sed -e 's/canal_iface:.*/canal_iface: "eth1"/' | \
         kubectl apply -f -
   ;;
-# Calico network: https://docs.projectcalico.org/v3.13/getting-started/kubernetes/installation/calico
-[Cc][Aa][Ll][Ii][Cc][Oo])
+# calico network: https://docs.projectcalico.org/v3.13/getting-started/kubernetes/installation/calico
+calico)
     echo "Installing Calico CNI ..."
     (
         if [ -n "#{HTTP_PROXY}" ]; then
@@ -169,7 +169,7 @@ case "#{$kube_network}" in
         kubectl apply -f -
   ;;
 # flannel network
-*)
+flannel)
     echo "Installing Flannel CNI ..."
     (
         if [ -n "#{HTTP_PROXY}" ]; then
@@ -179,6 +179,10 @@ case "#{$kube_network}" in
     ) | \
         awk '/- --kube-subnet-mgr/{print "        - --iface=eth1"}1' | \
         kubectl apply -f -
+  ;;
+# "none" network
+*)
+    echo "!!WARNING!! 'none' or unknown CNI selected (#{$kube_network}), not installing any CNI (KUBE_NETWORK env var)!"
   ;;
 esac
 

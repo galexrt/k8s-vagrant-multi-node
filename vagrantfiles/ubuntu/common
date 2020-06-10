@@ -72,4 +72,6 @@ SCRIPT
 
 $kubeletExtraArgsFile = '/etc/default/kubelet'
 
-$kube_network = 'canal'
+if $kube_network != 'none'
+    $kube_network = 'canal'
+end
