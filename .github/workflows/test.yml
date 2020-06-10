@@ -1,0 +1,23 @@
+name: test
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+jobs:
+  test:
+    # Use macos as it has nested virtualization, Virtualbox
+    # and Vagrant ready for use
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: make versions
+        run: |
+          make versions
+      - name: Run bats tests
+        run: |
+          make test-bats
