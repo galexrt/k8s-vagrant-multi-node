@@ -135,6 +135,14 @@ mkdir -p $HOME/.kube
 cp -Rf /etc/kubernetes/admin.conf $HOME/.kube/config
 chown $(id -u):$(id -g) $HOME/.kube/config
 
+if [ "#{KUBE_PROXY_IPVS}" = "true" ]; then
+    kubectl get -n kube-system configmap kube-proxy -o yaml | \
+        sed 's/mode: ""/mode: ipvs/g' | \
+        kubectl apply -f -
+
+    kubectl delete po -n kube-system -l k8s-app=kube-proxy
+fi
+
 case "#{$kube_network}" in
 # canal network
 [Cc][Aa][Nn][Aa][Ll])
