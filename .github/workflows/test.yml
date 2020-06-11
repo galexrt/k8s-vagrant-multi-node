@@ -1,0 +1,45 @@
+name: test
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+env:
+  VAGRANT_DEFAULT_PROVIDER: virtualbox
+  TEST_MAKEFLAGS: "-j1"
+jobs:
+  test:
+    # Use macos as it has nested virtualization, Virtualbox
+    # and Vagrant ready for use
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        box_os:
+          - centos7
+          - centos8
+          - fedora
+          - ubuntu
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Cache multiple paths
+        uses: actions/cache@v2
+        with:
+          path: |
+            /Users/runner/.vagrant.d/boxes
+            .test_files/
+          key: ${{ runner.os }}-boxes
+      - name: Install kubectl
+        run: |
+          brew install kubectl 
+      - name: make versions
+        run: |
+          make versions
+      - name: Run bats tests
+        env:
+          BOX_OS: ${{ matrix.box_os }}
+        run: |
+          make test-bats
