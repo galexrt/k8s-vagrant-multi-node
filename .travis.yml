@@ -17,6 +17,9 @@ cache:
   directories:
     - .test_files/
 
+before_install:
+  - ./tests/test_helper/travisci_before_install.sh
+
 jobs:
   include:
   - name: libvirt_centos7
@@ -56,3 +59,4 @@ script:
   - ./tests/test_helper/setup.sh
   - make versions
   - make test-bats
+  - ls -ahl /var/run/libvirt /var/run/libvirt/libvirt-sock || true

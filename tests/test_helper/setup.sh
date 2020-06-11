@@ -38,6 +38,8 @@ case "$VAGRANT_DEFAULT_PROVIDER" in
         echo "Installing libvirt"
         sudo apt-get install -y libvirt-bin libvirt-dev qemu-kvm qemu-utils ruby-dev
         sudo vagrant plugin install vagrant-libvirt
+        sudo usermod -aG libvirt "$(whoami)"
+        sudo usermod -aG libvirt-qemu "$(whoami)"
         echo "Installed libvirt"
     ;;
     virtualbox)
