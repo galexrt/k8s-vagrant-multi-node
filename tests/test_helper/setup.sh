@@ -32,6 +32,9 @@ sudo apt-get update
 sudo apt-get install -y bridge-utils dnsmasq-base ebtables
 sudo dpkg -i "vagrant_${VAGRANT_VERSION}_x86_64.deb"
 
+# Install vagrant-reload plugin
+sudo vagrant plugin install vagrant-reload
+
 echo "Installed Vagrant ${VAGRANT_VERSION}."
 vagrant version
 vagrant plugin list
