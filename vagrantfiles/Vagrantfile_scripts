@@ -189,6 +189,8 @@ esac
 echo "Done."
 SCRIPT
 
+$kubeMasterPostScript = ""
+
 $kubeMinionScript = <<SCRIPT
 set -x
 kubeadm reset -f

@@ -52,3 +52,7 @@ SCRIPT
 if $kube_network != 'none'
     $kube_network = 'calico'
 end
+
+$kubeMasterPostScript = <<SCRIPT
+#kubectl set env ds/calico-node FELIX_IPTABLESBACKEND=NFT
+SCRIPT

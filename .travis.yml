@@ -1,8 +1,6 @@
 ---
 os: linux
-
 dist: bionic
-
 language: shell
 
 git:
@@ -16,9 +14,13 @@ branches:
 cache:
   directories:
     - .test_files/
+    - /home/travis/.vagrant.d/boxes
 
 before_install:
+  - cat /proc/cpuinfo
   - ./tests/test_helper/travisci_before_install.sh
+  - ./tests/test_helper/setup.sh
+  - make versions
 
 jobs:
   include:
@@ -56,7 +58,4 @@ jobs:
       - VAGRANT_DEFAULT_PROVIDER="virtualbox"
 
 script:
-  - ./tests/test_helper/setup.sh
-  - make versions
-  - make test-bats
-  - ls -ahl /var/run/libvirt /var/run/libvirt/libvirt-sock || true
+  - travis_wait 60 sudo -E su "$(whoami)" -c "make test-bats"

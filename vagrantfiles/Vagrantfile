@@ -116,6 +116,9 @@ Vagrant.configure('2') do |config|
         # Master Provision
         if $hostname == 'master'
             subconfig.vm.provision :shell, inline: $kubeMasterScript
+            if $kubeMasterPostScript != ""
+                subconfig.vm.provision :shell, inline: $kubeMasterPostScript
+            end
             # Addons
             if K8S_DASHBOARD
                 subconfig.vm.provision :shell, inline: $kubeDashScript
