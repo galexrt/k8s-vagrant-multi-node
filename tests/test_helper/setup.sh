@@ -39,6 +39,8 @@ echo "Installed Vagrant ${VAGRANT_VERSION}."
 vagrant version
 vagrant plugin list
 
+chown -R "$(whoami):$(whoami)" /home/travis/.vagrant.d/
+
 case "${VAGRANT_DEFAULT_PROVIDER}" in
     libvirt)
         echo "Installing libvirt"
