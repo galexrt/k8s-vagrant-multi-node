@@ -87,24 +87,17 @@ versions: ## Print the "imporant" tools versions out for easier debugging.
 
 	@echo "Repo state: $$(git rev-parse --verify HEAD) (dirty? $$(if git diff --quiet; then echo 'NO'; else echo 'YES'; fi))"
 
-	@echo "make: $$(command -v make)"
-	@echo "kubectl: $$(command -v kubectl)"
-	@echo "grep: $$(command -v grep)"
-	@echo "cut: $$(command -v cut)"
-	@echo "rsync: $$(command -v rsync)"
-	@echo "openssl: $$(command -v openssl)"
-	@echo "/dev/urandom: $$(if test -c /dev/urandom; then echo OK; else echo 404; fi)"
+	-@echo "make: $$(command -v make)"
+	-@echo "kubectl: $$(command -v kubectl)"
+	-@echo "grep: $$(command -v grep)"
+	-@echo "cut: $$(command -v cut)"
+	-@echo "rsync: $$(command -v rsync)"
+	-@echo "openssl: $$(command -v openssl)"
+	-@echo "/dev/urandom: $$(if test -c /dev/urandom; then echo OK; else echo 404; fi)"
 
-	@echo "Vagrant version:"
-	@vagrant --version
-ifeq ($(VAGRANT_DEFAULT_PROVIDER), "virtualbox")
-	@echo "vboxmanage version:"
-	@vboxmanage --version
-endif
-ifeq ($(VAGRANT_DEFAULT_PROVIDER), "libvirt")
-	@echo "libvirtd version:
-	@libvirtd --version
-endif
+	-@echo "Vagrant version: $$(vagrant --version)"
+	-@echo "vboxmanage version: $$(vboxmanage --version)"
+	-@echo "libvirtd version: $$(libvirtd --version)"
 
 	@echo "=== END Version Info ==="
 
