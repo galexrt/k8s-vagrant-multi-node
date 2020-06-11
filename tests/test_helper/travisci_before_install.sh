@@ -5,7 +5,6 @@ SKIP_BUILD=True
 
 while read -r file; do
     if ! echo "$file" | grep -Pq "$IGNORE_REGEX"; then
-        echo "FILE: $file"
         SKIP_BUILD=False
         break
     fi
