@@ -254,3 +254,5 @@ for url in https://codeberg.org/hjacobs/kube-web-view/raw/commit/1deac0a8f878e25
         kubectl apply -n kube-web-view -f -
 done
 SCRIPT
+
+$postInstallScript = ""

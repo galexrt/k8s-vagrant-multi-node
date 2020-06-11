@@ -53,6 +53,26 @@ if $kube_network != 'none'
     $kube_network = 'calico'
 end
 
+# See https://github.com/rancher/rke/issues/1788#issuecomment-565536201
 $kubeMasterPostScript = <<SCRIPT
-#kubectl set env ds/calico-node FELIX_IPTABLESBACKEND=NFT
+kubectl -n kube-system set env ds/calico-node FELIX_IPTABLESBACKEND=NFT
+SCRIPT
+
+$postInstallScript = <<SCRIPT
+cat << 'EOF' > /etc/systemd/system/iptables-forward-accept.service
+[Unit]
+After=network.target
+Before=kubelet.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/iptables -P FORWARD ACCEPT
+TimeoutStartSec=0
+
+[Install]
+WantedBy=default.target
+EOF
+systemctl daemon-reload
+systemctl enable iptables-forward-accept.service
+systemctl start iptables-forward-accept.service
 SCRIPT

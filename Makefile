@@ -1,3 +1,6 @@
+# Bash is required as the shell
+SHELL := /bin/bash
+
 # Set Makefile directory in variable for referencing other files
 MFILECWD = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
