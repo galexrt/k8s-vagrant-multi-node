@@ -40,6 +40,10 @@ A demo of the start and destroy of a cluster can be found here: [README.md Demo 
   * `openssl` command - Fallback for when `/dev/urandom` is not available.
 * Vagrant (>= `2.2.0`)
   * Tested with `2.2.2` (if you should experience issues, please upgrade to at least this Vagrant version or higher)
+  * Plugins
+    * `vagrant-reload` For Fedora (used by default) and when you want to use the `vagrant-reload*` targets the `vagrant-reload` plugin is needed. To install run one of the following commands:
+      * `make vagrant-plugins` or
+      * `vagrant plugin install vagrant-reload`
 * Vagrant Provider (one of the following two is needed)
   * Virtualbox
     * Tested with `6.0.0` (if you should experience issues, please upgrade to at least this version or higher)
@@ -49,7 +53,9 @@ A demo of the start and destroy of a cluster can be found here: [README.md Demo 
     * Libvirt support is still a bit experimental and can be unstable (e.g., VMs not getting IPs).
       * Troubleshooting: If your VM creation is hanging at `Waiting for domain to get an IP address...`, using `virsh` run `virsh force reset VM_NAME` (`VM_NAME` can be obtained using `virsh list` command) or in virt-manager `Force Reset` on the VM.
 
-> **NOTE** `kubectl` is only needed when the `kubectl` auto configuration is enabled (default is enabled), to disable it set the variable `KUBECTL_AUTO_CONF` to `false`.
+> **NOTE**
+>
+> `kubectl` is only needed when the `kubectl` auto configuration is enabled (default is enabled), to disable it set the variable `KUBECTL_AUTO_CONF` to `false`.
 > For more information, see the [Variables](#variables) section.
 
 ## Hardware Requirements
@@ -214,6 +220,7 @@ stop                           Stop/Halt master and all nodes VMs.
 test-bats                      Run bats tests
 token                          Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_MAKEFILE/.vagrant/KUBETOKEN`).
 up                             Start Kubernetes Vagrant multi-node cluster. Creates, starts and bootsup the master and node VMs.
+vagrant-plugins                Checks that vagrant-reload plugin is installed when needed for BOX_OS=fedora, or try to install it
 vagrant-reload-master          Run vagrant reload for master VM.
 vagrant-reload-node-%          Run `vagrant reload` for specific node  VM.
 vagrant-reload-nodes           Run `vagrant reload` for all node VMs.
@@ -258,6 +265,8 @@ versions                       Print the "imporant" tools versions out for easie
 | `HTTP_PROXY_PASSWORD`           | `""` (empty)             | Only used for CentOS `yum` and Fedora `dnf` package managers. HTTP and HTTPS proxy password.                                                                                                                                                              |
 | `NO_PROXY`                      | `""` (empty)             | `NO_PROXY` / `no_proxy` list to set for the Docker daemon (for pulling images). It is currently not possible to set this for package installation.                                                                                                        |
 | `INSTALL_ADDITIONAL_PACKAGES`   | `""` (empty)             | List of additional packages to install in the VMs (packages are space separated; the variable is directly passed to the pacakge manager install command).                                                                                                 |
+| `VAGRANT`                       | `vagrant`                | Path to `vagrant` binary (only needed when `vagrant` is no in your `PATH`)                                                                                                                                                                                |
+| `KUBECTL`                       | `kubectl`                | Path to `kubectl` binary (only needed when `kubectl` is no in your `PATH`)                                                                                                                                                                                |
 
 ## Demo
 

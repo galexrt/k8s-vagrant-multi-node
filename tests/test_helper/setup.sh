@@ -34,6 +34,7 @@ sudo dpkg -i "vagrant_${VAGRANT_VERSION}_x86_64.deb"
 
 echo "Installed Vagrant ${VAGRANT_VERSION}."
 vagrant version
+vagrant plugin list
 
 case "${VAGRANT_DEFAULT_PROVIDER}" in
     libvirt)
