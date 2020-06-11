@@ -63,7 +63,7 @@ INSTALL_ADDITIONAL_PACKAGES ?=
 VAGRANT_LOG ?=
 VAGRANT_VAGRANTFILE ?= $(MFILECWD)/vagrantfiles/Vagrantfile
 
-preflight: token vagrant-plugins ## Run checks and gather variables, used for the the `up` target.
+preflight: token vagrant-plugins-require ## Run checks and gather variables, used for the the `up` target.
 	$(eval KUBETOKEN := $(shell cat $(MFILECWD)/.vagrant/KUBETOKEN))
 	@$(MAKE) versions
 
@@ -84,12 +84,13 @@ token: ## Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_
 		fi; \
 	fi
 
-vagrant-plugins: ## Checks that vagrant-reload plugin is installed when needed for BOX_OS=fedora, or try to install it
-	@if [ "$(BOX_OS)" != "fedora" ]; then \
-		echo "vagrant-plugins: BOX_OS isn't fedora, no need for any vagrant plugins."; \
-		exit 0; \
-	fi; \
-	if ! $(VAGRANT) plugin list | grep -q vagrant-reload; then \
+vagrant-plugins-require:
+	@if [ "$(BOX_OS)" = "fedora" ]; then \
+		$(MAKE) vagrant-plugins; \
+	fi
+
+vagrant-plugins: ## Checks that vagrant-reload plugin is installed, if not try to install it
+	@if ! $(VAGRANT) plugin list | grep -q vagrant-reload; then \
 		echo "vagrant-plugins: vagrant-reload is not installed, will try to install ..."; \
 		$(VAGRANT) plugin install vagrant-reload || { echo "vagrant-plugins: failed to install vagrant-reload plugin."; exit 1; }; \
 		echo "vagrant-plugins: vagrant-reload plugin has been installed."; \
@@ -251,10 +252,10 @@ clean-force: ## Remove all drives which should normally have been removed by the
 
 vagrant-reload: vagrant-reload-master vagrant-reload-nodes ## Run vagrant reload on master and nodes.
 
-vagrant-reload-master: ## Run vagrant reload for master VM.
+vagrant-reload-master: vagrant-plugins ## Run vagrant reload for master VM.
 	$(VAGRANT) reload
 
-vagrant-reload-node-%: ## Run `vagrant reload` for specific node  VM.
+vagrant-reload-node-%: vagrant-plugins ## Run `vagrant reload` for specific node  VM.
 	NODE=$* $(VAGRANT) reload
 
 vagrant-reload-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "vagrant-reload-node-$$i"; done) ## Run `vagrant reload` for all node VMs.
@@ -326,7 +327,8 @@ help: ## Show this help menu.
 	ssh-config ssh-config-master ssh-config-nodes \
 	ssh-master \
 	start-master start-nodes \
-	status status-master \
+	status status-master status-nodes \
 	stop stop-master stop-nodes \
 	test-bats \
-	vagrant-reload vagrant-reload-master vagrant-reload-nodes
+	vagrant-reload vagrant-reload-master vagrant-reload-nodes \
+	vagrant-plugins
