@@ -1,0 +1,39 @@
+name: test
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+env:
+  VAGRANT_DEFAULT_PROVIDER: virtualbox
+jobs:
+  test:
+    # Use macos as it has nested virtualization, Virtualbox
+    # and Vagrant ready for use
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        box_os:
+          - centos7
+          - centos8
+          - fedora
+          - ubuntu
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Install kubectl
+        run: |
+          brew install kubectl 
+      - name: make versions
+        run: |
+          make versions
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v2
+      - name: Run bats tests
+        env:
+          BOX_OS: ${{ matrix.box_os }}
+        run: |
+          make test-bats
