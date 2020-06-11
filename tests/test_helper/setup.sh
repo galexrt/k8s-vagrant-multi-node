@@ -39,8 +39,6 @@ echo "Installed Vagrant ${VAGRANT_VERSION}."
 vagrant version
 vagrant plugin list
 
-chown -R "$(whoami):$(whoami)" /home/travis/.vagrant.d/
-
 case "${VAGRANT_DEFAULT_PROVIDER}" in
     libvirt)
         echo "Installing libvirt"
@@ -63,6 +61,8 @@ case "${VAGRANT_DEFAULT_PROVIDER}" in
         echo "Unknown VAGRANT_DEFAULT_PROVIDER (value: ${VAGRANT_DEFAULT_PROVIDER}) given. Continuing for now"
     ;;
 esac
+
+sudo chown -R "$(whoami):$(whoami)" /home/travis/.vagrant.d/
 
 echo "Installing kubectl"
 KUBERNETES_VERSION="$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)"

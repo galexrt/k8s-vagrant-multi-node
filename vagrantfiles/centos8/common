@@ -53,11 +53,14 @@ if $kube_network != 'none'
     $kube_network = 'calico'
 end
 
-# See https://github.com/rancher/rke/issues/1788#issuecomment-565536201
-$kubeMasterPostScript = <<SCRIPT
+if $kube_network == 'calico'
+    # Fixup Calico to use nftables
+    # See https://github.com/rancher/rke/issues/1788#issuecomment-565536201
+    $kubeMasterPostScript = <<SCRIPT
 set -x
 kubectl -n kube-system set env ds/calico-node FELIX_IPTABLESBACKEND=NFT
 SCRIPT
+end
 
 $postInstallScript = <<SCRIPT
 set -x
