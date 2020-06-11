@@ -189,8 +189,6 @@ esac
 echo "Done."
 SCRIPT
 
-$kubeMasterPostScript = ""
-
 $kubeMinionScript = <<SCRIPT
 set -x
 kubeadm reset -f
@@ -255,4 +253,6 @@ for url in https://codeberg.org/hjacobs/kube-web-view/raw/commit/1deac0a8f878e25
 done
 SCRIPT
 
-$postInstallScript = ""
+# Overridable Scripts
+$kubeMasterPostScript = $kubeMasterPostScript.to_s.strip.empty? ? '' : $kubeMasterPostScript
+$postInstallScript = $postInstallScript.to_s.strip.empty? ? '' : $postInstallScript

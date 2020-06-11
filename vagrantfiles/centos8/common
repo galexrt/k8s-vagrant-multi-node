@@ -55,10 +55,13 @@ end
 
 # See https://github.com/rancher/rke/issues/1788#issuecomment-565536201
 $kubeMasterPostScript = <<SCRIPT
+set -x
 kubectl -n kube-system set env ds/calico-node FELIX_IPTABLESBACKEND=NFT
 SCRIPT
 
 $postInstallScript = <<SCRIPT
+set -x
+
 cat << 'EOF' > /etc/systemd/system/iptables-forward-accept.service
 [Unit]
 After=network.target
