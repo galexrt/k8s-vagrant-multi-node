@@ -1,9 +1,13 @@
+# Bash is required as the shell
+SHELL := /bin/bash
+
 # Set Makefile directory in variable for referencing other files
 MFILECWD = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # sed 1-liner to reverse the lines in an input stream
 REVERSE_LINES=sed -e '1!G;h;$$!d'
 
+VAGRANT ?= vagrant
 # Which kubectl to use, default is to use kubectl from `PATH`
 KUBECTL ?= kubectl
 
@@ -59,8 +63,9 @@ INSTALL_ADDITIONAL_PACKAGES ?=
 VAGRANT_LOG ?=
 VAGRANT_VAGRANTFILE ?= $(MFILECWD)/vagrantfiles/Vagrantfile
 
-preflight: versions token ## Run checks and gather variables, used for the the `up` target.
+preflight: token vagrant-plugins-require ## Run checks and gather variables, used for the the `up` target.
 	$(eval KUBETOKEN := $(shell cat $(MFILECWD)/.vagrant/KUBETOKEN))
+	@$(MAKE) versions
 
 token: ## Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_MAKEFILE/.vagrant/KUBETOKEN`).
 	@## Kubeadm join token format is: `[a-z0-9]{6}.[a-z0-9]{16}`
@@ -79,29 +84,39 @@ token: ## Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_
 		fi; \
 	fi
 
+vagrant-plugins-require:
+	@if [ "$(BOX_OS)" = "fedora" ]; then \
+		$(MAKE) vagrant-plugins; \
+	fi
+
+vagrant-plugins: ## Checks that vagrant-reload plugin is installed, if not try to install it
+	@if ! $(VAGRANT) plugin list | grep -q vagrant-reload; then \
+		echo "vagrant-plugins: vagrant-reload is not installed, will try to install ..."; \
+		$(VAGRANT) plugin install vagrant-reload || { echo "vagrant-plugins: failed to install vagrant-reload plugin."; exit 1; }; \
+		echo "vagrant-plugins: vagrant-reload plugin has been installed."; \
+	else \
+		echo "vagrant-plugins: vagrant-reload is already installed."; \
+	fi
+
 versions: ## Print the "imporant" tools versions out for easier debugging.
 	@echo "=== BEGIN Version Info ==="
 
 	@echo "Repo state: $$(git rev-parse --verify HEAD) (dirty? $$(if git diff --quiet; then echo 'NO'; else echo 'YES'; fi))"
 
-	@echo "make: $$(command -v make)"
-	@echo "kubectl: $$(command -v kubectl)"
-	@echo "grep: $$(command -v grep)"
-	@echo "cut: $$(command -v cut)"
-	@echo "rsync: $$(command -v rsync)"
-	@echo "openssl: $$(command -v openssl)"
-	@echo "/dev/urandom: $$(if test -c /dev/urandom; then echo OK; else echo 404; fi)"
+	-@echo "make: $$(command -v make)"
+	-@echo "kubectl: $$(command -v kubectl)"
+	-@echo "grep: $$(command -v grep)"
+	-@echo "cut: $$(command -v cut)"
+	-@echo "rsync: $$(command -v rsync)"
+	-@echo "openssl: $$(command -v openssl)"
+	-@echo "/dev/urandom: $$(if test -c /dev/urandom; then echo OK; else echo 404; fi)"
 
-	@echo "Vagrant version:"
-	@vagrant --version
-ifeq ($(VAGRANT_DEFAULT_PROVIDER), "virtualbox")
-	@echo "vboxmanage version:"
-	@vboxmanage --version
-endif
-ifeq ($(VAGRANT_DEFAULT_PROVIDER), "libvirt")
-	@echo "libvirtd version:
-	@libvirtd --version
-endif
+	-@echo "Vagrant version: $$($(VAGRANT) --version)"
+	@echo "=== BEGIN Vagrant Plugins ==="
+	-@$(VAGRANT) plugin list
+	@echo "=== END Vagrant Plugins ==="
+	-@echo "vboxmanage version: $$(vboxmanage --version)"
+	-@echo "libvirtd version: $$(libvirtd --version)"
 
 	@echo "=== END Version Info ==="
 
@@ -130,14 +145,14 @@ endif
 kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` (automatically done by `up` target).
 	$(eval CLUSTERCERTSDIR := $(shell mktemp -d))
 
-	vagrant ssh master -c 'sudo cat /etc/kubernetes/pki/ca.crt' \
+	$(VAGRANT) ssh master -c 'sudo cat /etc/kubernetes/pki/ca.crt' \
 		> $(CLUSTERCERTSDIR)/ca.crt
-	vagrant ssh master -c 'sudo grep -P "client-certificate-data:" /root/.kube/config | \
+	$(VAGRANT) ssh master -c 'sudo grep -P "client-certificate-data:" /root/.kube/config | \
 		sed -e "s/^[ \t]*//" | \
 		cut -d" " -f2 | \
 		base64 -d -i' \
 		> $(CLUSTERCERTSDIR)/client-certificate.crt
-	vagrant ssh master -c 'sudo grep -P "client-key-data:" /root/.kube/config | \
+	$(VAGRANT) ssh master -c 'sudo grep -P "client-key-data:" /root/.kube/config | \
 		sed -e "s/^[ \t]*//" | \
 		cut -d" " -f2 | \
 		base64 -d -i' \
@@ -179,14 +194,14 @@ kubectl-delete: ## Delete the created CLUSTER_NAME context from the kubeconfig (
 
 pull: ## Add and download, or update the box image for the chosen provider on the host.
 	echo $(MFILECWD)
-	if ! (vagrant box list | grep "$(BOX_IMAGE)" | grep -qi "$(VAGRANT_DEFAULT_PROVIDER)"); then \
-		vagrant \
+	if ! ($(VAGRANT) box list | grep "$(BOX_IMAGE)" | grep -qi "$(VAGRANT_DEFAULT_PROVIDER)"); then \
+		$(VAGRANT) \
 			box \
 			add \
 			--provider $(VAGRANT_DEFAULT_PROVIDER) \
 			$(BOX_IMAGE); \
 	else \
-		vagrant \
+		$(VAGRANT) \
 			box \
 			update \
 			--provider $(VAGRANT_DEFAULT_PROVIDER) \
@@ -194,37 +209,37 @@ pull: ## Add and download, or update the box image for the chosen provider on th
 	fi
 
 start-master: preflight ## Start up master VM (automatically done by `up` target).
-	vagrant up --provider $(VAGRANT_DEFAULT_PROVIDER)
+	$(VAGRANT) up --provider $(VAGRANT_DEFAULT_PROVIDER)
 
 start-node-%: preflight ## Start node VM, where `%` is the number of the node.
-	NODE=$* vagrant up --provider $(VAGRANT_DEFAULT_PROVIDER)
+	NODE=$* $(VAGRANT) up --provider $(VAGRANT_DEFAULT_PROVIDER)
 
 start-nodes: preflight $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "start-node-$$i"; done) ## Create and start all node VMs by utilizing the `node-X` target (automatically done by `up` target).
 
 stop: stop-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "stop-node-$$i"; done) ## Stop/Halt master and all nodes VMs.
 
 stop-master: ## Stop/Halt the master VM.
-	vagrant halt -f
+	$(VAGRANT) halt -f
 
 stop-node-%: ## Stop/Halt a node VM, where `%` is the number of the node.
-	NODE=$* vagrant halt -f
+	NODE=$* $(VAGRANT) halt -f
 
 stop-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "stop-node-$$i"; done) ## Stop/Halt all node VMs.
 
 ssh-master: ## SSH into the master VM.
-	vagrant ssh
+	$(VAGRANT) ssh
 
 ssh-node-%: ## SSH into a node VM, where `%` is the number of the node.
-	NODE=$* vagrant ssh
+	NODE=$* $(VAGRANT) ssh
 
 clean: kubectl-delete clean-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done) ## Destroy master and node VMs, delete data and the kubectl context.
 	@$(MAKE) clean-data
 
 clean-master: kubectl-delete ## Remove the master VM and the kubectl context.
-	-vagrant destroy -f
+	-$(VAGRANT) destroy -f
 
 clean-node-%: ## Remove a node VM, where `%` is the number of the node.
-	-NODE=$* vagrant destroy -f node$*
+	-NODE=$* $(VAGRANT) destroy -f node$*
 
 clean-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done) ## Remove all node VMs.
 
@@ -237,26 +252,26 @@ clean-force: ## Remove all drives which should normally have been removed by the
 
 vagrant-reload: vagrant-reload-master vagrant-reload-nodes ## Run vagrant reload on master and nodes.
 
-vagrant-reload-master: ## Run vagrant reload for master VM.
-	vagrant reload
+vagrant-reload-master: vagrant-plugins ## Run vagrant reload for master VM.
+	$(VAGRANT) reload
 
-vagrant-reload-node-%: ## Run `vagrant reload` for specific node  VM.
-	NODE=$* vagrant reload
+vagrant-reload-node-%: vagrant-plugins ## Run `vagrant reload` for specific node  VM.
+	NODE=$* $(VAGRANT) reload
 
 vagrant-reload-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "vagrant-reload-node-$$i"; done) ## Run `vagrant reload` for all node VMs.
 
 load-image: load-image-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "load-image-node-$$i"; done) ## Load local/pulled Docker image into master and all node VMs.
 
 load-image-master: ## Load local/pulled image into master VM.
-	docker save $(IMG) | vagrant ssh "master" -t -c 'sudo docker load'
+	docker save $(IMG) | $(VAGRANT) ssh "master" -t -c 'sudo docker load'
 	@if [ ! -z "$(TAG)" ]; then \
-		vagrant ssh "master" -t -c 'sudo docker tag $(IMG) $(TAG)'; \
+		$(VAGRANT) ssh "master" -t -c 'sudo docker tag $(IMG) $(TAG)'; \
 	fi
 
 load-image-node-%: ## Load local/pulled image into node VM, where `%` is the number of the node.
-	docker save $(IMG) | NODE=$* vagrant ssh "node$*" -t -c 'sudo docker load'
+	docker save $(IMG) | NODE=$* $(VAGRANT) ssh "node$*" -t -c 'sudo docker load'
 	@if [ ! -z "$(TAG)" ]; then \
-		NODE=$* vagrant ssh "node$*" -t -c 'sudo docker tag $(IMG) $(TAG)'; \
+		NODE=$* $(VAGRANT) ssh "node$*" -t -c 'sudo docker tag $(IMG) $(TAG)'; \
 	fi
 
 load-image-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "load-image-node-$$i"; done) ## Load local/pulled Docker image into all node VMs.
@@ -264,18 +279,18 @@ load-image-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "load-i
 ssh-config: ssh-config-master ssh-config-nodes ## Generate SSH config for master and nodes.
 
 ssh-config-master: ## Generate SSH config just for the master.
-	@vagrant ssh-config --host "master"
+	@$(VAGRANT) ssh-config --host "master"
 
 ssh-config-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "ssh-config-$$i"; done) ## Generate SSH config just for the nodes.
 
 ssh-config-node-%: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "ssh-config-$$i"; done) ## Generate SSH config just for the one node number given.
-	@NODE=$* vagrant ssh-config --host "master"
+	@NODE=$* $(VAGRANT) ssh-config --host "master"
 
 status: status-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "status-node-$$i"; done) ## Show status of master and all node VMs.
 
 status-master: ## Show status of the master VM.
 	@set -o pipefail; \
-		STATUS_OUT="$$(vagrant status | tail -n+3)"; \
+		STATUS_OUT="$$($(VAGRANT) status | tail -n+3)"; \
 		if (( $$(echo "$$STATUS_OUT" | wc -l) > 5 )); then \
 			echo "$$STATUS_OUT" | $(REVERSE_LINES) | tail -n +6 | $(REVERSE_LINES); \
 		else \
@@ -285,7 +300,7 @@ status-master: ## Show status of the master VM.
 
 status-node-%: ## Show status of a node VM, where `%` is the number of the node.
 	@set -o pipefail; \
-		STATUS_OUT="$$(NODE=$* vagrant status | tail -n+3)"; \
+		STATUS_OUT="$$(NODE=$* $(VAGRANT) status | tail -n+3)"; \
 		if (( $$(echo "$$STATUS_OUT" | wc -l) > 5 )); then \
 			echo "$$STATUS_OUT" | $(REVERSE_LINES) | tail -n +6 | $(REVERSE_LINES); \
 		else \
@@ -294,6 +309,10 @@ status-node-%: ## Show status of a node VM, where `%` is the number of the node.
 			sed '/^$$/d'
 
 status-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "status-node-$$i"; done) ## Show status of all node VMs.
+
+test-bats: ## Run bats tests
+	KUBERNETES_VERSION=$$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt | sed 's/^v//') \
+		bats ./tests/cluster-up.bats ./tests/cluster-clean.bats
 
 help: ## Show this help menu.
 	@echo "Usage: make [TARGET ...]"
@@ -308,6 +327,8 @@ help: ## Show this help menu.
 	ssh-config ssh-config-master ssh-config-nodes \
 	ssh-master \
 	start-master start-nodes \
-	status status-master \
+	status status-master status-nodes \
 	stop stop-master stop-nodes \
-	vagrant-reload vagrant-reload-master vagrant-reload-nodes
+	test-bats \
+	vagrant-reload vagrant-reload-master vagrant-reload-nodes \
+	vagrant-plugins

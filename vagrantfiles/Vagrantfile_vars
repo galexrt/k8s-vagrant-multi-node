@@ -44,7 +44,7 @@ if KUBERNETES_VERSION != '' && $kubeadm_init_flags == ''
     $kubeadm_init_flags = "--kubernetes-version=#{KUBERNETES_VERSION}"
 end
 
-$kube_network = ENV['KUBE_NETWORK'].to_s.strip.empty? ? 'calico' : ENV['KUBE_NETWORK']
+$kube_network = ENV['KUBE_NETWORK'].to_s.strip.empty? ? 'calico' : ENV['KUBE_NETWORK'].downcase
 
 KUBE_PROXY_IPVS = ENV['KUBE_PROXY_IPVS'].to_s.strip.empty? ? false : ENV['KUBE_PROXY_IPVS'].downcase == 'true'
 

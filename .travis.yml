@@ -1,0 +1,61 @@
+---
+os: linux
+dist: bionic
+language: shell
+
+git:
+  submodules: true
+  symlinks: true
+
+branches:
+  only:
+  - master
+
+cache:
+  directories:
+    - .test_files/
+    - /home/travis/.vagrant.d/boxes
+
+before_install:
+  - cat /proc/cpuinfo
+  - ./tests/test_helper/travisci_before_install.sh
+  - ./tests/test_helper/setup.sh
+  - make versions
+
+jobs:
+  include:
+  - name: libvirt_centos7
+    env:
+      - BOX_OS="centos7"
+      - VAGRANT_DEFAULT_PROVIDER="libvirt"
+  - name: virtualbox_centos7
+    env:
+      - BOX_OS="centos7"
+      - VAGRANT_DEFAULT_PROVIDER="virtualbox"
+  - name: libvirt_centos8
+    env:
+      - BOX_OS="centos8"
+      - VAGRANT_DEFAULT_PROVIDER="libvirt"
+  - name: virtualbox_centos8
+    env:
+      - BOX_OS="centos8"
+      - VAGRANT_DEFAULT_PROVIDER="virtualbox"
+  - name: libvirt_fedora
+    env:
+      - BOX_OS="fedora"
+      - VAGRANT_DEFAULT_PROVIDER="libvirt"
+  - name: virtualbox_fedora
+    env:
+      - BOX_OS="fedora"
+      - VAGRANT_DEFAULT_PROVIDER="virtualbox"
+  - name: libvirt_ubuntu
+    env:
+      - BOX_OS="ubuntu"
+      - VAGRANT_DEFAULT_PROVIDER="libvirt"
+  - name: virtualbox_ubuntu
+    env:
+      - BOX_OS="ubuntu"
+      - VAGRANT_DEFAULT_PROVIDER="virtualbox"
+
+script:
+  - travis_wait 60 sudo -E su "$(whoami)" -c "make test-bats"
