@@ -8,6 +8,7 @@ on:
       - master
 env:
   VAGRANT_DEFAULT_PROVIDER: virtualbox
+  TEST_MAKEFLAGS: "-j1"
 jobs:
   test:
     # Use macos as it has nested virtualization, Virtualbox
@@ -24,14 +25,19 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
+      - name: Cache multiple paths
+        uses: actions/cache@v2
+        with:
+          path: |
+            /Users/runner/.vagrant.d/boxes
+            .test_files/
+          key: ${{ runner.os }}-boxes
       - name: Install kubectl
         run: |
           brew install kubectl 
       - name: make versions
         run: |
           make versions
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v2
       - name: Run bats tests
         env:
           BOX_OS: ${{ matrix.box_os }}

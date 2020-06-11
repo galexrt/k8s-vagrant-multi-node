@@ -265,6 +265,7 @@ versions                       Print the "imporant" tools versions out for easie
 | `INSTALL_ADDITIONAL_PACKAGES`   | `""` (empty)             | List of additional packages to install in the VMs (packages are space separated; the variable is directly passed to the pacakge manager install command).                                                                                                                            |
 | `VAGRANT`                       | `vagrant`                | Path to `vagrant` binary (only needed when `vagrant` is no in your `PATH`)                                                                                                                                                                                                           |
 | `KUBECTL`                       | `kubectl`                | Path to `kubectl` binary (only needed when `kubectl` is no in your `PATH`)                                                                                                                                                                                                           |
+| `PARALLEL_VM_START`             | `false`                  | (Only use if you know what the effects can be) If master and nodes should be started in parallel, this does not affect the nodes creation + startup. This is normally controlled by passing `-j JOBS` to the `make` command.                                                         |
 
 ## Demo
 

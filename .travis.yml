@@ -23,39 +23,40 @@ before_install:
   - make versions
 
 jobs:
+  # Virtualbox testing is done through GitHub Actions
   include:
   - name: libvirt_centos7
     env:
       - BOX_OS="centos7"
       - VAGRANT_DEFAULT_PROVIDER="libvirt"
-  - name: virtualbox_centos7
-    env:
-      - BOX_OS="centos7"
-      - VAGRANT_DEFAULT_PROVIDER="virtualbox"
+  #- name: virtualbox_centos7
+  #  env:
+  #    - BOX_OS="centos7"
+  #    - VAGRANT_DEFAULT_PROVIDER="virtualbox"
   - name: libvirt_centos8
     env:
       - BOX_OS="centos8"
       - VAGRANT_DEFAULT_PROVIDER="libvirt"
-  - name: virtualbox_centos8
-    env:
-      - BOX_OS="centos8"
-      - VAGRANT_DEFAULT_PROVIDER="virtualbox"
+  #- name: virtualbox_centos8
+  #  env:
+  #    - BOX_OS="centos8"
+  #    - VAGRANT_DEFAULT_PROVIDER="virtualbox"
   - name: libvirt_fedora
     env:
       - BOX_OS="fedora"
       - VAGRANT_DEFAULT_PROVIDER="libvirt"
-  - name: virtualbox_fedora
-    env:
-      - BOX_OS="fedora"
-      - VAGRANT_DEFAULT_PROVIDER="virtualbox"
+  #- name: virtualbox_fedora
+  #  env:
+  #    - BOX_OS="fedora"
+  #    - VAGRANT_DEFAULT_PROVIDER="virtualbox"
   - name: libvirt_ubuntu
     env:
       - BOX_OS="ubuntu"
       - VAGRANT_DEFAULT_PROVIDER="libvirt"
-  - name: virtualbox_ubuntu
-    env:
-      - BOX_OS="ubuntu"
-      - VAGRANT_DEFAULT_PROVIDER="virtualbox"
+  #- name: virtualbox_ubuntu
+  #  env:
+  #    - BOX_OS="ubuntu"
+  #    - VAGRANT_DEFAULT_PROVIDER="virtualbox"
 
 script:
   - travis_wait 60 sudo -E su "$(whoami)" -c "make test-bats"

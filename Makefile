@@ -58,14 +58,17 @@ HTTP_PROXY_USERNAME ?=
 HTTP_PROXY_PASSWORD ?=
 NO_PROXY ?=
 INSTALL_ADDITIONAL_PACKAGES ?=
+PARALLEL_VM_START ?= false
 # === END USER OPTIONS ===
+
+TEST_MAKEFLAGS ?= -j3
 
 VAGRANT_LOG ?=
 VAGRANT_VAGRANTFILE ?= $(MFILECWD)/vagrantfiles/Vagrantfile
 
 preflight: token vagrant-plugins-require ## Run checks and gather variables, used for the the `up` target.
 	$(eval KUBETOKEN := $(shell cat $(MFILECWD)/.vagrant/KUBETOKEN))
-	@$(MAKE) versions
+	$(MAKE) versions
 
 token: ## Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_MAKEFILE/.vagrant/KUBETOKEN`).
 	@## Kubeadm join token format is: `[a-z0-9]{6}.[a-z0-9]{16}`
@@ -121,19 +124,21 @@ versions: ## Print the "imporant" tools versions out for easier debugging.
 	@echo "=== END Version Info ==="
 
 up: preflight ## Start Kubernetes Vagrant multi-node cluster. Creates, starts and bootsup the master and node VMs.
-	@$(MAKE) start
+	$(MAKE) start
 	@echo
 	$(KUBECTL) get nodes
 	@echo
 	@echo "Your k8s-vagrant-multi-node Kuberenetes cluster should be ready now."
 
 start: preflight pull
-ifeq ($(VAGRANT_DEFAULT_PROVIDER),virtualbox)
-	@$(MAKE) start-master start-nodes
+	@# virtualbox: seems to hang the makefile randomly when master and nodes are started at the same time
+	@# libvirt: Need to start master and nodes separately due to some weird IP assignment side effects (at least on my machine)
+	@# Users can force VMs to be created in parallel by setting `PARALLEL_VM_START=true`
+ifeq ($(PARALLEL_VM_START),true)
+	$(MAKE) start-master start-nodes
 else
-	# Need to start master and nodes separately due to some weird IP assignment side effects (at least on my machine)
-	@$(MAKE) start-master
-	@$(MAKE) start-nodes
+	$(MAKE) start-master
+	$(MAKE) start-nodes
 endif
 	@if $(KUBECTL_AUTO_CONF); then \
 		$(MAKE) kubectl; \
@@ -233,7 +238,7 @@ ssh-node-%: ## SSH into a node VM, where `%` is the number of the node.
 	NODE=$* $(VAGRANT) ssh
 
 clean: kubectl-delete clean-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done) ## Destroy master and node VMs, delete data and the kubectl context.
-	@$(MAKE) clean-data
+	$(MAKE) clean-data
 
 clean-master: kubectl-delete ## Remove the master VM and the kubectl context.
 	-$(VAGRANT) destroy -f
@@ -311,7 +316,8 @@ status-node-%: ## Show status of a node VM, where `%` is the number of the node.
 status-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "status-node-$$i"; done) ## Show status of all node VMs.
 
 test-bats: ## Run bats tests
-	KUBERNETES_VERSION=$$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt | sed 's/^v//') \
+	@KUBERNETES_VERSION=$$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt | sed 's/^v//') \
+		TEST_MAKEFLAGS="$(TEST_MAKEFLAGS)" \
 		bats ./tests/cluster-up.bats ./tests/cluster-clean.bats
 
 help: ## Show this help menu.
