@@ -35,10 +35,6 @@ sudo dpkg -i "vagrant_${VAGRANT_VERSION}_x86_64.deb"
 # Install vagrant-reload plugin
 sudo vagrant plugin install vagrant-reload
 
-echo "Installed Vagrant ${VAGRANT_VERSION}."
-vagrant version
-vagrant plugin list
-
 case "${VAGRANT_DEFAULT_PROVIDER}" in
     libvirt)
         echo "Installing libvirt"
@@ -63,6 +59,10 @@ case "${VAGRANT_DEFAULT_PROVIDER}" in
 esac
 
 sudo chown -R "$(whoami):$(whoami)" /home/travis/.vagrant.d/
+
+echo "Installed Vagrant ${VAGRANT_VERSION}."
+vagrant version
+vagrant plugin list
 
 echo "Installing kubectl"
 KUBERNETES_VERSION="$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)"
