@@ -33,16 +33,14 @@ jobs:
           key: ${{ runner.os }}-boxes
       - name: Install vagrant-reload plugin
         run: |
-          sudo vagrant plugin install vagrant-reload
+          vagrant plugin install vagrant-reload
       - name: Install kubectl
         run: |
           brew install kubectl 
       - name: make versions
         run: |
           make versions
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v2
-      - name: Run bats tests
+      - name: Run tests target
         env:
           BOX_OS: ${{ matrix.box_os }}
         run: |

@@ -313,9 +313,9 @@ status-node-%: ## Show status of a node VM, where `%` is the number of the node.
 
 status-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "status-node-$$i"; done) ## Show status of all node VMs.
 
-tests: ## Run shunit2 tests.
+tests: ## Run shunit2 tests (`expect` command is required).
 	@KUBERNETES_VERSION=$$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt | sed 's/^v//') \
-		bash ./tests/cluster-tests.sh
+		bash ./tests/cluster-tests.sh$(if $(TESTS), -- $(TESTS),)
 
 help: ## Show this help menu.
 	@echo "Usage: make [TARGET ...]"

@@ -18,8 +18,8 @@ cache:
 
 before_install:
   - cat /proc/cpuinfo
-  - ./tests/test_helper/travisci_before_install.sh
-  - ./tests/test_helper/setup.sh
+  - ./tests/test_helper/check_if_cirun_needed.sh
+  - ./tests/test_helper/travisci_setup.sh
   - make versions
 
 jobs:
