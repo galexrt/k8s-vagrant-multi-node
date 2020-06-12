@@ -32,6 +32,9 @@ jobs:
             /Users/runner/.vagrant.d/boxes
             .test_files/
           key: ${{ runner.os }}-boxes
+      - name: Install vagrant-reload plugin
+        run: |
+          sudo vagrant plugin install vagrant-reload
       - name: Install kubectl
         run: |
           brew install kubectl 

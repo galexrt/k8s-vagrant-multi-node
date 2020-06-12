@@ -4,21 +4,21 @@ load './test_helper/bats-support/load'
 load './test_helper/bats-assert/load'
 
 function teardown() {
-    make -j3 NODE_COUNT=1 clean
+    make ${TEST_MAKEFLAGS} NODE_COUNT=1 clean
 }
 
 @test "test make clean (master + 1x node) being succesful." {
-    run make -j3 NODE_COUNT=1 KUBE_NETWORK="none" clean
+    run make ${TEST_MAKEFLAGS} NODE_COUNT=1 KUBE_NETWORK="none" clean
     assert_success
 }
 
 @test "test consecutive run of make clean (master + 1x node) being succesful." {
-    run make -j3 NODE_COUNT=1 KUBE_NETWORK="none" clean
+    run make ${TEST_MAKEFLAGS} NODE_COUNT=1 KUBE_NETWORK="none" clean
     assert_success
 }
 
 @test "test make status reporing two VMs 'not created' status." {
-    run make -j3 NODE_COUNT=1 status
+    run make ${TEST_MAKEFLAGS} NODE_COUNT=1 status
     assert_success
     assert_output --partial 'not created'
     assert [ $(echo "$output" | sed 's/not created/not created\n/g' | grep -c "not created") -eq 2 ]
