@@ -8,7 +8,6 @@ on:
       - master
 env:
   VAGRANT_DEFAULT_PROVIDER: virtualbox
-  TEST_MAKEFLAGS: "-j1"
 jobs:
   test:
     # Use macos as it has nested virtualization, Virtualbox
@@ -47,4 +46,4 @@ jobs:
         env:
           BOX_OS: ${{ matrix.box_os }}
         run: |
-          make test-bats
+          make tests

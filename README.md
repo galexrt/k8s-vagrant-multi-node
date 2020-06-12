@@ -215,7 +215,7 @@ stop-master                    Stop/Halt the master VM.
 stop-nodes                     Stop/Halt all node VMs.
 stop-node-%                    Stop/Halt a node VM, where `%` is the number of the node.
 stop                           Stop/Halt master and all nodes VMs.
-test-bats                      Run bats tests
+tests                          Run shunit2 tests.
 token                          Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_MAKEFILE/.vagrant/KUBETOKEN`).
 up                             Start Kubernetes Vagrant multi-node cluster. Creates, starts and bootsup the master and node VMs.
 vagrant-plugins                Checks that vagrant-reload plugin is installed, if not try to install it

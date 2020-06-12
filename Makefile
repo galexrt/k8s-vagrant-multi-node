@@ -61,8 +61,6 @@ INSTALL_ADDITIONAL_PACKAGES ?=
 PARALLEL_VM_START ?= false
 # === END USER OPTIONS ===
 
-TEST_MAKEFLAGS ?= -j3
-
 VAGRANT_LOG ?=
 VAGRANT_VAGRANTFILE ?= $(MFILECWD)/vagrantfiles/Vagrantfile
 
@@ -315,10 +313,9 @@ status-node-%: ## Show status of a node VM, where `%` is the number of the node.
 
 status-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "status-node-$$i"; done) ## Show status of all node VMs.
 
-test-bats: ## Run bats tests
+tests: ## Run shunit2 tests.
 	@KUBERNETES_VERSION=$$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt | sed 's/^v//') \
-		TEST_MAKEFLAGS="$(TEST_MAKEFLAGS)" \
-		bats ./tests/cluster-up.bats ./tests/cluster-clean.bats
+		bash ./tests/cluster-tests.sh
 
 help: ## Show this help menu.
 	@echo "Usage: make [TARGET ...]"
@@ -335,6 +332,6 @@ help: ## Show this help menu.
 	start-master start-nodes \
 	status status-master status-nodes \
 	stop stop-master stop-nodes \
-	test-bats \
+	tests \
 	vagrant-reload vagrant-reload-master vagrant-reload-nodes \
 	vagrant-plugins

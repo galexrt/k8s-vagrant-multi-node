@@ -42,4 +42,4 @@ jobs:
       - VAGRANT_DEFAULT_PROVIDER="libvirt"
 
 script:
-  - travis_wait 60 sudo -E su "$(whoami)" -c "make test-bats"
+  - travis_wait 60 sudo -E su "$(whoami)" -c "make tests"
