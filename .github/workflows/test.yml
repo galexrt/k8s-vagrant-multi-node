@@ -34,9 +34,10 @@ jobs:
       - name: Install vagrant-reload plugin
         run: |
           vagrant plugin install vagrant-reload
-      - name: Install kubectl
+      - name: Install kubectl and unbuffer
         run: |
           brew install kubectl 
+          brew install expect
       - name: make versions
         run: |
           make versions

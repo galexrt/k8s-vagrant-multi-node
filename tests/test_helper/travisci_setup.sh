@@ -29,7 +29,7 @@ if [ ! -f "vagrant_${VAGRANT_VERSION}_x86_64.deb" ]; then
     sha256sum -c "vagrant_${VAGRANT_VERSION}_SHA256SUMS" 2>&1 | grep OK
 fi
 sudo apt-get update
-sudo apt-get install -y bridge-utils dnsmasq-base ebtables
+sudo apt-get install -y bridge-utils dnsmasq-base ebtables expect
 sudo dpkg -i "vagrant_${VAGRANT_VERSION}_x86_64.deb"
 
 # Install vagrant-reload plugin
