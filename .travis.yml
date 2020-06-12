@@ -18,8 +18,8 @@ cache:
 
 before_install:
   - cat /proc/cpuinfo
-  - ./tests/test_helper/travisci_before_install.sh
-  - ./tests/test_helper/setup.sh
+  - ./tests/test_helper/check_if_cirun_needed.sh
+  - ./tests/test_helper/travisci_setup.sh
   - make versions
 
 jobs:
@@ -28,34 +28,18 @@ jobs:
     env:
       - BOX_OS="centos7"
       - VAGRANT_DEFAULT_PROVIDER="libvirt"
-  - name: virtualbox_centos7
-    env:
-      - BOX_OS="centos7"
-      - VAGRANT_DEFAULT_PROVIDER="virtualbox"
   - name: libvirt_centos8
     env:
       - BOX_OS="centos8"
       - VAGRANT_DEFAULT_PROVIDER="libvirt"
-  - name: virtualbox_centos8
-    env:
-      - BOX_OS="centos8"
-      - VAGRANT_DEFAULT_PROVIDER="virtualbox"
   - name: libvirt_fedora
     env:
       - BOX_OS="fedora"
       - VAGRANT_DEFAULT_PROVIDER="libvirt"
-  - name: virtualbox_fedora
-    env:
-      - BOX_OS="fedora"
-      - VAGRANT_DEFAULT_PROVIDER="virtualbox"
   - name: libvirt_ubuntu
     env:
       - BOX_OS="ubuntu"
       - VAGRANT_DEFAULT_PROVIDER="libvirt"
-  - name: virtualbox_ubuntu
-    env:
-      - BOX_OS="ubuntu"
-      - VAGRANT_DEFAULT_PROVIDER="virtualbox"
 
 script:
-  - travis_wait 60 sudo -E su "$(whoami)" -c "make test-bats"
+  - sudo -E su "$(whoami)" -c "make tests"

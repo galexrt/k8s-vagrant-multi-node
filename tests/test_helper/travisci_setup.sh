@@ -17,7 +17,7 @@ VAGRANT_DEFAULT_PROVIDER="${VAGRANT_DEFAULT_PROVIDER:-libvirt}"
 VAGRANT_DEFAULT_PROVIDER="$(echo "${VAGRANT_DEFAULT_PROVIDER}" | tr '[:upper:]' '[:lower:]')"
 
 VAGRANT_VERSION="${VAGRANT_VERSION:-2.2.9}"
-VIRTUALBOX_VERSION="${VIRTUALBOX_VERSION:-6.0}"
+VIRTUALBOX_VERSION="${VIRTUALBOX_VERSION:-6.1}"
 
 echo "Installing Vagrant $VAGRANT_VERSION ..."
 if [ ! -f "vagrant_${VAGRANT_VERSION}_x86_64.deb" ]; then
@@ -29,17 +29,11 @@ if [ ! -f "vagrant_${VAGRANT_VERSION}_x86_64.deb" ]; then
     sha256sum -c "vagrant_${VAGRANT_VERSION}_SHA256SUMS" 2>&1 | grep OK
 fi
 sudo apt-get update
-sudo apt-get install -y bridge-utils dnsmasq-base ebtables
+sudo apt-get install -y bridge-utils dnsmasq-base ebtables expect
 sudo dpkg -i "vagrant_${VAGRANT_VERSION}_x86_64.deb"
 
 # Install vagrant-reload plugin
 sudo vagrant plugin install vagrant-reload
-
-echo "Installed Vagrant ${VAGRANT_VERSION}."
-vagrant version
-vagrant plugin list
-
-chown -R "$(whoami):$(whoami)" /home/travis/.vagrant.d/
 
 case "${VAGRANT_DEFAULT_PROVIDER}" in
     libvirt)
@@ -63,6 +57,12 @@ case "${VAGRANT_DEFAULT_PROVIDER}" in
         echo "Unknown VAGRANT_DEFAULT_PROVIDER (value: ${VAGRANT_DEFAULT_PROVIDER}) given. Continuing for now"
     ;;
 esac
+
+sudo chown -R "$(whoami):$(whoami)" /home/travis/.vagrant.d/
+
+echo "Installed Vagrant ${VAGRANT_VERSION}."
+vagrant version
+vagrant plugin list
 
 echo "Installing kubectl"
 KUBERNETES_VERSION="$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)"

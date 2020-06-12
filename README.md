@@ -45,13 +45,13 @@ A demo of the start and destroy of a cluster can be found here: [README.md Demo 
       * `make vagrant-plugins` or
       * `vagrant plugin install vagrant-reload`
 * Vagrant Provider (one of the following two is needed)
-  * Virtualbox
-    * Tested with `6.0.0` (if you should experience issues, please upgrade to at least this version or higher)
-    * `VBoxManage` binary in `PATH`.
   * libvirt (`vagrant plugin install vagrant-libvirt`)
     * Tested with `libvirtd` version `5.10.0`.
     * Libvirt support is still a bit experimental and can be unstable (e.g., VMs not getting IPs).
       * Troubleshooting: If your VM creation is hanging at `Waiting for domain to get an IP address...`, using `virsh` run `virsh force reset VM_NAME` (`VM_NAME` can be obtained using `virsh list` command) or in virt-manager `Force Reset` on the VM.
+  * Virtualbox (**WARNING** VirtualBox seems to hang the Makefile randomly for some people, `libvirt` is recommended)
+    * Tested with `6.0.0` (if you should experience issues, please upgrade to at least this version or higher)
+    * `VBoxManage` binary in `PATH`.
 
 > **NOTE** `kubectl` is only needed when the `kubectl` auto configuration is enabled (default is enabled), to disable it set the variable `KUBECTL_AUTO_CONF` to `false`.
 > For more information, see the [Variables](#variables) section.
@@ -59,11 +59,11 @@ A demo of the start and destroy of a cluster can be found here: [README.md Demo 
 ## Hardware Requirements
 
 * Master
-  * CPU: 2 Cores
-  * Memory: 2GB
+  * CPU: 2 Cores (`MASTER_CPUS`)
+  * Memory: 2GB (`MASTER_MEMORY_SIZE_GB`)
 * 1x Node:
-  * CPU: 2 Core
-  * Memory: 2GB
+  * CPU: 1 Core (it is recommended to use at least 2 Cores; `NODE_CPUS`)
+  * Memory: 2GB (it is recommended to use more than 2GB; `NODE_MEMORY_SIZE_GB`)
 
 These resources can be changed by setting the according variables for the `make up` command, see [Variables](#variables) section.
 
@@ -215,7 +215,7 @@ stop-master                    Stop/Halt the master VM.
 stop-nodes                     Stop/Halt all node VMs.
 stop-node-%                    Stop/Halt a node VM, where `%` is the number of the node.
 stop                           Stop/Halt master and all nodes VMs.
-test-bats                      Run bats tests
+tests                          Run shunit2 tests (`expect` command is required).
 token                          Generate a kubeadm join token, if needed (token file is `DIRECTORY_OF_MAKEFILE/.vagrant/KUBETOKEN`).
 up                             Start Kubernetes Vagrant multi-node cluster. Creates, starts and bootsup the master and node VMs.
 vagrant-plugins                Checks that vagrant-reload plugin is installed, if not try to install it
@@ -237,7 +237,7 @@ versions                       Print the "imporant" tools versions out for easie
 | `DISK_SIZE_GB`                  | `25` GB                  | Size of additional disks added to the VMs.                                                                                                                                                                                                                                           |
 | `MASTER_CPUS`                   | `2` Core                 | Amount of cores to use for the master VM.                                                                                                                                                                                                                                            |
 | `MASTER_MEMORY_SIZE_GB`         | `2` GB                   | Size of memory (in GB) to be allocated for the master VM.                                                                                                                                                                                                                            |
-| `NODE_CPUS`                     | `2`                      | Amount of cores to use for each node VM.                                                                                                                                                                                                                                             |
+| `NODE_CPUS`                     | `1`                      | Amount of cores to use for each node VM.                                                                                                                                                                                                                                             |
 | `NODE_MEMORY_SIZE_GB`           | `2` GB                   | Size of memory (in GB) to be allocated for each node VM.                                                                                                                                                                                                                             |
 | `NODE_COUNT`                    | `2`                      | How many worker nodes should be spawned.                                                                                                                                                                                                                                             |
 | `LIBVIRT_STORAGE_POOL`          | `"default"`              | Storage pool which libvirt should use. Libvirt only.                                                                                                                                                                                                                                 |
@@ -265,6 +265,7 @@ versions                       Print the "imporant" tools versions out for easie
 | `INSTALL_ADDITIONAL_PACKAGES`   | `""` (empty)             | List of additional packages to install in the VMs (packages are space separated; the variable is directly passed to the pacakge manager install command).                                                                                                                            |
 | `VAGRANT`                       | `vagrant`                | Path to `vagrant` binary (only needed when `vagrant` is no in your `PATH`)                                                                                                                                                                                                           |
 | `KUBECTL`                       | `kubectl`                | Path to `kubectl` binary (only needed when `kubectl` is no in your `PATH`)                                                                                                                                                                                                           |
+| `PARALLEL_VM_START`             | `false`                  | (Only use if you know what the effects can be) If master and nodes should be started in parallel, this does not affect the nodes creation + startup. This is normally controlled by passing `-j JOBS` to the `make` command.                                                         |
 
 ## Demo
 
