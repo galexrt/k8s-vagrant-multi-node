@@ -15,7 +15,7 @@ oneTimeTearDown() {
 testClusterUpFirst() {
     echo "=== BEGIN COMMAND OUTPUT ==="
     exec 5>&1
-    CMD_OUTPUT="$(set -o pipefail; unbuffer make -d -j3 NODE_COUNT=1 KUBE_NETWORK="none" up 2>&1 | tee >(cat - >&5))"
+    CMD_OUTPUT="$(set -o pipefail; unbuffer make -j3 NODE_COUNT=1 KUBE_NETWORK="none" up 2>&1 | tee >(cat - >&5))"
     rtrn=$?
     echo "=== END COMMAND OUTPUT ==="
 

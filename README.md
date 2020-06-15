@@ -21,6 +21,9 @@ A demo of the start and destroy of a cluster can be found here: [README.md Demo 
   - [Data inside VM](#data-inside-vm)
   - [Show `make` targets](#show-make-targets)
 - [Variables](#variables)
+- [Troubleshooting](#troubleshooting)
+  - [When usign Virtualbox as the provider `make up` hangs after it is done](#when-usign-virtualbox-as-the-provider-make-up-hangs-after-it-is-done)
+  - ["I have a VPN running on my host machine, what should I look out for?"](#i-have-a-vpn-running-on-my-host-machine-what-should-i-look-out-for)
 - [Demo](#demo)
   - [Start Cluster](#start-cluster)
   - [Destroy Cluster](#destroy-cluster)
@@ -233,8 +236,8 @@ versions                       Print the "imporant" tools versions out for easie
 | `VAGRANT_DEFAULT_PROVIDER`      | `virtualbox`             | Which Vagrant provider to use. Available are `virtualbox` and `libvirt`.                                                                                                                                                                                                             |
 | `BOX_OS`                        | `fedora`                 | Which set of Vagrantfiles to use to start the VMs, see [Different OS / Vagrantfiles](#different-os--vagrantfiles) section.                                                                                                                                                           |
 | `BOX_IMAGE`                     | `""` (empty)             | Override the VM box image used (only use for override purposes as the image is set based on the `BOX_OS` variable).                                                                                                                                                                  |
-| `DISK_COUNT`                    | `1`                      | Set how many additional disks will be added to the VMs.                                                                                                                                                                                                                              |
-| `DISK_SIZE_GB`                  | `25` GB                  | Size of additional disks added to the VMs.                                                                                                                                                                                                                                           |
+| `DISK_COUNT`                    | `2`                      | Set how many additional disks will be added to the VMs.                                                                                                                                                                                                                              |
+| `DISK_SIZE_GB`                  | `20` GB                  | Size of additional disks added to the VMs.                                                                                                                                                                                                                                           |
 | `MASTER_CPUS`                   | `2` Core                 | Amount of cores to use for the master VM.                                                                                                                                                                                                                                            |
 | `MASTER_MEMORY_SIZE_GB`         | `2` GB                   | Size of memory (in GB) to be allocated for the master VM.                                                                                                                                                                                                                            |
 | `NODE_CPUS`                     | `1`                      | Amount of cores to use for each node VM.                                                                                                                                                                                                                                             |
@@ -266,6 +269,23 @@ versions                       Print the "imporant" tools versions out for easie
 | `VAGRANT`                       | `vagrant`                | Path to `vagrant` binary (only needed when `vagrant` is no in your `PATH`)                                                                                                                                                                                                           |
 | `KUBECTL`                       | `kubectl`                | Path to `kubectl` binary (only needed when `kubectl` is no in your `PATH`)                                                                                                                                                                                                           |
 | `PARALLEL_VM_START`             | `false`                  | (Only use if you know what the effects can be) If master and nodes should be started in parallel, this does not affect the nodes creation + startup. This is normally controlled by passing `-j JOBS` to the `make` command.                                                         |
+| `NETWORK_VM_MTU`                | `1500`                   | Set to, e.g., `1350`, to have the VMs interfaces MTU be set to `1350`. This can be used to prevent issues with VPNs running on the host machine (e.g., OpenVPN, Wireguard, etc).                                                                                                     |
+| `KUBE_NETWORK_MTU`              | `1450`                   | Use in combination with the `NETWORK_VM_MTU` parameter, this should be set to the value of `NETWORK_VM_MTU - 50`.                                                                                                                                                                    |
+
+
+## Troubleshooting
+
+### When usign Virtualbox as the provider `make up` hangs after it is done
+
+For unknown reasons the makefile is not exiting after it has printed the "cluster creation successful" message.
+The issue is being looked into it, till then just do `CTRL+C` to exit the `make up` command.
+
+### "I have a VPN running on my host machine, what should I look out for?"
+
+> **TL;DR** Set the following variables on your `make up` run as follows: `NETWORK_VM_MTU=1350` and `KUBE_NETWORK_MTU=1300`.
+
+Set the `NETWORK_VM_MTU` and `KUBE_NETWORK_MTU` according to the MTU of your VPN interface(s) - "overhead" (`50`).
+Using the values in the `TL;DR` should work for "99% percent" of common VPNs.
 
 ## Demo
 
