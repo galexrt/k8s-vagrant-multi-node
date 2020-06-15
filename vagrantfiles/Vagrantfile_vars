@@ -4,7 +4,7 @@
 
 # Disk setup
 DISK_COUNT = ENV['DISK_COUNT'].to_s.strip.empty? ? 2 : ENV['DISK_COUNT'].to_i
-DISK_SIZE_GB = ENV['DISK_SIZE_GB'].to_s.strip.empty? ? 10 : ENV['DISK_SIZE_GB'].to_i
+DISK_SIZE_GB = ENV['DISK_SIZE_GB'].to_s.strip.empty? ? 20 : ENV['DISK_SIZE_GB'].to_i
 
 # Resources
 MASTER_CPUS = ENV['MASTER_CPUS'].to_s.strip.empty? ? 2 : ENV['MASTER_CPUS'].to_i
