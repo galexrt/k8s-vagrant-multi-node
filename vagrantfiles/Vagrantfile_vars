@@ -56,6 +56,9 @@ NO_PROXY = ENV['NO_PROXY'].to_s.strip.empty? ? '' : ENV['NO_PROXY']
 
 INSTALL_ADDITIONAL_PACKAGES = ENV['INSTALL_ADDITIONAL_PACKAGES'].to_s.strip.empty? ? '' : ENV['INSTALL_ADDITIONAL_PACKAGES']
 
+NETWORK_VM_MTU = ENV['NETWORK_VM_MTU'].to_s.strip.empty? ? 1500 : ENV['NETWORK_VM_MTU'].to_i
+KUBE_NETWORK_MTU = ENV['KUBE_NETWORK_MTU'].to_s.strip.empty? ? 1450 : ENV['KUBE_NETWORK_MTU'].to_i
+
 # Generate new using steps in README
 KUBETOKEN = ENV['KUBETOKEN'] || 'b029ee.968a33e8d8e6bb0d'
 
