@@ -67,7 +67,7 @@ set -x
 
 cat << 'EOF' > /etc/systemd/system/iptables-forward-accept.service
 [Unit]
-After=network.target
+After=network.target docker.service
 Before=kubelet.service
 
 [Service]
@@ -76,7 +76,7 @@ ExecStart=/usr/sbin/iptables -P FORWARD ACCEPT
 TimeoutStartSec=0
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
 EOF
 systemctl daemon-reload
 systemctl enable iptables-forward-accept.service
