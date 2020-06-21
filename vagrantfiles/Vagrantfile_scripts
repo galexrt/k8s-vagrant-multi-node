@@ -158,6 +158,7 @@ canal)
     ) | \
         sed \
             -e 's/canal_iface:.*/canal_iface: "eth1"/' \
+            -e 's?10.244.0.0/16?#{POD_NW_CIDR}?g' \
             -e 's/veth_mtu:.*/veth_mtu: "#{KUBE_NETWORK_MTU}"/g' | \
         kubectl apply -f -
   ;;
@@ -171,9 +172,12 @@ calico)
         curl --retry 5 --fail -s https://docs.projectcalico.org/v3.14/manifests/calico.yaml
     ) | \
         sed \
+            -e '/CALICO_IPV4POOL_CIDR/s/# //' \
+            -e '/CALICO_IPV4POOL_CIDR/{N;s/# //}' \
             -e 's?192.168.0.0/16?#{POD_NW_CIDR}?g' \
             -e 's/veth_mtu:.*/veth_mtu: "#{KUBE_NETWORK_MTU}"/g' | \
         kubectl apply -f -
+        kubectl set -n kube-system env daemonset/calico-node IP_AUTODETECTION_METHOD=interface=eth1
   ;;
 # flannel network
 flannel)
@@ -185,6 +189,8 @@ flannel)
         curl --retry 5 --fail -s https://raw.githubusercontent.com/coreos/flannel/v0.12.0/Documentation/kube-flannel.yml
     ) | \
         awk '/- --kube-subnet-mgr/{print "        - --iface=eth1"}1' | \
+        sed \
+            -e 's?10.244.0.0/16?#{POD_NW_CIDR}?g' | \
         kubectl apply -f -
   ;;
 # "none" network
