@@ -1,0 +1,54 @@
+site_name: galexrt/k8s-vagrant-multi-node Documentation
+repo_url: https://github.com/galexrt/k8s-vagrant-multi-node
+site_author: Alexander Trost
+site_description: "GitHub galexrt/k8s-vagrant-multi-node project documentation"
+use_directory_urls: true
+copyright: '<a href="/site-notice/">Impressum</a> | <a href="/privacy-policy/">Privacy Policy</a> | Copyright (c) Alexander Trost 2020'
+theme:
+  name: material
+  font: false
+  favicon: images/favicon.png
+  logo: images/favicon.png
+  palette:
+    scheme: 'slate'
+    primary: 'deep purple'
+    accent: 'lime'
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - instant
+    - navigation.expand
+plugins:
+  - search
+  - awesome-pages
+  - git-revision-date-localized
+  - minify:
+      minify_html: true
+      minify_js: true
+      htmlmin_opts:
+        remove_comments: true
+      #js_files: []
+  - redirects:
+      redirect_maps: {}
+markdown_extensions:
+  - attr_list
+  - meta
+  - toc:
+      permalink: true
+  - tables
+  - nl2br
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight:
+      use_pygments: true
+      linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tasklist
+  - pymdownx.keys
+  - pymdownx.magiclink
+  - pymdownx.mark
+  # Style is broken
+  #- pymdownx.progressbar
+  - pymdownx.snippets
+  - pymdownx.superfences
+  #- pymdownx.tabbed
