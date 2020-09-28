@@ -303,4 +303,4 @@ Please note that these terminal recordings are currently outdated.
 
 ## Creating an Issue
 
-Please attach the output of the `make versions` output to the issue as is shown in the issue template. This makes debugging easier.
+Please attach the output of the `make versions` command to the issue as is shown in the issue template. This makes debugging easier.
