@@ -12,8 +12,7 @@ done < <(git diff --name-only master..."${TRAVIS_COMMIT}")
 
 if [[ $SKIP_BUILD == True ]]; then
     echo "Only changed files that are ignored have been found. Terminating Travis run."
-    travis_terminate 0
-    exit 0
+    exit 1
 else
     echo "Other non-ignored files have been found. Contiuning with run ..."
 fi

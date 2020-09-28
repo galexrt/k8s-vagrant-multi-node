@@ -18,7 +18,8 @@ cache:
 
 before_install:
   - cat /proc/cpuinfo
-  - ./tests/test_helper/check_if_cirun_needed.sh
+  # Check if the CI really needs to run
+  - ./tests/test_helper/check_if_cirun_needed.sh || travis_terminate 0
   - ./tests/test_helper/travisci_setup.sh
   - make versions
 
