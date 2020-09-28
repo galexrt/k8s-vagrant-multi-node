@@ -16,6 +16,13 @@ systemctl stop firewalld || true
 systemctl disable firewalld || true
 systemctl mask firewalld || true
 
+retries=5
+for ((i=1; i<=retries; i++)); do
+    yum update -y && \
+        break
+    [[ $retries -eq i ]] && { echo "Failed to update OS packages after 5 tries"; exit 1; }
+done
+
 if [ -n '#{INSTALL_ADDITIONAL_PACKAGES}' ]; then
     yum clean packages
     retries=5
@@ -33,8 +40,8 @@ set -x
 retries=5
 for ((i=1; i<=retries; i++)); do
     yum install -y yum-utils \
-        device-mapper-persistent-data \
-        lvm2 tc
+        lvm2 iproute-tc
+    yum install -y libseccomp
     yum-config-manager \
         --add-repo \
         https://download.docker.com/linux/centos/docker-ce.repo

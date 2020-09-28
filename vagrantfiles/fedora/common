@@ -23,6 +23,13 @@ if [ ! -f /usr/sbin/iptables-legacy ]; then
 fi
 update-alternatives --set iptables /usr/sbin/iptables-legacy
 
+retries=5
+for ((i=1; i<=retries; i++)); do
+    dnf update -y && \
+        break
+    [[ $retries -eq i ]] && { echo "Failed to update OS packages after 5 tries"; exit 1; }
+done
+
 if [ -n '#{INSTALL_ADDITIONAL_PACKAGES}' ]; then
     dnf clean packages
     retries=5

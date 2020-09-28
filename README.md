@@ -7,27 +7,27 @@ This project was based on work from [coolsvap/kubeadm-vagrant](https://github.co
 A demo of the start and destroy of a cluster can be found here: [README.md Demo section](#demo).
 
 <!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
-
-- [Prerequisites](#prerequisites)
-- [Hardware Requirements](#hardware-requirements)
-- [Quickstart](#quickstart)
-- [Different OS / Vagrantfiles](#different-os--vagrantfiles)
-- [Usage](#usage)
-  - [Starting the environment](#starting-the-environment)
-  - [Faster (parallel) environment start](#faster-parallel-environment-start)
-  - [Show status of VMs](#show-status-of-vms)
-  - [Shutting down the environment](#shutting-down-the-environment)
-  - [Copy local Docker image into VMs](#copy-local-docker-image-into-vms)
-  - [Data inside VM](#data-inside-vm)
-  - [Show `make` targets](#show-make-targets)
-- [Variables](#variables)
-- [Troubleshooting](#troubleshooting)
-  - [When usign Virtualbox as the provider `make up` hangs after it is done](#when-usign-virtualbox-as-the-provider-make-up-hangs-after-it-is-done)
-  - ["I have a VPN running on my host machine, what should I look out for?"](#i-have-a-vpn-running-on-my-host-machine-what-should-i-look-out-for)
-- [Demo](#demo)
-  - [Start Cluster](#start-cluster)
-  - [Destroy Cluster](#destroy-cluster)
-- [Creating an Issue](#creating-an-issue)
+- [k8s-vagrant-multi-node](#k8s-vagrant-multi-node)
+  - [Prerequisites](#prerequisites)
+  - [Hardware Requirements](#hardware-requirements)
+  - [Quickstart](#quickstart)
+  - [Different OS / Vagrantfiles](#different-os--vagrantfiles)
+  - [Usage](#usage)
+    - [Starting the environment](#starting-the-environment)
+    - [Faster (parallel) environment start](#faster-parallel-environment-start)
+    - [Show status of VMs](#show-status-of-vms)
+    - [Shutting down the environment](#shutting-down-the-environment)
+    - [Copy local Docker image into VMs](#copy-local-docker-image-into-vms)
+    - [Data inside VM](#data-inside-vm)
+    - [Show `make` targets](#show-make-targets)
+  - [Variables](#variables)
+  - [Troubleshooting](#troubleshooting)
+    - [When usign Virtualbox as the provider `make up` hangs after it is done](#when-usign-virtualbox-as-the-provider-make-up-hangs-after-it-is-done)
+    - ["I have a VPN running on my host machine, what should I look out for?"](#i-have-a-vpn-running-on-my-host-machine-what-should-i-look-out-for)
+  - [Demo](#demo)
+    - [Start Cluster](#start-cluster)
+    - [Destroy Cluster](#destroy-cluster)
+  - [Creating an Issue](#creating-an-issue)
 
 <!-- /TOC -->
 
@@ -79,6 +79,7 @@ $ make up -j 3
 ```
 
 The `-j3` will cause three VMs to be started in parallel to speed up the cluster creation.
+
 > **NOTE** Your `kubectl` is automatically configured to use a context for the
 > created cluster, after the master VM is started.
 > The context is named after the directory the `Makefile` is in.
@@ -260,6 +261,7 @@ versions                       Print the "imporant" tools versions out for easie
 | `KUBE_NETWORK`                  | `calico`                 | What CNI to install, if empty don't install any CNI. `calico`, `canal`, `flannel` and `none` are supported options. `none` will cause no CNI to be installed. (See [Different OS / Vagrantfiles](#different-os--vagrantfiles) for OS specific overrides, `none` is never overriden). |
 | `KUBECTL_AUTO_CONF`             | `true`                   | If `kubectl` should be  automatically configured to be able to talk with the cluster (if disabled, removes need for `kubectl` binary).                                                                                                                                               |
 | `USER_SSHPUBKEY`                | `""` (empty)             | Your SSH **public key** (not private) to add to the VMs `vagrant` users `.ssh/authorized_keys` file during VM provisioning.                                                                                                                                                          |
+| `USER_POST_INSTALL_SCRIPT_PATH` | `""` (empty)             | Path to a custom script to run after the Kubernetes cluster has been created. This script will be run on the master and all nodes of the cluster.                                                                                                                                    |
 | `HTTP_PROXY`                    | `""` (empty)             | HTTP proxy to set for package installation and the Docker daemon (for pulling images).                                                                                                                                                                                               |
 | `HTTPS_PROXY`                   | `""` (empty)             | HTTPS proxy to set for package installation and the Docker daemon (for pulling images).                                                                                                                                                                                              |
 | `HTTP_PROXY_USERNAME`           | `""` (empty)             | Only used for CentOS `yum` and Fedora `dnf` package managers. HTTP and HTTPS proxy username.                                                                                                                                                                                         |
@@ -301,4 +303,4 @@ Please note that these terminal recordings are currently outdated.
 
 ## Creating an Issue
 
-Please attach the `make versions` output to the issue as is shown in the issue template. This makes debugging easier.
+Please attach the output of the `make versions` output to the issue as is shown in the issue template. This makes debugging easier.

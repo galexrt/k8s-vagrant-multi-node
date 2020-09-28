@@ -28,6 +28,15 @@ sudo update-alternatives --set ebtables /usr/sbin/ebtables-legacy
 retries=5
 for ((i=1; i<=retries; i++)); do
     apt-get update
+    apt-get upgrade -y && \
+        break
+    [[ $retries -eq i ]] && { echo "Failed to update OS packages after 5 tries"; exit 1; }
+done
+
+retries=5
+for ((i=1; i<=retries; i++)); do
+    apt-get update
+    apt-get upgrade -y
     apt-get -y install apt-transport-https curl software-properties-common ca-certificates && \
         break
 

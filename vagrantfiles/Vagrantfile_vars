@@ -27,6 +27,9 @@ NODE_IP = NODE_IP_NW + (NODE + MASTER_IP.split(".").last.to_i).to_s
 
 $userSSHPubKey = ENV['USER_SSHPUBKEY'].to_s.strip.empty? ? '' : ENV['USER_SSHPUBKEY']
 
+# User Scripts
+$userPostInstallScript = ENV['USER_POST_INSTALL_SCRIPT_PATH'].to_s.strip.empty? ? '' : ENV['USER_POST_INSTALL_SCRIPT_PATH']
+
 # Addons
 ## Kubernetes Dashboard
 K8S_DASHBOARD = ENV['K8S_DASHBOARD'].to_s.strip.empty? ? false : ENV['K8S_DASHBOARD'].downcase == 'true'

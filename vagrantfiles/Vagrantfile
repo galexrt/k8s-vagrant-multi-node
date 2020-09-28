@@ -131,5 +131,10 @@ Vagrant.configure('2') do |config|
         if $postInstallScript != ""
             subconfig.vm.provision :shell, inline: $postInstallScript
         end
+
+        if $userPostInstallScript != ""
+            subconfig.vm.provision :file, source: $userPostInstallScript, destination: "/opt/userPostInstallScript.sh"
+            subconfig.vm.provision :shell, inline: 'echo "Execute userPostInstallScript"; bash /opt/userPostInstallScript.sh'
+        end
     end
 end
