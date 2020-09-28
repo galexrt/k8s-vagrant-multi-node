@@ -86,6 +86,10 @@ Vagrant.configure('2') do |config|
             create: true, owner: 'root', group: 'root',
             rsync__args: ["--rsync-path='sudo rsync'", '--archive', '--delete', '-z']
 
+        # Try to copy the user install scripts first, so we fail early
+        if $userPostInstallScript != ""
+            subconfig.vm.provision :file, source: $userPostInstallScript, destination: "/home/vagrant/userPostInstallScript.sh"
+        end
         # Add SSH pub key from user if specified
         if $userSSHPubKey != ""
             subconfig.vm.provision :file, source: $userSSHPubKey, destination: "~/.ssh/user.pub"
@@ -130,6 +134,10 @@ Vagrant.configure('2') do |config|
         end
         if $postInstallScript != ""
             subconfig.vm.provision :shell, inline: $postInstallScript
+        end
+
+        if $userPostInstallScript != ""
+            subconfig.vm.provision :shell, inline: 'echo "Execute userPostInstallScript"; bash /home/vagrant/userPostInstallScript.sh'
         end
     end
 end
