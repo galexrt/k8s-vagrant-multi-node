@@ -29,4 +29,4 @@ The script will be copied from the host inside each VM / server.
 
 ## Operating System (OS) used for the VMs
 
-See [VM OS Selection doc page](vm-vm-os-selection.md).
+See [VM OS Selection doc page](vm-os-selection.md).
