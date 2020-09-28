@@ -1,4 +1,4 @@
-# Targets
+# make Targets
 
 ```shell
 $ make help
@@ -47,4 +47,4 @@ vagrant-reload                 Run vagrant reload on master and nodes.
 versions                       Print the "imporant" tools versions out for easier debugging.
 ```
 
-Be sure to checkout the [Variables doc page](../configuration.md).
+Be sure to checkout the [Configuration / Variables doc page](../configuration.md) for the available configurations options / variables.

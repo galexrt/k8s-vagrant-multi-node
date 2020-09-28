@@ -12,17 +12,7 @@ The issue is being looked into it, till then just do `CTRL+C` to exit the `make 
 Set the `NETWORK_VM_MTU` and `KUBE_NETWORK_MTU` according to the MTU of your VPN interface(s) - "overhead" (`50`).
 Using the values in the `TL;DR` should work for "99% percent" of common VPNs.
 
-# Demo
-
-Please note that these terminal recordings are currently outdated.
-
-## Start Cluster
-
-[![asciicast](https://asciinema.org/a/186375.png)](https://asciinema.org/a/186375)
-
-## Destroy Cluster
-
-[![asciicast](https://asciinema.org/a/186376.png)](https://asciinema.org/a/186376)
+***
 
 # Creating an Issue
 

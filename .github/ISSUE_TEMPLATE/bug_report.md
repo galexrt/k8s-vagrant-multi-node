@@ -21,6 +21,6 @@ assignees: ''
 * Kernel of the machine (e.g. `uname -a`):
 * `make versions` output: <!-- Run `make versions` and post the output
 in the code block below -->
-```
+```plain
 OUTPUT_HERE
 ```

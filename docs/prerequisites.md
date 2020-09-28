@@ -26,7 +26,7 @@
     * `VBoxManage` binary in `PATH`.
 
 > **NOTE** `kubectl` is only needed when the `kubectl` auto configuration is enabled (default is enabled), to disable it set the variable `KUBECTL_AUTO_CONF` to `false`.
-> For more information, see the [Variables](#variables) section.
+> For more information, see the [Configuration / Variables doc page](configuration.md).
 
 ## Hardware Requirements
 
@@ -37,4 +37,4 @@
   * CPU: 1 Core (it is recommended to use at least 2 Cores; `NODE_CPUS`)
   * Memory: 2GB (it is recommended to use more than 2GB; `NODE_MEMORY_SIZE_GB`)
 
-These resources can be changed by setting the according variables for the `make up` command, see [Variables](#variables) section.
+These resources can be changed by setting the according variables for the `make up` command, see [Configuration / Variables doc page](configuration.md).

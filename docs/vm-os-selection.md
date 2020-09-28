@@ -1,4 +1,4 @@
-# Different OS / Vagrantfiles
+# VM OS Selection
 
 There are multiple sets of Vagrantfiles available (see [`vagrantfiles/`](/vagrantfiles/)) which can be used to use a different OS for the Kubernetes environment.
 

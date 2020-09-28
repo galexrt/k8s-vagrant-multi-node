@@ -26,3 +26,7 @@ The script will be copied from the host inside each VM / server.
     master: I am a script that runs after the installation of Kubernetes has been done on each server.
 [...]
 ```
+
+## Operating System (OS) used for the VMs
+
+See [VM OS Selection doc page](vm-vm-os-selection.md).
