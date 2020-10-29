@@ -220,9 +220,9 @@ start-master: preflight ## Start up master VM (automatically done by `up` target
 start-node-%: preflight ## Start node VM, where `%` is the number of the node.
 	NODE=$* $(VAGRANT) up --provider $(VAGRANT_DEFAULT_PROVIDER)
 
-start-nodes: preflight $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "start-node-$$i"; done) ## Create and start all node VMs by utilizing the `node-X` target (automatically done by `up` target).
+start-nodes: preflight $(shell for (( i=1; i<=$(NODE_COUNT); i+=1 )); do echo "start-node-$$i"; done) ## Create and start all node VMs by utilizing the `node-X` target (automatically done by `up` target).
 
-stop: stop-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "stop-node-$$i"; done) ## Stop/Halt master and all nodes VMs.
+stop: stop-master $(shell for (( i=1; i<=$(NODE_COUNT); i+=1 )); do echo "stop-node-$$i"; done) ## Stop/Halt master and all nodes VMs.
 
 stop-master: ## Stop/Halt the master VM.
 	$(VAGRANT) halt -f
@@ -230,7 +230,7 @@ stop-master: ## Stop/Halt the master VM.
 stop-node-%: ## Stop/Halt a node VM, where `%` is the number of the node.
 	NODE=$* $(VAGRANT) halt -f
 
-stop-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "stop-node-$$i"; done) ## Stop/Halt all node VMs.
+stop-nodes: $(shell for (( i=1; i<=$(NODE_COUNT); i+=1 )); do echo "stop-node-$$i"; done) ## Stop/Halt all node VMs.
 
 ssh-master: ## SSH into the master VM.
 	$(VAGRANT) ssh
@@ -238,7 +238,7 @@ ssh-master: ## SSH into the master VM.
 ssh-node-%: ## SSH into a node VM, where `%` is the number of the node.
 	NODE=$* $(VAGRANT) ssh
 
-clean: kubectl-delete clean-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done) ## Destroy master and node VMs, delete data and the kubectl context.
+clean: kubectl-delete clean-master $(shell for (( i=1; i<=$(NODE_COUNT); i+=1 )); do echo "clean-node-$$i"; done) ## Destroy master and node VMs, delete data and the kubectl context.
 	$(MAKE) clean-data
 
 clean-master: kubectl-delete ## Remove the master VM and the kubectl context.
@@ -247,7 +247,7 @@ clean-master: kubectl-delete ## Remove the master VM and the kubectl context.
 clean-node-%: ## Remove a node VM, where `%` is the number of the node.
 	-NODE=$* $(VAGRANT) destroy -f node$*
 
-clean-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "clean-node-$$i"; done) ## Remove all node VMs.
+clean-nodes: $(shell for (( i=1; i<=$(NODE_COUNT); i+=1 )); do echo "clean-node-$$i"; done) ## Remove all node VMs.
 
 clean-data: ## Remove data (shared folders) and disks of all VMs (master and nodes).
 	rm -v -rf "$(MFILECWD)/data/"*
@@ -264,9 +264,9 @@ vagrant-reload-master: vagrant-plugins ## Run vagrant reload for master VM.
 vagrant-reload-node-%: vagrant-plugins ## Run `vagrant reload` for specific node  VM.
 	NODE=$* $(VAGRANT) reload
 
-vagrant-reload-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "vagrant-reload-node-$$i"; done) ## Run `vagrant reload` for all node VMs.
+vagrant-reload-nodes: $(shell for (( i=1; i<=$(NODE_COUNT); i+=1 )); do echo "vagrant-reload-node-$$i"; done) ## Run `vagrant reload` for all node VMs.
 
-load-image: load-image-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "load-image-node-$$i"; done) ## Load local/pulled Docker image into master and all node VMs.
+load-image: load-image-master $(shell for (( i=1; i<=$(NODE_COUNT); i+=1 )); do echo "load-image-node-$$i"; done) ## Load local/pulled Docker image into master and all node VMs.
 
 load-image-master: ## Load local/pulled image into master VM.
 	docker save $(IMG) | $(VAGRANT) ssh "master" -t -c 'sudo docker load'
@@ -280,19 +280,19 @@ load-image-node-%: ## Load local/pulled image into node VM, where `%` is the num
 		NODE=$* $(VAGRANT) ssh "node$*" -t -c 'sudo docker tag $(IMG) $(TAG)'; \
 	fi
 
-load-image-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "load-image-node-$$i"; done) ## Load local/pulled Docker image into all node VMs.
+load-image-nodes: $(shell for (( i=1; i<=$(NODE_COUNT); i+=1 )); do echo "load-image-node-$$i"; done) ## Load local/pulled Docker image into all node VMs.
 
 ssh-config: ssh-config-master ssh-config-nodes ## Generate SSH config for master and nodes.
 
 ssh-config-master: ## Generate SSH config just for the master.
 	@$(VAGRANT) ssh-config --host "master"
 
-ssh-config-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "ssh-config-$$i"; done) ## Generate SSH config just for the nodes.
+ssh-config-nodes: $(shell for (( i=1; i<=$(NODE_COUNT); i+=1 )); do echo "ssh-config-$$i"; done) ## Generate SSH config just for the nodes.
 
-ssh-config-node-%: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "ssh-config-$$i"; done) ## Generate SSH config just for the one node number given.
+ssh-config-node-%: $(shell for (( i=1; i<=$(NODE_COUNT); i+=1 )); do echo "ssh-config-$$i"; done) ## Generate SSH config just for the one node number given.
 	@NODE=$* $(VAGRANT) ssh-config --host "master"
 
-status: status-master $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "status-node-$$i"; done) ## Show status of master and all node VMs.
+status: status-master $(shell for (( i=1; i<=$(NODE_COUNT); i+=1 )); do echo "status-node-$$i"; done) ## Show status of master and all node VMs.
 
 status-master: ## Show status of the master VM.
 	@set -o pipefail; \
@@ -314,7 +314,7 @@ status-node-%: ## Show status of a node VM, where `%` is the number of the node.
 		fi | \
 			sed '/^$$/d'
 
-status-nodes: $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "status-node-$$i"; done) ## Show status of all node VMs.
+status-nodes: $(shell for (( i=1; i<=$(NODE_COUNT); i+=1 )); do echo "status-node-$$i"; done) ## Show status of all node VMs.
 
 tests: ## Run shunit2 tests (`expect` command is required).
 	@KUBERNETES_VERSION=$$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt | sed 's/^v//') \
