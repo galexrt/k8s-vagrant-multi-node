@@ -1,6 +1,6 @@
 #!/bin/bash
 
-IGNORE_REGEX=".git.*|.md|LICENSE"
+IGNORE_REGEX=".md|LICENSE"
 SKIP_BUILD=True
 
 while read -r file; do

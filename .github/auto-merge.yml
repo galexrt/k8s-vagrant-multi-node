@@ -1,0 +1,40 @@
+# Configuration for probot-auto-merge - https://github.com/bobvanderlinden/probot-auto-merge
+
+# The minimum number of reviews from each association that approve the pull request before
+# doing an automatic merge. For more information about associations see:
+# https://developer.github.com/v4/enum/commentauthorassociation/
+minApprovals:
+  MEMBER: 1
+  COLLABORATOR: 1
+
+# Pull requests will only be automatically merged when all of these reviewers have approved the
+# pull request.
+requiredReviewers: []
+
+# The maximum number of reviews from each association that request changes to the pull request.
+# Setting this number higher than 0 will allow automatic merging while changes are still requested.
+# Requested changes from associations not defined in this list are ignored for automatic merging.
+maxRequestedChanges:
+  NONE: 0
+
+# Whether an out-of-date pull request is automatically updated.
+# It does so by merging its base on top of the head of the pull request.
+# This is the equivalent of clicking the 'Update branch' button.
+# This is useful for repositories where protected branches are used and the option
+# 'Require branches to be up to date before merging' is enabled.
+# Note: this only works when the branch of the pull request resides in the same repository as
+#       the pull request itself.
+updateBranch: true
+
+deleteBranchAfterMerge: false
+
+mergeMethod: merge
+
+requiredLabels:
+- automerge
+
+rules:
+- minApprovals:
+    OWNER: 1
+- requiredLabels:
+  - automerge
