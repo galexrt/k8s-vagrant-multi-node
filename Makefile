@@ -287,10 +287,10 @@ ssh-config: ssh-config-master ssh-config-nodes ## Generate SSH config for master
 ssh-config-master: ## Generate SSH config just for the master.
 	@$(VAGRANT) ssh-config --host "master"
 
-ssh-config-nodes: $(shell for (( i=1; i<=$(NODE_COUNT); i+=1 )); do echo "ssh-config-$$i"; done) ## Generate SSH config just for the nodes.
+ssh-config-nodes: $(shell for (( i=1; i<=$(NODE_COUNT); i+=1 )); do echo "ssh-config-node-$$i"; done) ## Generate SSH config just for the nodes.
 
-ssh-config-node-%: $(shell for (( i=1; i<=$(NODE_COUNT); i+=1 )); do echo "ssh-config-$$i"; done) ## Generate SSH config just for the one node number given.
-	@NODE=$* $(VAGRANT) ssh-config --host "master"
+ssh-config-node-%: ## Generate SSH config just for the one node number given.
+	@NODE=$* $(VAGRANT) ssh-config --host "node$*"
 
 status: status-master $(shell for (( i=1; i<=$(NODE_COUNT); i+=1 )); do echo "status-node-$$i"; done) ## Show status of master and all node VMs.
 
