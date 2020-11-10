@@ -12,6 +12,15 @@ proxy_password=#{HTTP_PROXY_PASSWORD}
 EOF
 fi
 
+# Allow chrony to sync time aggressively in case VMs are stopped and started and fall out of sync
+if [ -f /etc/chrony.conf ]; then
+    # Comment out any existing makestep directives
+    sed -i '/^makestep .*/ s/^/# /' /etc/chrony.conf
+    echo "" >> /etc/chrony.conf
+    echo "makestep 1 -1" >> /etc/chrony.conf
+    systemctl restart chronyd
+fi
+
 if [ ! -f /usr/sbin/iptables-legacy ]; then
     retries=5
     for ((i=1; i<=retries; i++)); do
