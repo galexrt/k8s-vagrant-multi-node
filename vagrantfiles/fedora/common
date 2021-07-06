@@ -1,4 +1,4 @@
-$box_image = ENV['BOX_IMAGE'].to_s.strip.empty? ? 'fedora/32-cloud-base'.freeze : ENV['BOX_IMAGE']
+$box_image = ENV['BOX_IMAGE'].to_s.strip.empty? ? 'fedora/34-cloud-base'.freeze : ENV['BOX_IMAGE']
 
 # Use iptables-legacy for iptables
 $osPrepareScript = <<SCRIPT
