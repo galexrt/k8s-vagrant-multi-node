@@ -46,7 +46,6 @@ for ((i=1; i<=retries; i++)); do
         --add-repo \
         https://download.docker.com/linux/centos/docker-ce.repo
     yum install -y container-selinux
-    dnf module disable -y container-tools
     yum install -y docker-ce docker-ce-cli containerd.io && \
         break
 

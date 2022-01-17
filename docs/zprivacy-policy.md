@@ -101,12 +101,13 @@ We herewith advise you that the transmission of data via the Internet (i.e. thro
 
 The data processing controller on this website is:
 
-Alexander Trost
-Kelterstr. 4/1
-75196 Remchingen
+<address>
+Alexander Trost<br />
+Postfach 11<br />
+75196 Kämpfelbach<br />
 Germany
+</address>
 
-Phone: +497232370228
 E-mail: galexrt@googlemail.com
 
 The controller is the natural person or legal entity that single-handedly or jointly with others makes decisions as to the purposes of and resources for the processing of personal data (e.g. names, e-mail addresses, etc.).
@@ -298,12 +299,13 @@ Wir weisen darauf hin, dass die Datenübertragung im Internet (z. B. bei der Ko
 
 Die verantwortliche Stelle für die Datenverarbeitung auf dieser Website ist:
 
-Alexander Trost
-Kelterstr. 4/1
-75196 Remchingen
+<address>
+Alexander Trost<br />
+Postfach 11<br />
+75196 Kämpfelbach<br />
 Germany
+</address>
 
-Telefon: +497232370228
 E-Mail: galexrt@googlemail.com
 
 Verantwortliche Stelle ist die natürliche oder juristische Person, die allein oder gemeinsam mit anderen über die Zwecke und Mittel der Verarbeitung von personenbezogenen Daten (z. B. Namen, E-Mail-Adressen o. Ä.) entscheidet.

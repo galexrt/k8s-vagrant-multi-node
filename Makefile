@@ -188,11 +188,14 @@ kubectl: ## Configure kubeconfig context for the cluster using `kubectl config` 
 			--user=$(CLUSTER_NAME)-kubernetes-admin
 
 	# kubectl switch to created context
-	kubectl config use-context $(CLUSTER_NAME)
+	$(MAKE) kubectl-use-context
 	@echo
 	@echo "kubectl has been configured to use started k8s-vagrant-multi-node Kubernetes cluster"
 	kubectl config current-context
 	@echo
+
+kubectl-use-context: ## Use the created CLUSTER_NAME context using `kubectl config`
+	kubectl config use-context $(CLUSTER_NAME)
 
 kubectl-delete: ## Delete the created CLUSTER_NAME context from the kubeconfig (uses kubectl).
 	$(eval CLUSTERCERTSDIR := $(shell mktemp -d))
