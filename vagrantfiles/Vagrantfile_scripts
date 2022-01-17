@@ -158,7 +158,7 @@ canal)
         if [ -n "#{HTTP_PROXY}" ]; then
             export HTTP_PROXY="#{HTTP_PROXY}" HTTPS_PROXY="#{HTTPS_PROXY}" NO_PROXY="#{NO_PROXY}"
         fi
-        curl --retry 5 --fail -s https://docs.projectcalico.org/v3.14/getting-started/kubernetes/installation/hosted/canal/canal.yaml
+        curl --retry 5 --fail -s https://docs.projectcalico.org/v3.21/getting-started/kubernetes/installation/hosted/canal/canal.yaml
     ) | \
         sed \
             -e 's/canal_iface:.*/canal_iface: "eth1"/' \
